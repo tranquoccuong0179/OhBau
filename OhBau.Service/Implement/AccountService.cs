@@ -1,0 +1,94 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using OhBau.Model.Entity;
+using OhBau.Model.Payload.Request;
+using OhBau.Model.Payload.Response;
+using OhBau.Repository.Interface;
+using OhBau.Service.Interface;
+
+namespace OhBau.Service.Implement
+{
+    public class AccountService : BaseService<AccountService>, IAccountService
+    {
+        public AccountService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<AccountService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        {
+        }
+
+        public async Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request)
+        {
+            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(request.Email, emailPattern))
+            {
+                return new BaseResponse<RegisterResponse>()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Email không đúng định dạng",
+                    data = null
+                };
+            }
+
+            string phonePattern = @"^0\d{9}$";
+            if (!Regex.IsMatch(request.Phone, phonePattern))
+            {
+                return new BaseResponse<RegisterResponse>()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Số điện thoại không đúng định dạng",
+                    data = null
+                };
+            }
+
+            var isEmailExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: u => u.Email.Equals(request.Email));
+            if (isEmailExist != null)
+            {
+                return new BaseResponse<RegisterResponse>()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Email đã tồn tại",
+                    data = null
+                };
+            }
+
+            var isPhoneExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: u => u.Phone.Equals(request.Phone));
+            if (isPhoneExist != null)
+            {
+                return new BaseResponse<RegisterResponse>()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Số điện thoại đã tồn tại",
+                    data = null
+                };
+            }
+
+            var account = _mapper.Map<Account>(request);
+            await _unitOfWork.GetRepository<Account>().InsertAsync(account);
+            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessfully)
+            {
+                return new BaseResponse<RegisterResponse>()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Đăng kí tài khoản thành công",
+                    data = _mapper.Map<RegisterResponse>(account)
+                };
+            }
+
+            return new BaseResponse<RegisterResponse>()
+            {
+                status = StatusCodes.Status400BadRequest.ToString(),
+                message = "Đăng kí tài khoản thất bại",
+                data = null
+            };
+        }
+    }
+}
