@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OhBau.Model.Payload.Response
+namespace OhBau.Model.Payload.Response.Account
 {
-    public class RegisterResponse
+    public class GetAccountResponse
     {
         public Guid Id { get; set; }
         public string? Phone { get; set; }

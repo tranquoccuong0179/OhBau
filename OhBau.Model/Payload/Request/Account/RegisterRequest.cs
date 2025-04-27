@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OhBau.Model.Enum;
 
-namespace OhBau.Model.Payload.Request
+namespace OhBau.Model.Payload.Request.Account
 {
     public class RegisterRequest
     {

@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
-using OhBau.Model.Payload.Request;
+using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Account;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
 
@@ -19,6 +16,33 @@ namespace OhBau.Service.Implement
     {
         public AccountService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<AccountService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+        }
+
+        public async Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size)
+        {
+            if(page < 1 || size < 1)
+            {
+                return new BaseResponse<IPaginate<GetAccountResponse>>()
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Page hoặc size không hợp lệ",
+                    data = null
+                };
+            }
+
+            var accounts = await _unitOfWork.GetRepository<Account>().GetPagingListAsync(
+                selector: a => _mapper.Map<GetAccountResponse>(a),
+                predicate: a => a.Active == true,
+                orderBy: a => a.OrderByDescending(a => a.CreateAt),
+                page: page,
+                size: size);
+
+            return new BaseResponse<IPaginate<GetAccountResponse>>()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Danh sách tài khoản",
+                data = accounts
+            };
         }
 
         public async Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request)

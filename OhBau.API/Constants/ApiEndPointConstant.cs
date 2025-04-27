@@ -14,6 +14,7 @@
         {
             public const string AccountEndPoint = ApiEndpoint + "/account";
             public const string RegisterAccount = AccountEndPoint;
+            public const string GetAccounts = AccountEndPoint;
         }
 
     }

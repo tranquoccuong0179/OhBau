@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using AutoMapper;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
-using OhBau.Model.Payload.Request;
-using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Request.Account;
+using OhBau.Model.Payload.Response.Account;
 using OhBau.Model.Utils;
 
 namespace OhBau.Model.Mapper
@@ -25,6 +25,8 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()));
 
             CreateMap<Account, RegisterResponse>();
+
+            CreateMap<Account, GetAccountResponse>();
         }
     }
 }

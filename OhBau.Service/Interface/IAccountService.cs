@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OhBau.Model.Payload.Request;
+﻿using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Account;
 
 namespace OhBau.Service.Interface
 {
     public interface IAccountService
     {
         Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request);
+        Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size);
     }
 }
