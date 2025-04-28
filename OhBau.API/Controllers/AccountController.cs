@@ -25,15 +25,35 @@ namespace OhBau.API.Controllers
         /// - Trường `role` trong yêu cầu phải là một trong các giá trị sau: `FATHER`, `MOTHER`, hoặc `DOCTOR`.
         /// - Tất cả các trường trong `RegisterRequest` đều bắt buộc.
         /// - Không yêu cầu xác thực (public API).
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   POST /api/v1/account
+        ///   ```
         /// - Ví dụ nội dung yêu cầu:
-        /// ```json
-        /// {
-        ///   "phone": "0987654321",
-        ///   "email": "cuongtq@gmail.com",
-        ///   "password": "123456",
-        ///   "role": "FATHER/MOTHER/DOCTOR"
-        /// }
-        /// ```
+        ///   ```json
+        ///   {
+        ///     "phone": "0987654321",
+        ///     "email": "cuongtq@gmail.com",
+        ///     "password": "123456",
+        ///     "role": "FATHER/MOTHER/DOCTOR"
+        ///    }
+        ///    ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Cập nhật tài khoản thành công. Trả về `BaseResponse&lt;RegisterResponse&gt;` chứa thông tin tài khoản đã được cập nhật.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: thiếu trường hoặc dữ liệu không đúng định dạng).
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "Email": "cuongtq@gmail.com",
+        ///       "Phone": "0987654321",
+        ///       "Role": "FATHER"
+        ///     },
+        ///     "message": "Đăng kí tài khoản thành công"
+        ///   }
+        ///   ```
         /// </remarks>
         /// <param name="request">Thông tin đăng ký của người dùng. Phải bao gồm `phone`, `email`, `password`, và `role` (giá trị cho phép: `FATHER`, `MOTHER`, `DOCTOR`).</param>
         /// <returns>
@@ -59,9 +79,41 @@ namespace OhBau.API.Controllers
         /// - API này cho phép lấy danh sách tài khoản với hỗ trợ phân trang thông qua các tham số `page` và `size`.
         /// - Nếu không cung cấp `page`, mặc định là 1. Nếu không cung cấp `size`, mặc định là 10.
         /// - API yêu cầu xác thực (JWT) để truy cập.
+        /// - API được sử dụng bởi `ADMIN`
         /// - Ví dụ yêu cầu:
         ///   ```
         ///   GET /api/v1/account?page=1&amp;size=10
+        ///   ```
+        ///   - Kết quả trả về:
+        ///   - `200 OK`: Lấy danh sách tài khoản thành công. Trả về `BaseResponse&lt;IPaginate&lt;GetAccountResponse&gt;&gt;` chứa danh sách tài khoản và thông tin phân trang.
+        ///   - `400 Bad Request`: Tham số đầu vào không hợp lệ (ví dụ: `page` hoặc `size` nhỏ hơn 1).
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "size": 10,
+        ///       "page": 1,
+        ///       "total": 2,
+        ///       "totalPages": 1,
+        ///       "items": [
+        ///         {
+        ///           "id": "d826a39b-fe01-4b55-a438-b13b33ff59f2",
+        ///           "email": "cuongtq@gmail.com",
+        ///           "phone": "0987654321",
+        ///           "role": "FATHER"
+        ///         },
+        ///         {
+        ///           "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///           "email": "user2@example.com",
+        ///           "phone": "0987654322",
+        ///           "role": "MOTHER"
+        ///         }
+        ///       ],
+        ///     },
+        ///     "message": "Danh sách tài khoản"
+        ///   }
         ///   ```
         /// </remarks>
         /// <param name="page">Số trang (tùy chọn, mặc định là 1).</param>
@@ -82,6 +134,110 @@ namespace OhBau.API.Controllers
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             var response = await _accountService.GetAccounts(pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        /// <summary>
+        /// API lấy thông tin chi tiết của một tài khoản dựa trên ID.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép lấy thông tin chi tiết của một tài khoản bằng cách cung cấp `id` qua đường dẫn (route).
+        /// - Yêu cầu xác thực: Người dùng phải cung cấp token hợp lệ trong header `Authorization`.
+        /// - API yêu cầu xác thực (JWT) để truy cập.
+        /// - API được sử dụng bởi `ADMIN`
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   GET /api/v1/account/{id}
+        ///   ```
+        ///   Ví dụ: `GET /api/v1/account/d826a39b-fe01-4b55-a438-b13b33ff59f2`
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Cập nhật tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse&gt;` chứa thông tin tài khoản đã được cập nhật.
+        ///   - `404 Not Found`: Không tìm thấy tài khoản cần cập nhật.
+        ///   - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "Email": "cuongtq@gmail.com",
+        ///       "Phone": "0987654321",
+        ///       "Role": "FATHER"
+        ///     },
+        ///     "message": "Cập nhật tài khoản thành công"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="id">ID của tài khoản cần lấy thông tin (định dạng GUID).</param>
+        /// <returns>
+        /// - `200 OK`: Lấy thông tin tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse;&gt;` chứa thông tin chi tiết của tài khoản.
+        /// - `404 Not Found`: Không tìm thấy tài khoản với ID đã cung cấp.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// </returns>
+        /// <response code="200">Trả về thông tin chi tiết của tài khoản khi yêu cầu thành công.</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy tài khoản với ID đã cung cấp.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        [HttpGet(ApiEndPointConstant.Account.GetAccount)]
+        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAccountById([FromRoute] Guid id)
+        {
+            var response = await _accountService.GetAccount(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        /// <summary>
+        /// API cập nhật thông tin tài khoản người dùng.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép cập nhật thông tin tài khoản người dùng thông qua `UpdateAccountRequest`.
+        /// - Yêu cầu xác thực: Người dùng phải cung cấp token hợp lệ trong header `Authorization`.
+        /// - API yêu cầu xác thực (JWT) để truy cập.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/account
+        ///   ```
+        /// - Ví dụ nội dung yêu cầu:
+        ///   ```json
+        ///   {
+        ///     "phone": "0987654321"
+        ///   }
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Cập nhật tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse&gt;` chứa thông tin tài khoản đã được cập nhật.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: thiếu trường hoặc dữ liệu không đúng định dạng).
+        ///   - `404 Not Found`: Không tìm thấy tài khoản cần cập nhật.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "Email": "cuongtq@gmail.com",
+        ///       "Phone": "0987654321",
+        ///       "Role": "FATHER"
+        ///     },
+        ///     "message": "Cập nhật tài khoản thành công"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="request">Thông tin cập nhật tài khoản. Phải bao gồm `accountId` và các trường cần cập nhật (như `fullName`, `email`, `phone`).</param>
+        /// <returns>
+        /// - `200 OK`: Cập nhật tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse&gt;` chứa thông tin tài khoản đã được cập nhật.
+        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: thiếu trường hoặc dữ liệu không đúng định dạng).
+        /// - `404 Not Found`: Không tìm thấy tài khoản cần cập nhật.
+        /// </returns>
+        /// <response code="200">Cập nhật tài khoản thành công. Trả về thông tin tài khoản đã được cập nhật.</response>
+        /// <response code="400">Trả về lỗi nếu thông tin đầu vào không hợp lệ (ví dụ: thiếu trường hoặc dữ liệu không đúng định dạng).</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy tài khoản cần cập nhật.</response>
+        [HttpPut(ApiEndPointConstant.Account.UpdateAccount)]
+        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateAccount([FromBody] UpdateAccountRequest request)
+        {
+            var response = await _accountService.UpdateAccount(request);
             return StatusCode(int.Parse(response.status), response);
         }
     }

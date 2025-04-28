@@ -26,6 +26,7 @@ namespace OhBau.API
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAuthService, AuthService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)

@@ -15,6 +15,14 @@
             public const string AccountEndPoint = ApiEndpoint + "/account";
             public const string RegisterAccount = AccountEndPoint;
             public const string GetAccounts = AccountEndPoint;
+            public const string GetAccount = AccountEndPoint + "/{id}";
+            public const string UpdateAccount = AccountEndPoint;
+        }
+
+        public static class Authentication
+        {
+            public const string AuthEndPoint = ApiEndpoint + "/auth";
+            public const string Auth = AuthEndPoint;
         }
 
     }
