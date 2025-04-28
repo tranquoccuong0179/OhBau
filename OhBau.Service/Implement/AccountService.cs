@@ -7,6 +7,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
 
@@ -16,6 +17,30 @@ namespace OhBau.Service.Implement
     {
         public AccountService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<AccountService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+        }
+
+        public async Task<BaseResponse<GetAccountResponse>> GetAccount(Guid id)
+        {
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                selector: a => _mapper.Map<GetAccountResponse>(a),
+                predicate: a => a.Id.Equals(id) && a.Active == true);
+
+            if (account == null)
+            {
+                return new BaseResponse<GetAccountResponse>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tài khoản này",
+                    data = null
+                };
+            }
+
+            return new BaseResponse<GetAccountResponse>()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Tài khoản người dùng",
+                data = account
+            };
         }
 
         public async Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size)
@@ -111,6 +136,46 @@ namespace OhBau.Service.Implement
             {
                 status = StatusCodes.Status400BadRequest.ToString(),
                 message = "Đăng kí tài khoản thất bại",
+                data = null
+            };
+        }
+
+        public async Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request)
+        {
+            Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(id) && a.Active == true);
+
+            if (account == null)
+            {
+                return new BaseResponse<GetAccountResponse>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tài khoản",
+                    data = null
+                };
+            }
+
+            account.Email = string.IsNullOrEmpty(request.Email) ? account.Email : request.Email;
+            account.UpdateAt = TimeUtil.GetCurrentSEATime();
+
+            _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+            if (isSuccessfully)
+            {
+                return new BaseResponse<GetAccountResponse>()
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Cập nhật tài khoản thành công",
+                    data = _mapper.Map<GetAccountResponse>(account)
+                };
+            }
+
+            return new BaseResponse<GetAccountResponse>()
+            {
+                status = StatusCodes.Status400BadRequest.ToString(),
+                message = "Cập nhật tài khoản thất bại",
                 data = null
             };
         }

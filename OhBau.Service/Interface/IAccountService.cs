@@ -9,5 +9,7 @@ namespace OhBau.Service.Interface
     {
         Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request);
         Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size);
+        Task<BaseResponse<GetAccountResponse>> GetAccount(Guid id);
+        Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request);
     }
 }
