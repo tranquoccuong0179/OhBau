@@ -28,7 +28,7 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Favorite> Favorites { get; set; }
 
-    public virtual DbSet<Fetu> Fetus { get; set; }
+    public virtual DbSet<Fetus> Fetus { get; set; }
 
     public virtual DbSet<FetusDetail> FetusDetails { get; set; }
 
@@ -151,7 +151,7 @@ public partial class OhBauContext : DbContext
                 .HasConstraintName("FK_Favorite_Course_1");
         });
 
-        modelBuilder.Entity<Fetu>(entity =>
+        modelBuilder.Entity<Fetus>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code)
@@ -161,6 +161,11 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.DeleteAt).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.Fetus)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Fetus_Parent");
         });
 
         modelBuilder.Entity<FetusDetail>(entity =>

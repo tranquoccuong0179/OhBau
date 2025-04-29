@@ -22,4 +22,6 @@ public partial class Parent
     public DateTime? DeleteAt { get; set; }
 
     public virtual Account Account { get; set; } = null!;
+
+    public virtual ICollection<Fetus> Fetus { get; set; } = new List<Fetus>();
 }
