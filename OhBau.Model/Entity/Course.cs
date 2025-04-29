@@ -3,17 +3,19 @@ using System.Collections.Generic;
 
 namespace OhBau.Model.Entity;
 
-public partial class Account
+public partial class Course
 {
     public Guid Id { get; set; }
 
-    public string Phone { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
-    public string Password { get; set; } = null!;
+    public double Rating { get; set; }
 
-    public string Email { get; set; } = null!;
+    public long Duration { get; set; }
 
-    public string? Role { get; set; }
+    public double Price { get; set; }
+
+    public Guid CategoryId { get; set; }
 
     public bool? Active { get; set; }
 
@@ -23,11 +25,11 @@ public partial class Account
 
     public DateTime? DeleteAt { get; set; }
 
-    public virtual ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
+    public virtual Category Category { get; set; } = null!;
+
+    public virtual ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
 
     public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
     public virtual ICollection<MyCourse> MyCourses { get; set; } = new List<MyCourse>();
-
-    public virtual ICollection<Parent> Parents { get; set; } = new List<Parent>();
 }
