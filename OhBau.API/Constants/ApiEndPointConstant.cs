@@ -17,6 +17,7 @@
             public const string GetAccounts = AccountEndPoint;
             public const string GetAccount = AccountEndPoint + "/{id}";
             public const string UpdateAccount = AccountEndPoint;
+            public const string DeleteAccount = AccountEndPoint + "/{id}";
         }
 
         public static class Authentication

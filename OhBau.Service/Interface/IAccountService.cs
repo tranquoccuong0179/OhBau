@@ -11,5 +11,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size);
         Task<BaseResponse<GetAccountResponse>> GetAccount(Guid id);
         Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request);
+        Task<BaseResponse<bool>> DeleteAccount(Guid id);
     }
 }

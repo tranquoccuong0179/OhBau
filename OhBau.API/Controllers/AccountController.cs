@@ -240,5 +240,67 @@ namespace OhBau.API.Controllers
             var response = await _accountService.UpdateAccount(request);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        /// <summary>
+        /// API xóa tài khoản người dùng dựa trên ID.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép xóa một tài khoản người dùng bằng cách cung cấp `id` qua đường dẫn (route).
+        /// - Yêu cầu xác thực: Người dùng phải cung cấp token hợp lệ trong header `Authorization`.
+        /// - API yêu cầu xác thực (JWT) để truy cập.
+        /// - API được sử dụng bởi admin.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   DELETE /api/v1/account/{id}
+        ///   ```
+        ///   Ví dụ: `DELETE /api/v1/account/3fa85f64-5717-4562-b3fc-2c963f66afa6`
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Xóa tài khoản thành công. Trả về `BaseResponse&lt;bool&gt;` với giá trị `true`.
+        ///   - `404 Not Found`: Không tìm thấy tài khoản với ID đã cung cấp.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": true,
+        ///     "message": "Xóa tài khoản thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (404 Not Found):
+        ///   ```json
+        ///   {
+        ///     "status": "404",
+        ///     "data": false,
+        ///     "message": "Không tìm thấy tài khoản này"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": false,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="id">ID của tài khoản cần xóa (định dạng GUID).</param>
+        /// <returns>
+        /// - `200 OK`: Xóa tài khoản thành công. Trả về `BaseResponse&lt;bool&gt;` với giá trị `true`.
+        /// - `404 Not Found`: Không tìm thấy tài khoản với ID đã cung cấp.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// </returns>
+        /// <response code="200">Xóa tài khoản thành công.</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy tài khoản với ID đã cung cấp.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ hoặc không có quyền truy cập.</response>
+        [HttpDelete(ApiEndPointConstant.Account.DeleteAccount)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteAccount([FromRoute] Guid id)
+        {
+            var response = await _accountService.DeleteAccount(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

@@ -19,6 +19,37 @@ namespace OhBau.Service.Implement
         {
         }
 
+        public async Task<BaseResponse<bool>> DeleteAccount(Guid id)
+        {
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(id) && a.Active == true);
+
+            if (account == null)
+            {
+                return new BaseResponse<bool>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tài khoản này",
+                    data = false
+                };
+            }
+
+            account.Active = false;
+            account.DeleteAt = TimeUtil.GetCurrentSEATime();
+            account.UpdateAt = TimeUtil.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>()
+            {
+                status = StatusCodes.Status404NotFound.ToString(),
+                message = "Xóa tài khoản thành công",
+                data = true
+            };
+
+        }
+
         public async Task<BaseResponse<GetAccountResponse>> GetAccount(Guid id)
         {
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
