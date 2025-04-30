@@ -11,6 +11,16 @@ public partial class Doctor
 
     public DateOnly Dob { get; set; }
 
+    public string Gender { get; set; } = null!;
+
+    public string Content { get; set; } = null!;
+
+    public string Address { get; set; } = null!;
+
+    public double Rating { get; set; }
+
+    public Guid MajorId { get; set; }
+
     public Guid AccountId { get; set; }
 
     public bool? Active { get; set; }
@@ -22,4 +32,8 @@ public partial class Doctor
     public DateTime? DeleteAt { get; set; }
 
     public virtual Account Account { get; set; } = null!;
+
+    public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
+
+    public virtual Major Major { get; set; } = null!;
 }

@@ -31,5 +31,5 @@ public partial class FetusDetail
 
     public DateTime? DeleteAt { get; set; }
 
-    public virtual Fetus Fetus { get; set; } = null!;
+    public virtual Fetu Fetus { get; set; } = null!;
 }

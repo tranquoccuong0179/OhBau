@@ -18,6 +18,8 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Account> Accounts { get; set; }
 
+    public virtual DbSet<Booking> Bookings { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Chapter> Chapters { get; set; }
@@ -26,15 +28,21 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Doctor> Doctors { get; set; }
 
+    public virtual DbSet<DoctorSlot> DoctorSlots { get; set; }
+
     public virtual DbSet<Favorite> Favorites { get; set; }
 
-    public virtual DbSet<Fetus> Fetus { get; set; }
+    public virtual DbSet<Fetu> Fetus { get; set; }
 
     public virtual DbSet<FetusDetail> FetusDetails { get; set; }
+
+    public virtual DbSet<Major> Majors { get; set; }
 
     public virtual DbSet<MyCourse> MyCourses { get; set; }
 
     public virtual DbSet<Parent> Parents { get; set; }
+
+    public virtual DbSet<Slot> Slots { get; set; }
 
     public static string GetConnectionString(string connectionStringName)
     {
@@ -72,6 +80,27 @@ public partial class OhBauContext : DbContext
                 .HasMaxLength(10)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.ToTable("Booking");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.Type).HasMaxLength(50);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.DotorSlot).WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.DotorSlotId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Booking_DoctorSlot_1");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.Bookings)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Booking_Parent");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -121,16 +150,45 @@ public partial class OhBauContext : DbContext
             entity.ToTable("Doctor");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Address).HasMaxLength(250);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.DeleteAt).HasColumnType("datetime");
             entity.Property(e => e.Dob).HasColumnName("DOB");
             entity.Property(e => e.FullName).HasMaxLength(50);
+            entity.Property(e => e.Gender)
+                .HasMaxLength(50)
+                .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Account).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Doctor_Account");
+
+            entity.HasOne(d => d.Major).WithMany(p => p.Doctors)
+                .HasForeignKey(d => d.MajorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Doctor_Major");
+        });
+
+        modelBuilder.Entity<DoctorSlot>(entity =>
+        {
+            entity.ToTable("DoctorSlot");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Doctor).WithMany(p => p.DoctorSlots)
+                .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DoctorSlot_Doctor");
+
+            entity.HasOne(d => d.Slot).WithMany(p => p.DoctorSlots)
+                .HasForeignKey(d => d.SlotId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DoctorSlot_Slot_1");
         });
 
         modelBuilder.Entity<Favorite>(entity =>
@@ -151,7 +209,7 @@ public partial class OhBauContext : DbContext
                 .HasConstraintName("FK_Favorite_Course_1");
         });
 
-        modelBuilder.Entity<Fetus>(entity =>
+        modelBuilder.Entity<Fetu>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code)
@@ -189,6 +247,17 @@ public partial class OhBauContext : DbContext
                 .HasConstraintName("FK_FetusDetail_Fetus");
         });
 
+        modelBuilder.Entity<Major>(entity =>
+        {
+            entity.ToTable("Major");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<MyCourse>(entity =>
         {
             entity.ToTable("MyCourse");
@@ -222,6 +291,17 @@ public partial class OhBauContext : DbContext
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Parent_Account");
+        });
+
+        modelBuilder.Entity<Slot>(entity =>
+        {
+            entity.ToTable("Slot");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);

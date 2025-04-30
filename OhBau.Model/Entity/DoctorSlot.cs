@@ -3,15 +3,13 @@ using System.Collections.Generic;
 
 namespace OhBau.Model.Entity;
 
-public partial class Parent
+public partial class DoctorSlot
 {
     public Guid Id { get; set; }
 
-    public string FullName { get; set; } = null!;
+    public Guid DoctorId { get; set; }
 
-    public DateOnly Dob { get; set; }
-
-    public Guid AccountId { get; set; }
+    public Guid SlotId { get; set; }
 
     public bool? Active { get; set; }
 
@@ -21,9 +19,9 @@ public partial class Parent
 
     public DateTime? DeleteAt { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
-
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    public virtual ICollection<Fetu> Fetus { get; set; } = new List<Fetu>();
+    public virtual Doctor Doctor { get; set; } = null!;
+
+    public virtual Slot Slot { get; set; } = null!;
 }
