@@ -151,6 +151,11 @@ namespace OhBau.Service.Implement
 
             var account = _mapper.Map<Account>(request);
             await _unitOfWork.GetRepository<Account>().InsertAsync(account);
+
+            var parent = _mapper.Map<Parent>(request.RegisterParentRequest);
+            parent.AccountId = account.Id;
+            await _unitOfWork.GetRepository<Parent>().InsertAsync(parent);
+
             bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
 
             if (isSuccessfully)

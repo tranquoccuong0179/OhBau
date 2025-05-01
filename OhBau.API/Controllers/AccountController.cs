@@ -22,7 +22,7 @@ namespace OhBau.API.Controllers
         /// </summary>
         /// <remarks>
         /// - API này cho phép tạo tài khoản mới bằng cách cung cấp thông tin qua `RegisterRequest`.
-        /// - Trường `role` trong yêu cầu phải là một trong các giá trị sau: `FATHER`, `MOTHER`, hoặc `DOCTOR`.
+        /// - Trường `role` trong yêu cầu phải là một trong các giá trị sau: `FATHER` hoặc `MOTHER`.
         /// - Tất cả các trường trong `RegisterRequest` đều bắt buộc.
         /// - Không yêu cầu xác thực (public API).
         /// - Ví dụ yêu cầu:
@@ -35,7 +35,11 @@ namespace OhBau.API.Controllers
         ///     "phone": "0987654321",
         ///     "email": "cuongtq@gmail.com",
         ///     "password": "123456",
-        ///     "role": "FATHER/MOTHER/DOCTOR"
+        ///     "role": "FATHER/MOTHER",
+        ///     "registerParentRequest": {
+        ///       "fullName": "Father 1",
+        ///       "dob": "1990-05-01"
+        ///     }
         ///    }
         ///    ```
         /// - Kết quả trả về:
@@ -46,22 +50,26 @@ namespace OhBau.API.Controllers
         ///   {
         ///     "status": "200",
         ///     "data": {
-        ///       "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        ///       "Email": "cuongtq@gmail.com",
-        ///       "Phone": "0987654321",
-        ///       "Role": "FATHER"
+        ///       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "email": "cuongtq@gmail.com",
+        ///       "phone": "0987654321",
+        ///       "role": "FATHER",
+        ///       "registerParentRequest": {
+        ///         "fullName": "Father 1",
+        ///         "dob": "1990-05-01"
+        ///        }
         ///     },
         ///     "message": "Đăng kí tài khoản thành công"
         ///   }
         ///   ```
         /// </remarks>
-        /// <param name="request">Thông tin đăng ký của người dùng. Phải bao gồm `phone`, `email`, `password`, và `role` (giá trị cho phép: `FATHER`, `MOTHER`, `DOCTOR`).</param>
+        /// <param name="request">Thông tin đăng ký của người dùng. Phải bao gồm `phone`, `email`, `password`, và `role` (giá trị cho phép: `FATHER`, `MOTHER`).</param>
         /// <returns>
         /// - `200 OK`: Đăng ký thành công.  
         /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: thiếu trường, email không hợp lệ, hoặc `role` không được hỗ trợ).
         /// </returns>
         /// <response code="200">Trả về kết quả đăng ký khi tài khoản được tạo thành công.</response>
-        /// <response code="400">Trả về lỗi nếu yêu cầu không hợp lệ hoặc `role` không phải là `FATHER`, `MOTHER`, hoặc `DOCTOR`.</response>
+        /// <response code="400">Trả về lỗi nếu yêu cầu không hợp lệ hoặc `role` không phải là `FATHER`, `MOTHER`.</response>
         [HttpPost(ApiEndPointConstant.Account.RegisterAccount)]
         [ProducesResponseType(typeof(BaseResponse<RegisterResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<RegisterResponse>), StatusCodes.Status400BadRequest)]

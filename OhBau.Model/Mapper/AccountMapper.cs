@@ -24,7 +24,8 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()))
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()));
 
-            CreateMap<Account, RegisterResponse>();
+            CreateMap<Account, RegisterResponse>()
+                .ForMember(dest => dest.RegisterParentResponse, opt => opt.MapFrom(src => src.Parents.FirstOrDefault()));
 
             CreateMap<Account, GetAccountResponse>();
         }
