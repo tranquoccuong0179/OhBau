@@ -5,6 +5,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Payload.Response.Parent;
 using OhBau.Service.Interface;
 
 namespace OhBau.API.Controllers
@@ -207,7 +208,7 @@ namespace OhBau.API.Controllers
         ///   GET /api/v1/account/profile
         ///   ```
         /// - Kết quả trả về:
-        ///   - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse&gt;` chứa thông tin tài khoản.
+        ///   - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetParentResponse&gt;` chứa thông tin tài khoản.
         ///   - `404 Not Found`: Không tìm thấy thông tin tài khoản của người dùng hiện tại.
         ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
         /// - Ví dụ phản hồi thành công (200 OK):
@@ -216,9 +217,8 @@ namespace OhBau.API.Controllers
         ///     "status": "200",
         ///     "data": {
         ///       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        ///       "phone": "0987654321",
-        ///       "email": "cuongtq@gmail.com",
-        ///       "role": "FATHER"
+        ///       "fullName": "Father 1",
+        ///       "dob": "1990-05-01"
         ///     },
         ///     "message": "Lấy thông tin hồ sơ tài khoản thành công"
         ///   }
@@ -241,7 +241,7 @@ namespace OhBau.API.Controllers
         ///   ```
         /// </remarks>
         /// <returns>
-        /// - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetAccountResponse&gt;` chứa thông tin chi tiết của tài khoản.
+        /// - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetParentResponse&gt;` chứa thông tin chi tiết của tài khoản.
         /// - `404 Not Found`: Không tìm thấy thông tin tài khoản của người dùng hiện tại.
         /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
         /// </returns>
@@ -249,9 +249,9 @@ namespace OhBau.API.Controllers
         /// <response code="404">Trả về lỗi nếu không tìm thấy thông tin tài khoản của người dùng hiện tại.</response>
         /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ hoặc không có quyền truy cập.</response>
         [HttpGet(ApiEndPointConstant.Account.GetAccountProfile)]
-        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(BaseResponse<GetAccountResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> GetAccountProfile()
         {

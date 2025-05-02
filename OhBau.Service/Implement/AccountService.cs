@@ -7,6 +7,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Payload.Response.Parent;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
@@ -90,7 +91,7 @@ namespace OhBau.Service.Implement
             };
         }
 
-        public async Task<BaseResponse<GetAccountResponse>> GetAccountProfile()
+        public async Task<BaseResponse<GetParentResponse>> GetAccountProfile()
         {
 
             Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
@@ -99,7 +100,20 @@ namespace OhBau.Service.Implement
 
             if (account == null)
             {
-                return new BaseResponse<GetAccountResponse>()
+                return new BaseResponse<GetParentResponse>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tài khoản này",
+                    data = null
+                };
+            }
+
+            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
+
+            if (parent == null)
+            {
+                return new BaseResponse<GetParentResponse>()
                 {
                     status = StatusCodes.Status404NotFound.ToString(),
                     message = "Không tìm thấy thông tin tài khoản của người dùng hiện tại",
@@ -107,11 +121,11 @@ namespace OhBau.Service.Implement
                 };
             }
 
-            return new BaseResponse<GetAccountResponse>()
+            return new BaseResponse<GetParentResponse>()
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Lấy thông tin hồ sơ tài khoản thành công",
-                data = _mapper.Map<GetAccountResponse>(account)
+                data = _mapper.Map<GetParentResponse>(parent)
             };
         }
 

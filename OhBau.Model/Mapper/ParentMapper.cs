@@ -23,6 +23,8 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.AccountId, opt => opt.Ignore());
 
             CreateMap<Parent, RegisterParentResponse>();
+
+            CreateMap<Parent, GetParentResponse>();
         }
     }
 }
