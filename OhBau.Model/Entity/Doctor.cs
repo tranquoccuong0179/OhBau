@@ -17,8 +17,6 @@ public partial class Doctor
 
     public string Address { get; set; } = null!;
 
-    public double Rating { get; set; }
-
     public Guid MajorId { get; set; }
 
     public Guid AccountId { get; set; }

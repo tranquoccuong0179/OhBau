@@ -44,6 +44,8 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Slot> Slots { get; set; }
 
+    public virtual DbSet<FeedBacks> FeedBacks { get; set; }
+
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()

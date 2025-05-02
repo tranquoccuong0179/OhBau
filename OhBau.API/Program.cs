@@ -7,6 +7,10 @@ using OhBau.Model.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//Serilog Config
+ 
+
 // Add services to the container.
 
 builder.Services.AddControllers()

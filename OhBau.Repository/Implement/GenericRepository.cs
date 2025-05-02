@@ -162,6 +162,11 @@ namespace OhBau.Repository.Implement
             }
             return await query.CountAsync();
         }
+
+        public async Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.FirstOrDefaultAsync(predicate);
+        }
         #endregion
     }
 }
