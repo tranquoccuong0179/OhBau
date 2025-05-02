@@ -2,6 +2,7 @@
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Payload.Response.Parent;
 
 namespace OhBau.Service.Interface
 {
@@ -12,5 +13,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<GetAccountResponse>> GetAccount(Guid id);
         Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request);
         Task<BaseResponse<bool>> DeleteAccount(Guid id);
+        Task<BaseResponse<GetParentResponse>> GetAccountProfile();
     }
 }

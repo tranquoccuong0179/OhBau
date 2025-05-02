@@ -5,6 +5,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Payload.Response.Parent;
 using OhBau.Service.Interface;
 
 namespace OhBau.API.Controllers
@@ -191,6 +192,70 @@ namespace OhBau.API.Controllers
         public async Task<IActionResult> GetAccountById([FromRoute] Guid id)
         {
             var response = await _accountService.GetAccount(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        /// <summary>
+        /// API lấy thông tin hồ sơ tài khoản của người dùng hiện tại.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép lấy thông tin chi tiết của hồ sơ tài khoản hiện tại của người dùng đã xác thực.
+        /// - Yêu cầu xác thực: Người dùng phải cung cấp token hợp lệ trong header `Authorization`.
+        /// - API yêu cầu xác thực (JWT) để truy cập.
+        /// - API được sử dụng bởi người dùng đã đăng nhập.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   GET /api/v1/account/profile
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetParentResponse&gt;` chứa thông tin tài khoản.
+        ///   - `404 Not Found`: Không tìm thấy thông tin tài khoản của người dùng hiện tại.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "fullName": "Father 1",
+        ///       "dob": "1990-05-01"
+        ///     },
+        ///     "message": "Lấy thông tin hồ sơ tài khoản thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (404 Not Found):
+        ///   ```json
+        ///   {
+        ///     "status": "404",
+        ///     "data": null,
+        ///     "message": "Không tìm thấy thông tin tài khoản của người dùng hiện tại"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <returns>
+        /// - `200 OK`: Lấy thông tin hồ sơ tài khoản thành công. Trả về `BaseResponse&lt;GetParentResponse&gt;` chứa thông tin chi tiết của tài khoản.
+        /// - `404 Not Found`: Không tìm thấy thông tin tài khoản của người dùng hiện tại.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// </returns>
+        /// <response code="200">Trả về thông tin hồ sơ tài khoản khi yêu cầu thành công.</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy thông tin tài khoản của người dùng hiện tại.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ hoặc không có quyền truy cập.</response>
+        [HttpGet(ApiEndPointConstant.Account.GetAccountProfile)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<GetParentResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAccountProfile()
+        {
+            var response = await _accountService.GetAccountProfile();
             return StatusCode(int.Parse(response.status), response);
         }
 

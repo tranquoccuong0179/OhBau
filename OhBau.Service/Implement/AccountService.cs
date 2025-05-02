@@ -7,6 +7,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Account;
+using OhBau.Model.Payload.Response.Parent;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
@@ -38,6 +39,22 @@ namespace OhBau.Service.Implement
             account.DeleteAt = TimeUtil.GetCurrentSEATime();
             account.UpdateAt = TimeUtil.GetCurrentSEATime();
             _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+
+            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
+            if (parent == null)
+            {
+                return new BaseResponse<bool>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy bố mẹ này",
+                    data = false
+                };
+            }
+            parent.Active = false;
+            parent.DeleteAt = TimeUtil.GetCurrentSEATime();
+            parent.UpdateAt = TimeUtil.GetCurrentSEATime();
+            _unitOfWork.GetRepository<Parent>().UpdateAsync(parent);
 
             await _unitOfWork.CommitAsync();
 
@@ -71,6 +88,44 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Tài khoản người dùng",
                 data = account
+            };
+        }
+
+        public async Task<BaseResponse<GetParentResponse>> GetAccountProfile()
+        {
+
+            Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(id) && a.Active == true);
+
+            if (account == null)
+            {
+                return new BaseResponse<GetParentResponse>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy tài khoản này",
+                    data = null
+                };
+            }
+
+            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
+
+            if (parent == null)
+            {
+                return new BaseResponse<GetParentResponse>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Không tìm thấy thông tin tài khoản của người dùng hiện tại",
+                    data = null
+                };
+            }
+
+            return new BaseResponse<GetParentResponse>()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy thông tin hồ sơ tài khoản thành công",
+                data = _mapper.Map<GetParentResponse>(parent)
             };
         }
 
