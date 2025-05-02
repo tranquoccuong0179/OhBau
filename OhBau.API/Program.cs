@@ -1,16 +1,21 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using OhBau.API.Constants;
 using OhBau.API;
 using Microsoft.OpenApi.Any;
 using OhBau.Model.Enum;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 //Serilog Config
- 
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
+builder.Host.UseSerilog();
 // Add services to the container.
 
 builder.Services.AddControllers()
@@ -84,11 +89,18 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction() || app.Environment.IsStaging())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapGet("/test-telegram-error", () =>
+{
+    Log.Error("Đây là lỗi thử nghiệm gửi về Telegram");
+    throw new Exception("Đây là Exception test gửi về Telegram");
+});
 
 app.UseHttpsRedirection();
 
