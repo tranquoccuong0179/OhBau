@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using OhBau.Model.Paginate;
 
@@ -73,5 +74,8 @@ namespace OhBau.Repository.Interface
         void DeleteAsync(T entity);
         void DeleteRangeAsync(IEnumerable<T> entities);
         Task<int> CountAsync(Expression<Func<T, bool>> predicate = null);
+
+        Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate);
+
     }
 }
