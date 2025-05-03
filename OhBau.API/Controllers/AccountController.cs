@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using OhBau.API.Constants;
+using OhBau.Model.Exception;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Account;
 using OhBau.Model.Payload.Response;
@@ -77,6 +78,14 @@ namespace OhBau.API.Controllers
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateNewAccount([FromBody] RegisterRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToList()
+                );
+                throw new ModelValidationException(errors);
+            }
             var response = await _accountService.RegisterAccount(request);
             return StatusCode(int.Parse(response.status), response);
         }
