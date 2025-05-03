@@ -5,6 +5,8 @@ using OhBau.API;
 using Microsoft.OpenApi.Any;
 using OhBau.Model.Enum;
 using Serilog;
+using OhBau.API.Middlewares;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,10 @@ builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
 builder.Services.AddHttpClientServices();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "OhBau's API", Version = "v1" });
@@ -101,6 +107,8 @@ app.MapGet("/test-telegram-error", () =>
     Log.Error("Đây là lỗi thử nghiệm gửi về Telegram");
     throw new Exception("Đây là Exception test gửi về Telegram");
 });
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
@@ -11,6 +10,8 @@ using OhBau.Model.Payload.Response.Parent;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
+using OhBau.Model.Exception;
+using System.ComponentModel.DataAnnotations;
 
 namespace OhBau.Service.Implement
 {
@@ -158,77 +159,47 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request)
         {
-            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            if (!Regex.IsMatch(request.Email, emailPattern))
+            try
             {
-                return new BaseResponse<RegisterResponse>()
+                var isEmailExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                    predicate: u => u.Email.Equals(request.Email));
+                if (isEmailExist != null)
                 {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Email không đúng định dạng",
-                    data = null
-                };
-            }
+                    throw new CustomValidationException("Email đã tồn tại");
+                }
 
-            string phonePattern = @"^0\d{9}$";
-            if (!Regex.IsMatch(request.Phone, phonePattern))
-            {
-                return new BaseResponse<RegisterResponse>()
+                var isPhoneExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                    predicate: u => u.Phone.Equals(request.Phone));
+                if (isPhoneExist != null)
                 {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Số điện thoại không đúng định dạng",
-                    data = null
-                };
-            }
+                    throw new CustomValidationException("Số điện thoại đã tồn tại");
+                }
 
-            var isEmailExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
-                predicate: u => u.Email.Equals(request.Email));
-            if (isEmailExist != null)
-            {
-                return new BaseResponse<RegisterResponse>()
+                var account = _mapper.Map<Account>(request);
+                await _unitOfWork.GetRepository<Account>().InsertAsync(account);
+
+                var parent = _mapper.Map<Parent>(request.RegisterParentRequest);
+                parent.AccountId = account.Id;
+                await _unitOfWork.GetRepository<Parent>().InsertAsync(parent);
+
+                bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+
+                if (isSuccessfully)
                 {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Email đã tồn tại",
-                    data = null
-                };
+                    return new BaseResponse<RegisterResponse>()
+                    {
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Đăng kí tài khoản thành công",
+                        data = _mapper.Map<RegisterResponse>(account)
+                    };
+                }
+
+                throw new Exception("Đăng kí tài khoản thất bại");
             }
-
-            var isPhoneExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
-                predicate: u => u.Phone.Equals(request.Phone));
-            if (isPhoneExist != null)
+            catch (Exception ex)
             {
-                return new BaseResponse<RegisterResponse>()
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Số điện thoại đã tồn tại",
-                    data = null
-                };
+                throw;
             }
-
-            var account = _mapper.Map<Account>(request);
-            await _unitOfWork.GetRepository<Account>().InsertAsync(account);
-
-            var parent = _mapper.Map<Parent>(request.RegisterParentRequest);
-            parent.AccountId = account.Id;
-            await _unitOfWork.GetRepository<Parent>().InsertAsync(parent);
-
-            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
-
-            if (isSuccessfully)
-            {
-                return new BaseResponse<RegisterResponse>()
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Đăng kí tài khoản thành công",
-                    data = _mapper.Map<RegisterResponse>(account)
-                };
-            }
-
-            return new BaseResponse<RegisterResponse>()
-            {
-                status = StatusCodes.Status400BadRequest.ToString(),
-                message = "Đăng kí tài khoản thất bại",
-                data = null
-            };
         }
 
         public async Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request)
