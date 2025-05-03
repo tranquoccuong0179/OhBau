@@ -95,51 +95,42 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<GetParentResponse>> GetAccountProfile()
         {
 
-            Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
-            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
-                predicate: a => a.Id.Equals(id) && a.Active == true);
-
-            if (account == null)
+            try
             {
+                Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+                var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                    predicate: a => a.Id.Equals(id) && a.Active == true);
+
+                if (account == null)
+                {
+                    throw new NotFoundException("Không tìm thấy tài khoản này");
+                }
+
+                var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                    predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
+
+                if (parent == null)
+                {
+                    throw new NotFoundException("Không tìm thấy thông tin tài khoản của người dùng hiện tại");
+                }
+
                 return new BaseResponse<GetParentResponse>()
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "Không tìm thấy tài khoản này",
-                    data = null
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Lấy thông tin hồ sơ tài khoản thành công",
+                    data = _mapper.Map<GetParentResponse>(parent)
                 };
-            }
-
-            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
-                predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
-
-            if (parent == null)
+            }catch (Exception ex)
             {
-                return new BaseResponse<GetParentResponse>()
-                {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "Không tìm thấy thông tin tài khoản của người dùng hiện tại",
-                    data = null
-                };
+                throw;
             }
-
-            return new BaseResponse<GetParentResponse>()
-            {
-                status = StatusCodes.Status200OK.ToString(),
-                message = "Lấy thông tin hồ sơ tài khoản thành công",
-                data = _mapper.Map<GetParentResponse>(parent)
-            };
         }
 
         public async Task<BaseResponse<IPaginate<GetAccountResponse>>> GetAccounts(int page, int size)
         {
             if(page < 1 || size < 1)
             {
-                return new BaseResponse<IPaginate<GetAccountResponse>>()
-                {
-                    status = StatusCodes.Status400BadRequest.ToString(),
-                    message = "Page hoặc size không hợp lệ",
-                    data = null
-                };
+                throw new BadHttpRequestException("Page hoặc size không hợp lệ");
             }
 
             var accounts = await _unitOfWork.GetRepository<Account>().GetPagingListAsync(
@@ -204,42 +195,38 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request)
         {
-            Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
-            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
-                predicate: a => a.Id.Equals(id) && a.Active == true);
-
-            if (account == null)
+            try
             {
-                return new BaseResponse<GetAccountResponse>()
+                Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+                var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                    predicate: a => a.Id.Equals(id) && a.Active == true);
+
+                if (account == null)
                 {
-                    status = StatusCodes.Status404NotFound.ToString(),
-                    message = "Không tìm thấy tài khoản",
-                    data = null
-                };
-            }
+                    throw new NotFoundException("Không tìm thấy tài khoản");
+                }
 
-            account.Email = string.IsNullOrEmpty(request.Email) ? account.Email : request.Email;
-            account.UpdateAt = TimeUtil.GetCurrentSEATime();
+                account.Email = string.IsNullOrEmpty(request.Email) ? account.Email : request.Email;
+                account.UpdateAt = TimeUtil.GetCurrentSEATime();
 
-            _unitOfWork.GetRepository<Account>().UpdateAsync(account);
-            bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
+                _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+                bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
 
-            if (isSuccessfully)
-            {
-                return new BaseResponse<GetAccountResponse>()
+                if (isSuccessfully)
                 {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Cập nhật tài khoản thành công",
-                    data = _mapper.Map<GetAccountResponse>(account)
-                };
+                    return new BaseResponse<GetAccountResponse>()
+                    {
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Cập nhật tài khoản thành công",
+                        data = _mapper.Map<GetAccountResponse>(account)
+                    };
+                }
+                throw new Exception("Cập nhật tài khoản thất bại");
             }
-
-            return new BaseResponse<GetAccountResponse>()
+            catch (Exception ex)
             {
-                status = StatusCodes.Status400BadRequest.ToString(),
-                message = "Cập nhật tài khoản thất bại",
-                data = null
-            };
+                throw;
+            }
         }
     }
 }
