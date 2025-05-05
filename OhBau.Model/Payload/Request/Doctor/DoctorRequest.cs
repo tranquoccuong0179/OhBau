@@ -11,6 +11,7 @@ namespace OhBau.Model.Payload.Request.Doctor
     {
         [Required(ErrorMessage = "Full Name is required")]
         [RegularExpression(@"^[\p{L}\s]+$", ErrorMessage = "Full Name can only contain letters and spaces.")]
+        [DataType(DataType.Text)]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Date of Birth is required")]
@@ -28,6 +29,7 @@ namespace OhBau.Model.Payload.Request.Doctor
         [Required(ErrorMessage = "Address is required")]
         [RegularExpression(@"^[a-zA-Z0-9\s,.-]{5,100}$", 
         ErrorMessage = "Address must be between 5 and 100 characters, and can include letters, numbers, spaces, commas, periods, and hyphens.")]
+        [DataType(DataType.Text)]
         public string Address { get; set; }
 
         public bool Active { get; set; } = true;
