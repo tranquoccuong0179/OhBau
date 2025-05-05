@@ -13,10 +13,12 @@ public partial class Doctor
 
     public string Gender { get; set; } = null!;
 
+    public string Avatar {  get; set; } = null!;
+
     public string Content { get; set; } = null!;
 
     public string Address { get; set; } = null!;
-
+        
     public Guid MajorId { get; set; }
 
     public Guid AccountId { get; set; }

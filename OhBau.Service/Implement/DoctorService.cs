@@ -177,6 +177,7 @@ namespace OhBau.Service.Implement
                 {
                     Id = d.Id,
                     FullName = d.FullName,
+                    Avatar  = d.Avatar,
                     Major = d.Major.Name,
                     Address = d.Address
                 }).ToList();
@@ -224,6 +225,7 @@ namespace OhBau.Service.Implement
             {
                 Id = getInfor.Id,
                 FullName = getInfor.FullName,
+                Avatar = getInfor.Avatar,
                 Dob = getInfor.Dob,
                 Gender = getInfor.Gender.ToString(), 
                 Content = getInfor.Content,

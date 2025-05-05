@@ -11,7 +11,7 @@ namespace OhBau.Model.Payload.Request.Doctor
         public Guid Id { get; set; }
 
         public string FullName { get; set; } = null!;
-
+        public string Avatar { get; set; } = null!;
         public Guid MajorId { get; set; }
         public string Major { get; set; } = null!;
 
