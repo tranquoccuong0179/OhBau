@@ -29,10 +29,14 @@ namespace OhBau.Model.Payload.Request.Doctor
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool Active {  get; set; } = true;
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string Role { get;} = RoleEnum.DOCTOR.ToString();
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime CreateAt { get; set; } = DateTime.Now;
         
         public CreateMajorRequest CreateMajorRequest { get; set; }

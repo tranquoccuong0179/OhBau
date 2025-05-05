@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace OhBau.Model.Payload.Request.Doctor
@@ -22,7 +23,6 @@ namespace OhBau.Model.Payload.Request.Doctor
         [RegularExpression(@"^(Male|Female|Other)$", ErrorMessage = "Gender must be Male, Female, or Other.")]
         public string Gender { get; set; }
 
-
         [Required(ErrorMessage ="Content is required")]
         public string Content {  get; set; }
 
@@ -32,8 +32,10 @@ namespace OhBau.Model.Payload.Request.Doctor
         [DataType(DataType.Text)]
         public string Address { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool Active { get; set; } = true;
-
+        
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime CreateAt {  get; set; } = DateTime.Now;
 
     }
