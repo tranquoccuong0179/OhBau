@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
@@ -17,6 +19,7 @@ using OhBau.Model.Payload.Response.Major;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OhBau.Service.Implement
 {
@@ -150,15 +153,26 @@ namespace OhBau.Service.Implement
             }
         }
 
-        public async Task<BaseResponse<Paginate<GetDoctorsResponse>>> GetDoctors(int pageSize, int pageNumber)
+        public async Task<BaseResponse<Paginate<GetDoctorsResponse>>> GetDoctors(int pageSize, int pageNumber,string doctorName)
         {
             try
             {
+                Expression<Func<Doctor, bool>> predicate = null;
+
+                if (!string.IsNullOrWhiteSpace(doctorName))
+                {
+                    predicate = d => d.FullName.Contains(doctorName);
+                }
+
                 var result = await _unitOfWork.GetRepository<Doctor>()
-                                   .GetPagingListAsync(include: a => a.Include(a => a.Account)
-                                                                      .Include(m => m.Major),
-                                                                      page: pageNumber,
-                                                                      size: pageSize);
+                                   .GetPagingListAsync(
+                                       predicate: predicate,
+                                       include: q => q.Include(d => d.Account)
+                                                      .Include(d => d.Major),
+                                       page: pageNumber,
+                                       size: pageSize
+                                   );
+
                 var mappedItems = result.Items.Select(d => new GetDoctorsResponse
                 {
                     Id = d.Id,
@@ -214,6 +228,7 @@ namespace OhBau.Service.Implement
                 Gender = getInfor.Gender.ToString(), 
                 Content = getInfor.Content,
                 Address = getInfor.Address,
+                MajorId = getInfor.MajorId,
                 Major = getInfor.Major.Name,
                 Email = getInfor.Account.Email, 
                 Phone = getInfor.Account.Phone,
@@ -229,6 +244,147 @@ namespace OhBau.Service.Implement
             };
 
             throw new NotImplementedException();
+        }
+
+        public async Task<BaseResponse<DoctorRequest>> EditDoctorInfor(Guid doctorId, DoctorRequest request)
+        {
+            try
+            {
+                var getDoctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                                                                       predicate: x => x.Id == doctorId,
+                                                                       include: q => q.Include(m => m.Major)
+                                                                                      .Include(a => a.Account)
+                                                                   );
+                if (getDoctor == null)
+                {
+                    return new BaseResponse<DoctorRequest>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Docotor not found",
+                        data = null
+                    };
+                }
+
+                getDoctor.FullName = request.FullName ?? getDoctor.FullName;
+                getDoctor.Dob = request.DOB != null ? request.DOB : getDoctor.Dob;
+                getDoctor.Gender = request.Gender ?? getDoctor.Gender;
+                getDoctor.Content = request.Content ?? getDoctor.Content;
+                getDoctor.Address = request.Address ?? getDoctor.Address;
+                getDoctor.Active = getDoctor.Active;
+                getDoctor.CreateAt = getDoctor.CreateAt;
+                getDoctor.UpdateAt = DateTime.Now;
+
+                 _unitOfWork.GetRepository<Doctor>().UpdateAsync(getDoctor);
+                await _unitOfWork.CommitAsync();
+                return new BaseResponse<DoctorRequest>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Edit doctor info success",
+                    data = request
+                };
+            }
+            catch (Exception ex) { 
+            
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<BaseResponse<string>> EditMajor(Guid majorId, EditMajorRequest request)
+        {
+            try
+            {
+                var getMajor = await _unitOfWork.GetRepository<Major>().GetByConditionAsync(x => x.Id == majorId);
+                if (getMajor == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Major not found"
+                    };
+                }
+
+                getMajor.Name = request.MajorName;
+                getMajor.CreateAt = getMajor.CreateAt;
+                getMajor.DeleteAt = getMajor.DeleteAt;
+                getMajor.UpdateAt = DateTime.Now;
+                getMajor.Active = true;
+                _unitOfWork.GetRepository<Major>().UpdateAsync(getMajor);
+                await _unitOfWork.CommitAsync();
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Update major success",
+                };
+            }
+            catch (Exception ex) { 
+                
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<BaseResponse<string>> DeleteDoctor(Guid doctorId)
+        {
+            try
+            {
+                var getDoctor = await _unitOfWork.GetRepository<Doctor>().GetByConditionAsync(x => x.Id == doctorId);
+                if (getDoctor != null && getDoctor.Active == true)
+                {
+                    getDoctor.Active = false;
+                    getDoctor.DeleteAt = DateTime.Now;
+                    _unitOfWork.GetRepository<Doctor>().UpdateAsync(getDoctor);
+                    await _unitOfWork.CommitAsync();
+
+                    return new BaseResponse<string>
+                    {
+
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Delete doctor success"
+                    };
+                }
+
+                return new BaseResponse<string>()
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Doctor not found"
+                };
+            }
+            catch (Exception ex) {
+                
+                throw new Exception(ex.ToString());
+            }
+
+        }
+
+        public async Task<BaseResponse<string>> DeleteMajor(Guid majorId)
+        {
+            try
+            {
+                var getMajor = await _unitOfWork.GetRepository<Major>().GetByConditionAsync(x => x.Id.Equals(majorId));
+                if (getMajor != null && getMajor.Active == true)
+                {
+                    getMajor.Active = false;
+                    getMajor.DeleteAt = DateTime.Now;
+                    _unitOfWork.GetRepository<Major>().UpdateAsync(getMajor);
+                    await _unitOfWork.CommitAsync();
+
+                    return new BaseResponse<string>
+                    {
+
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Delete major success"
+                    };
+                }
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status404NotFound.ToString(),
+                    message = "Major not found"
+                };
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
         }
     }
 }

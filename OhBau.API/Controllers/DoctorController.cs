@@ -5,6 +5,8 @@ using OhBau.Model.Payload.Response.Major;
 using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request;
+using OhBau.Model.Entity;
 
 namespace OhBau.API.Controllers
 {
@@ -103,7 +105,7 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, ex.ToString());
             }
         }
-
+            
 
         [HttpPost("create-doctor")]
         public async Task<IActionResult> CreateDoctor([FromBody]CreateDoctorRequest request)
@@ -122,6 +124,75 @@ namespace OhBau.API.Controllers
             
                 _logger.LogError(ex.Message, ex.StackTrace);
                 return StatusCode(500,ex.ToString());
+            }
+        }
+
+        [HttpPut("edit-doctor-infor/{doctorId}")]
+        public async Task<IActionResult> EditDoctorInfor(Guid doctorId, [FromBody]DoctorRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var response = await _doctorService.EditDoctorInfor(doctorId, request);
+                return StatusCode(int.Parse(response.status),response);
+            }
+            catch (Exception ex) {
+                _logger.LogError($"[Edit doctor infor] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        
+        [HttpPut("edit-major/{majorId}")]
+        public async Task<IActionResult> EditMajor(Guid majorId, [FromBody]EditMajorRequest request )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var response = await _doctorService.EditMajor(majorId, request);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex) { 
+
+                _logger.LogError($"[Edit Major] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+
+        [HttpPut("DeleteDoctor/{doctorId}")]
+        public async Task<IActionResult> DeleteDoctor(Guid doctorId)
+        {
+            try
+            {
+                var response = await _doctorService.DeleteDoctor(doctorId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex) {
+                _logger.LogError($"[Delete doctor API: ]" + ex.Message,ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("delete-major/{majorId}")]
+        public async Task<IActionResult>DeleteMajor(Guid majorId)
+        {
+            try
+            {
+                var response = await _doctorService.DeleteMajor(majorId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[Delete major API: ]" + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
             }
         }
 
@@ -195,6 +266,7 @@ namespace OhBau.API.Controllers
         /// </remarks>
         /// <param name="pageNumber">Số trang.</param>
         /// <param name="pageSize">Kích thước trang.</param>
+        /// <param name="doctorName">Xài kết hợp nếu muốn search bác sĩ theo tên thì truyền tên vào</param>
         /// <returns>
         /// - `200 OK`: Lấy danh sách tài khoản thành công. Trả về `BaseResponse&lt;IPaginate&lt;GetAccountResponse&gt;&gt;` chứa danh sách tài khoản và thông tin phân trang.
         /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
@@ -211,11 +283,11 @@ namespace OhBau.API.Controllers
         [ProducesResponseType(typeof(BaseResponse<Paginate<GetDoctorsResponse>>), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(BaseResponse<Paginate<GetDoctorsResponse>>), StatusCodes.Status500InternalServerError)]
         [ProducesErrorResponseType(typeof(BaseResponse<Paginate<GetDoctorsResponse>>))]
-        public async Task<IActionResult> GetDoctor([FromQuery]int pageSize, [FromQuery]int pageNumber)
+        public async Task<IActionResult> GetDoctorWithSearch([FromQuery]int pageSize, [FromQuery]int pageNumber, [FromQuery]string? doctorName)
         {
             try
             {
-                var response = await _doctorService.GetDoctors(pageSize, pageNumber);
+                var response = await _doctorService.GetDoctors(pageSize, pageNumber,doctorName);
                 return StatusCode(int.Parse(response.status), response);
             }
             catch (Exception ex) { 

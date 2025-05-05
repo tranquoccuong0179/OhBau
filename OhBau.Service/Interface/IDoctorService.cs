@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
@@ -17,8 +19,16 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<CreateMajorResponse>> CreateMajonr(CreateMajorRequest request);
         Task<BaseResponse<string>> CreateDoctor(CreateDoctorRequest request);
         
-        Task<BaseResponse<Paginate<GetDoctorsResponse>>> GetDoctors(int pageSize, int pageNumber);
+        Task<BaseResponse<Paginate<GetDoctorsResponse>>> GetDoctors(int pageSize, int pageNumber,string doctorName);
 
         Task<BaseResponse<GetDoctorResponse>> GetDoctorInfo(Guid doctorId);
+
+        Task<BaseResponse<DoctorRequest>> EditDoctorInfor(Guid doctorId, DoctorRequest request);
+
+        Task<BaseResponse<string>> EditMajor(Guid MajorID, EditMajorRequest request);
+
+        Task<BaseResponse<string>> DeleteDoctor(Guid doctorId);
+
+        Task<BaseResponse<string>> DeleteMajor(Guid majorId);
     }
 }
