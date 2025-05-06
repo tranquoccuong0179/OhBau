@@ -30,9 +30,7 @@ namespace OhBau.API.Controllers
         /// - Ví dụ nội dung yêu cầu:
         ///   ```json
         ///   {
-        ///     "name": "Cardiology",
-        ///     "active": true,
-        ///     "createAt": "2025-05-03T00:00:00Z"
+        ///     "name": "Cardiology"
         ///   }
         ///   ```
         /// - Kết quả trả về:

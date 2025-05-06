@@ -13,8 +13,5 @@ namespace OhBau.Model.Payload.Request.Major
 
         public string Name { get; set; }
 
-        public bool Active { get; set; } = true;
-
-        public DateTime CreateAt { get; set; } = DateTime.Now;
     }
 }

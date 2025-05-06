@@ -176,10 +176,10 @@ namespace OhBau.API.Controllers
         ///   {
         ///     "status": "200",
         ///     "data": {
-        ///       "Id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        ///       "Email": "cuongtq@gmail.com",
-        ///       "Phone": "0987654321",
-        ///       "Role": "FATHER"
+        ///       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        ///       "email": "cuongtq@gmail.com",
+        ///       "phone": "0987654321",
+        ///       "role": "FATHER"
         ///     },
         ///     "message": "Cập nhật tài khoản thành công"
         ///   }
