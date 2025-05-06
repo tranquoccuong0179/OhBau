@@ -13,7 +13,7 @@ public partial class Doctor
 
     public string Gender { get; set; } = null!;
 
-    public string Avatar {  get; set; } = null!;
+    public string? Avatar {  get; set; } = null!;
 
     public string Content { get; set; } = null!;
 

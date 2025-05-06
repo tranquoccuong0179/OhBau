@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
-using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
+using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Major;
@@ -75,6 +75,7 @@ namespace OhBau.Service.Implement
                 {
                     Id = Guid.NewGuid(),
                     FullName = request.DoctorRequest.FullName,
+                    Avatar = request.DoctorRequest.Avatar!,
                     Dob = request.DoctorRequest.DOB,
                     Gender = request.DoctorRequest.Gender,
                     Content = request.DoctorRequest.Content,
@@ -268,6 +269,14 @@ namespace OhBau.Service.Implement
                 }
 
                 getDoctor.FullName = request.FullName ?? getDoctor.FullName;
+                if (request.Avatar == null)
+                {
+                    getDoctor.Avatar = getDoctor.Avatar;
+                }
+                else
+                {
+                    getDoctor.Avatar = request.Avatar;
+                }
                 getDoctor.Dob = request.DOB != null ? request.DOB : getDoctor.Dob;
                 getDoctor.Gender = request.Gender ?? getDoctor.Gender;
                 getDoctor.Content = request.Content ?? getDoctor.Content;
@@ -275,6 +284,7 @@ namespace OhBau.Service.Implement
                 getDoctor.Active = getDoctor.Active;
                 getDoctor.CreateAt = getDoctor.CreateAt;
                 getDoctor.UpdateAt = DateTime.Now;
+                getDoctor.DeleteAt = null;
 
                  _unitOfWork.GetRepository<Doctor>().UpdateAsync(getDoctor);
                 await _unitOfWork.CommitAsync();
@@ -385,6 +395,50 @@ namespace OhBau.Service.Implement
             }
             catch(Exception ex)
             {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<BaseResponse<string>> EditFetusInformation(Guid fetusId, EditFetusInformationRequest request)
+        {
+            try
+            {
+
+                var getFetus = await _unitOfWork.GetRepository<FetusDetail>().GetByConditionAsync(x => x.FetusId == fetusId);
+                if (getFetus == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Fetus not found",
+                        data = null
+                    };
+                }
+
+                getFetus.Weekly = request.Weekly != 0 ? request.Weekly : getFetus.Weekly;
+                getFetus.Gsd = request.Gsd != 0 ? request.Gsd : getFetus.Gsd;
+                getFetus.Crl = request.Crl != 0 ? request.Crl : getFetus.Crl;
+                getFetus.Crl = request.Crl != 0 ? request.Crl : getFetus.Crl;
+                getFetus.Bpd = request.Bpd != 0 ? request.Bpd : getFetus.Bpd;
+                getFetus.Fl = request.Fl != 0 ? request.Fl : getFetus.Fl;
+                getFetus.Hc = request.Hc != 0 ? request.Hc : getFetus.Hc;
+                getFetus.Ac = request.Ac != 0 ? request.Ac : getFetus.Ac;
+                getFetus.CreateAt = getFetus.CreateAt;
+                getFetus.UpdateAt = request.UpdateAt;
+                getFetus.DeleteAt = getFetus.DeleteAt;
+
+                await _unitOfWork.GetRepository<FetusDetail>().InsertAsync(getFetus);
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Edit fetus information success",
+                    data = null
+                };
+            }
+            catch (Exception ex) { 
+            
                 throw new Exception(ex.ToString());
             }
         }

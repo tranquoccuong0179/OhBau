@@ -6,8 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
-using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
+using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Major;
@@ -30,5 +30,8 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<string>> DeleteDoctor(Guid doctorId);
 
         Task<BaseResponse<string>> DeleteMajor(Guid majorId);
+
+        Task<BaseResponse<string>> EditFetusInformation(Guid fetusId, EditFetusInformationRequest request);
+
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace OhBau.Model.Payload.Request.Doctor
 {
@@ -14,6 +15,8 @@ namespace OhBau.Model.Payload.Request.Doctor
         [RegularExpression(@"^[\p{L}\s]+$", ErrorMessage = "Full Name can only contain letters and spaces.")]
         [DataType(DataType.Text)]
         public string FullName { get; set; }
+
+        public string? Avatar { get; set; }
 
         [Required(ErrorMessage = "Date of Birth is required")]
         public DateOnly DOB { get; set; }

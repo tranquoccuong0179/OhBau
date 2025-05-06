@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using CloudinaryDotNet;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OhBau.Model.Entity;
 using OhBau.Repository.Implement;
 using OhBau.Repository.Interface;
+using OhBau.Service.CloudinaryService;
 using OhBau.Service.Implement;
 using OhBau.Service.Interface;
 
@@ -25,9 +27,11 @@ namespace OhBau.API
 
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
+            services.AddScoped<Cloudinary>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IDoctorService, DoctorService>();
+            services.AddScoped<ICloudinaryService, CloudinaryService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
