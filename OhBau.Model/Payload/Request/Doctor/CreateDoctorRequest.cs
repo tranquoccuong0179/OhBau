@@ -29,11 +29,7 @@ namespace OhBau.Model.Payload.Request.Doctor
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
-        public bool Active {  get; set; } = true;
-
         public string Role { get;} = RoleEnum.DOCTOR.ToString();
-
-        public DateTime CreateAt { get; set; } = DateTime.Now;
         
         public CreateMajorRequest CreateMajorRequest { get; set; }
 

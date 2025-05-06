@@ -53,8 +53,8 @@ namespace OhBau.Service.Implement
                     Phone = request.Phone,
                     Password = PasswordUtil.HashPassword(request.Password),
                     Role = request.Role,
-                    Active = request.Active,
-                    CreateAt = request.CreateAt,
+                    Active = true,
+                    CreateAt = TimeUtil.GetCurrentSEATime(),
                     UpdateAt = null,
                     DeleteAt = null
                 };
@@ -64,8 +64,8 @@ namespace OhBau.Service.Implement
                 {
                     Id = Guid.NewGuid(),
                     Name = request.CreateMajorRequest.Name,
-                    Active = request.CreateMajorRequest.Active,
-                    CreateAt = request.CreateMajorRequest.CreateAt,
+                    Active = true,
+                    CreateAt = TimeUtil.GetCurrentSEATime(),
                     UpdateAt = null,
                     DeleteAt = null
                 };
@@ -128,8 +128,8 @@ namespace OhBau.Service.Implement
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
-                    Active = request.Active,
-                    CreateAt = request.CreateAt,
+                    Active = true,
+                    CreateAt = TimeUtil.GetCurrentSEATime(),
                     UpdateAt = null,
                     DeleteAt = null,
                 };
