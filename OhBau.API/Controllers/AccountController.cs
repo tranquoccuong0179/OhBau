@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OhBau.API.Constants;
 using OhBau.Model.Exception;
@@ -144,6 +145,7 @@ namespace OhBau.API.Controllers
         /// <response code="200">Trả về danh sách tài khoản và thông tin phân trang khi yêu cầu thành công.</response>
         /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
         /// <response code="400">Trả về lỗi nếu tham số `page` hoặc `size` không hợp lệ.</response>
+        [Authorize(Roles = "ADMIN")]
         [HttpGet(ApiEndPointConstant.Account.GetAccounts)]
         [ProducesResponseType(typeof(BaseResponse<IPaginate<GetAccountResponse>>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
