@@ -29,5 +29,7 @@ public partial class Booking
 
     public virtual DoctorSlot DotorSlot { get; set; } = null!;
 
+    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+
     public virtual Parent Parent { get; set; } = null!;
 }

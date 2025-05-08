@@ -13,12 +13,10 @@ public partial class Doctor
 
     public string Gender { get; set; } = null!;
 
-    public string Avatar {  get; set; } = null!;
-
     public string Content { get; set; } = null!;
 
     public string Address { get; set; } = null!;
-        
+
     public Guid MajorId { get; set; }
 
     public Guid AccountId { get; set; }
@@ -31,9 +29,13 @@ public partial class Doctor
 
     public DateTime? DeleteAt { get; set; }
 
+    public string? Avatar { get; set; }
+
     public virtual Account Account { get; set; } = null!;
 
     public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
+
+    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
     public virtual Major Major { get; set; } = null!;
 }

@@ -19,8 +19,6 @@ public partial class Fetus
 
     public double Height { get; set; }
 
-    public Guid ParentId { get; set; }
-
     public bool? Active { get; set; }
 
     public DateTime? CreateAt { get; set; }
@@ -31,5 +29,5 @@ public partial class Fetus
 
     public virtual ICollection<FetusDetail> FetusDetails { get; set; } = new List<FetusDetail>();
 
-    public virtual Parent Parent { get; set; } = null!;
+    public virtual ICollection<ParentRelation> ParentRelations { get; set; } = new List<ParentRelation>();
 }

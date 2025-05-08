@@ -11,7 +11,7 @@ public partial class Parent
 
     public DateOnly Dob { get; set; }
 
-    public Guid AccountId { get; set; }
+    public Guid? AccountId { get; set; }
 
     public bool? Active { get; set; }
 
@@ -21,9 +21,11 @@ public partial class Parent
 
     public DateTime? DeleteAt { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
+    public virtual Account? Account { get; set; }
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    public virtual ICollection<Fetus> Fetus { get; set; } = new List<Fetus>();
+    public virtual ICollection<MotherHealthRecord> MotherHealthRecords { get; set; } = new List<MotherHealthRecord>();
+
+    public virtual ICollection<ParentRelation> ParentRelations { get; set; } = new List<ParentRelation>();
 }
