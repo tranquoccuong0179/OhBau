@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using OhBau.Model.Entity;
-using OhBau.Model.Paginate;
+﻿using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Major;

@@ -32,7 +32,7 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Favorite> Favorites { get; set; }
 
-    public virtual DbSet<Fetu> Fetus { get; set; }
+    public virtual DbSet<Fetus> Fetus { get; set; }
 
     public virtual DbSet<FetusDetail> FetusDetails { get; set; }
 
@@ -211,7 +211,7 @@ public partial class OhBauContext : DbContext
                 .HasConstraintName("FK_Favorite_Course_1");
         });
 
-        modelBuilder.Entity<Fetu>(entity =>
+        modelBuilder.Entity<Fetus>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code)

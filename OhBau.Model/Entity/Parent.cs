@@ -25,5 +25,5 @@ public partial class Parent
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    public virtual ICollection<Fetu> Fetus { get; set; } = new List<Fetu>();
+    public virtual ICollection<Fetus> Fetus { get; set; } = new List<Fetus>();
 }
