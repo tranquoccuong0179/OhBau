@@ -11,7 +11,7 @@ namespace OhBau.Model.Payload.Request.Major
     {
         [Required(ErrorMessage = "Major name is required")]
 
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
     }
 }
