@@ -27,5 +27,11 @@
             public const string Auth = AuthEndPoint;
         }
 
+        public static class Parent
+        {
+            public const string ParentEndPoint = ApiEndpoint + "/parent";
+            public const string CreateParent = ParentEndPoint;
+        }
+
     }
 }
