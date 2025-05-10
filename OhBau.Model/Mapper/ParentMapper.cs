@@ -24,7 +24,11 @@ namespace OhBau.Model.Mapper
 
             CreateMap<Parent, RegisterParentResponse>();
 
-            CreateMap<Parent, GetParentResponse>();
+            CreateMap<Parent, GetParentResponse>()
+                .ForMember(dest => dest.GetMotherHealthResponse,
+                        opt => opt.MapFrom(src => src.MotherHealthRecords
+                            .OrderByDescending(x => x.CreateAt)
+                            .FirstOrDefault()));
         }
     }
 }

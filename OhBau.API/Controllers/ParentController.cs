@@ -15,7 +15,7 @@ namespace OhBau.API.Controllers
         {
             _parentService = parentService;
         }
-        [HttpGet(ApiEndPointConstant.Parent.CreateParent)]
+        [HttpPost(ApiEndPointConstant.Parent.CreateParent)]
         [ProducesResponseType(typeof(BaseResponse<RegisterParentResponse>), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> CreateParent([FromBody] RegisterParentRequest request) 
