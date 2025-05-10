@@ -12,5 +12,6 @@ namespace OhBau.Service.Interface
     public interface IParentService
     {
         Task<BaseResponse<RegisterParentResponse>> AddNewParent(RegisterParentRequest request);
+
     }
 }

@@ -29,6 +29,7 @@ namespace OhBau.API
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IDoctorService, DoctorService>();
             services.AddScoped<IParentService, ParentService>();
+            services.AddScoped<IParentRelationService, ParentRelationService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)

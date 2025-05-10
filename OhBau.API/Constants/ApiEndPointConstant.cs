@@ -33,5 +33,11 @@
             public const string CreateParent = ParentEndPoint;
         }
 
+        public static class ParentRelation
+        {
+            public const string ParentRelationEndPoint = ApiEndpoint + "/parent-relation";
+            public const string GetParentRelation = ParentRelationEndPoint;
+        }
+
     }
 }
