@@ -32,15 +32,21 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Favorite> Favorites { get; set; }
 
-    public virtual DbSet<Fetu> Fetus { get; set; }
+    public virtual DbSet<Feedback> Feedbacks { get; set; }
+
+    public virtual DbSet<Fetus> Fetus { get; set; }
 
     public virtual DbSet<FetusDetail> FetusDetails { get; set; }
 
     public virtual DbSet<Major> Majors { get; set; }
 
+    public virtual DbSet<MotherHealthRecord> MotherHealthRecords { get; set; }
+
     public virtual DbSet<MyCourse> MyCourses { get; set; }
 
     public virtual DbSet<Parent> Parents { get; set; }
+
+    public virtual DbSet<ParentRelation> ParentRelations { get; set; }
 
     public virtual DbSet<Slot> Slots { get; set; }
 
@@ -153,6 +159,7 @@ public partial class OhBauContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(250);
+            entity.Property(e => e.Avatar).HasMaxLength(255);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.DeleteAt).HasColumnType("datetime");
             entity.Property(e => e.Dob).HasColumnName("DOB");
@@ -211,7 +218,22 @@ public partial class OhBauContext : DbContext
                 .HasConstraintName("FK_Favorite_Course_1");
         });
 
-        modelBuilder.Entity<Fetu>(entity =>
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BookingId).HasColumnName("BookingID");
+            entity.Property(e => e.Content).HasMaxLength(255);
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.Feedbacks)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("FK_Feedbacks_Booking");
+
+            entity.HasOne(d => d.Doctor).WithMany(p => p.Feedbacks)
+                .HasForeignKey(d => d.DoctorId)
+                .HasConstraintName("FK_Feedbacks_Doctor");
+        });
+
+        modelBuilder.Entity<Fetus>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code)
@@ -221,11 +243,6 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.DeleteAt).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
-
-            entity.HasOne(d => d.Parent).WithMany(p => p.Fetus)
-                .HasForeignKey(d => d.ParentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Fetus_Parent");
         });
 
         modelBuilder.Entity<FetusDetail>(entity =>
@@ -260,6 +277,21 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<MotherHealthRecord>(entity =>
+        {
+            entity.ToTable("MotherHealthRecord");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.MotherHealthRecords)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MotherHealthRecord_Parent");
+        });
+
         modelBuilder.Entity<MyCourse>(entity =>
         {
             entity.ToTable("MyCourse");
@@ -291,8 +323,30 @@ public partial class OhBauContext : DbContext
 
             entity.HasOne(d => d.Account).WithMany(p => p.Parents)
                 .HasForeignKey(d => d.AccountId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Parent_Account");
+        });
+
+        modelBuilder.Entity<ParentRelation>(entity =>
+        {
+            entity.ToTable("ParentRelation");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.DeleteAt).HasColumnType("datetime");
+            entity.Property(e => e.RelationType).HasMaxLength(50);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Account).WithMany(p => p.ParentRelations)
+                .HasForeignKey(d => d.AccountId)
+                .HasConstraintName("FK_ParentRelation_Account");
+
+            entity.HasOne(d => d.Fetus).WithMany(p => p.ParentRelations)
+                .HasForeignKey(d => d.FetusId)
+                .HasConstraintName("FK_ParentRelation_Fetus_2");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.ParentRelations)
+                .HasForeignKey(d => d.ParentId)
+                .HasConstraintName("FK_ParentRelation_Parent_1");
         });
 
         modelBuilder.Entity<Slot>(entity =>

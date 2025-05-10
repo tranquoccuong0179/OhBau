@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;

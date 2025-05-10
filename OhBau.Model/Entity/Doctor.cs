@@ -18,7 +18,7 @@ public partial class Doctor
     public string Content { get; set; } = null!;
 
     public string Address { get; set; } = null!;
-        
+
     public Guid MajorId { get; set; }
 
     public Guid AccountId { get; set; }
@@ -34,6 +34,8 @@ public partial class Doctor
     public virtual Account Account { get; set; } = null!;
 
     public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
+
+    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
     public virtual Major Major { get; set; } = null!;
 }

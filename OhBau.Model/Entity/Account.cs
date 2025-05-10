@@ -29,5 +29,7 @@ public partial class Account
 
     public virtual ICollection<MyCourse> MyCourses { get; set; } = new List<MyCourse>();
 
+    public virtual ICollection<ParentRelation> ParentRelations { get; set; } = new List<ParentRelation>();
+
     public virtual ICollection<Parent> Parents { get; set; } = new List<Parent>();
 }

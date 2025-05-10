@@ -22,11 +22,58 @@ namespace OhBau.API.Middlewares
             try
             {
                 await _next(context);
+                if (!context.Response.HasStarted)
+                {
+                    if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+                    {
+                        await HandleUnauthorizedAsync(context);
+                    }
+                    else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
+                    {
+                        await HandleForbiddenAsync(context);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 await HandleExceptionAsync(context, ex);
             }
+        }
+
+        private async Task HandleUnauthorizedAsync(HttpContext context)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+            var errorResponse = new BaseResponse<object>
+            {
+                status = StatusCodes.Status401Unauthorized.ToString(),
+                message = "Không được phép truy cập: Vui lòng đăng nhập.",
+                data = null
+            };
+
+            var result = JsonSerializer.Serialize(errorResponse);
+            await context.Response.WriteAsync(result);
+
+            _logger.LogWarning("Unauthorized access attempt.");
+        }
+
+        private async Task HandleForbiddenAsync(HttpContext context)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+            var errorResponse = new BaseResponse<object>
+            {
+                status = StatusCodes.Status403Forbidden.ToString(),
+                message = "Không có quyền truy cập: Bạn không có vai trò phù hợp.",
+                data = null
+            };
+
+            var result = JsonSerializer.Serialize(errorResponse);
+            await context.Response.WriteAsync(result);
+
+            _logger.LogWarning("Forbidden access attempt.");
         }
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)

@@ -11,9 +11,8 @@ namespace OhBau.Model.Payload.Request.Major
     public class CreateMajorRequest
     {
         [Required(ErrorMessage = "Major name is required")]
+        public string Name { get; set; } = null!;
 
-        public string Name { get; set; }
-        
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public bool Active { get; set; } = true;
 
