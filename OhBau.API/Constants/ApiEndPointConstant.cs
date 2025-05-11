@@ -39,5 +39,14 @@
             public const string GetParentRelation = ParentRelationEndPoint;
         }
 
+        public static class Fetus
+        {
+            public const string FetusEndPoint = ApiEndpoint + "/fetus";
+            public const string CreateFetus = FetusEndPoint;
+            public const string GetAllFetus = FetusEndPoint;
+            public const string GetFetusById = FetusEndPoint + "/{id}";
+            public const string GetFetusByCode = FetusEndPoint + "/{code}";
+        }
+
     }
 }
