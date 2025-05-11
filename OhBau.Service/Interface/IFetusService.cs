@@ -3,10 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request.Fetus;
+using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Fetus;
 
 namespace OhBau.Service.Interface
 {
     public interface IFetusService
     {
+        Task<BaseResponse<CreateFetusResponse>> CreateFetus(CreateFetusRequest request);
+        Task<BaseResponse<IPaginate<GetFetusResponse>>> GetAllFetus(int page, int size);
+        Task<BaseResponse<GetFetusResponse>> GetFetusById(Guid id);
+        Task<BaseResponse<GetFetusResponse>> GetFetusByCode(string code);
     }
 }
