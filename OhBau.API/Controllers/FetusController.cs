@@ -1,4 +1,3 @@
-﻿
 using Microsoft.AspNetCore.Mvc;
 using OhBau.API.Constants;
 using OhBau.Model.Exception;
@@ -304,5 +303,23 @@ namespace OhBau.API.Controllers
             var response = await _fetusService.GetFetusByCode(code);
             return StatusCode(int.Parse(response.status), response);
         }
+        public async Task<IActionResult> EditFetusInformation(Guid fetusId, [FromBody] EditFetusInformationRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid) {
+
+                    return BadRequest(ModelState);
+                }
+
+                var response = await _doctorService.EditFetusInformation(fetusId,request);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Edit Fetus Information API] " + ex.Message, ex.StackTrace,ex.ToString());
+                return StatusCode(500, ex.ToString());
+            }
+         }
     }
 }

@@ -5,7 +5,6 @@ using OhBau.Model.Payload.Response.Major;
 using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
 using OhBau.Model.Paginate;
-using OhBau.Model.Payload.Request;
 using OhBau.Model.Entity;
 
 namespace OhBau.API.Controllers

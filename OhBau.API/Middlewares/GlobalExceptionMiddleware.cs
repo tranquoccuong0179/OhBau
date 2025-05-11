@@ -133,7 +133,7 @@ namespace OhBau.API.Middlewares
                     errorResponse = new BaseResponse<object>
                     {
                         status = HttpStatusCode.InternalServerError.ToString(),
-                        message = "Lỗi hệ thống: " + exception.Message,
+                        message = "Lỗi hệ thống: " + exception.Message + exception.StackTrace + exception.ToString(),
                         data = null
                     };
                     _logger.LogError(exception.ToString());

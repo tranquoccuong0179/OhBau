@@ -12,7 +12,7 @@ namespace OhBau.Model.Payload.Request.Doctor
 
         public string FullName { get; set; } = null!;
 
-        public string Avatar { get; set; } = null!;
+        public string? Avatar { get; set; } = null!;
 
         public string Address { get; set; } = null!;
 

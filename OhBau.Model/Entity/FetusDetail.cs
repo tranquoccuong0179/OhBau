@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace OhBau.Model.Entity;
 
 public partial class FetusDetail
 {
+    [Required]
     public Guid Id { get; set; }
 
     public int Weekly { get; set; }

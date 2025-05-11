@@ -13,6 +13,8 @@ public partial class Doctor
 
     public string Gender { get; set; } = null!;
 
+    public string? Avatar {  get; set; } = null!;
+
     public string Content { get; set; } = null!;
 
     public string Address { get; set; } = null!;
@@ -28,8 +30,6 @@ public partial class Doctor
     public DateTime? UpdateAt { get; set; }
 
     public DateTime? DeleteAt { get; set; }
-
-    public string? Avatar { get; set; }
 
     public virtual Account Account { get; set; } = null!;
 

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OhBau.Model\OhBau.Model.csproj" />
+    <ProjectReference Include="..\OhBau.Service\OhBau.Service.csproj" />
+  </ItemGroup>
+
+</Project>

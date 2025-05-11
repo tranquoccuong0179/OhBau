@@ -7,9 +7,19 @@ using OhBau.Model.Enum;
 using Serilog;
 using OhBau.API.Middlewares;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using VNPayService.Config;
+using Microsoft.Extensions.Options;
+using VNPayService;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//VNPay Config
+var vnPaySection = builder.Configuration.GetSection("VNPayConfig");
+builder.Services.Configure<VNPayConfig>(vnPaySection);
+builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<VNPayConfig>>().Value);
+builder.Services.AddScoped<IVnPayService,VNPayService.VNPayService>();
 
 //Serilog Config
 Log.Logger = new LoggerConfiguration()
@@ -33,6 +43,17 @@ builder.Services.AddUnitOfWork();
 builder.Services.AddCustomServices();
 builder.Services.AddJwtValidation();
 builder.Services.AddHttpClientServices();
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var account = new CloudinaryDotNet.Account(
+        configuration["Cloudinary:CloudName"],
+        configuration["Cloudinary:ApiKey"],
+        configuration["Cloudinary:Secret"]);
+    return account;
+}      
+);
+
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
