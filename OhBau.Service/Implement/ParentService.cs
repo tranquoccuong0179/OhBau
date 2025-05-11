@@ -80,6 +80,18 @@ namespace OhBau.Service.Implement
                     };
                     await _unitOfWork.GetRepository<ParentRelation>().InsertAsync(motherRelation);
 
+                    var motherHelthRecord = new MotherHealthRecord
+                    {
+                        Id = Guid.NewGuid(),
+                        ParentId = mother.Id,
+                        Weight = 0,
+                        BloodPressure = 0,
+                        Active = true,
+                        CreateAt = TimeUtil.GetCurrentSEATime(),
+                        UpdateAt = TimeUtil.GetCurrentSEATime()
+                    };
+                    await _unitOfWork.GetRepository<MotherHealthRecord>().InsertAsync(motherHelthRecord);
+
                     var fatherSelfRelation = new ParentRelation
                     {
                         Id = Guid.NewGuid(),
@@ -105,6 +117,18 @@ namespace OhBau.Service.Implement
                         UpdateAt = TimeUtil.GetCurrentSEATime(),
                     };
                     await _unitOfWork.GetRepository<ParentRelation>().InsertAsync(motherRelation);
+
+                    var motherHelthRecord = new MotherHealthRecord
+                    {
+                        Id = Guid.NewGuid(),
+                        ParentId = motherRelation.Parent.Id,
+                        Weight = 0,
+                        BloodPressure = 0,
+                        Active = true,
+                        CreateAt = TimeUtil.GetCurrentSEATime(),
+                        UpdateAt = TimeUtil.GetCurrentSEATime()
+                    };
+                    await _unitOfWork.GetRepository<MotherHealthRecord>().InsertAsync(motherHelthRecord);
                 }
 
                 await _unitOfWork.CommitTransactionAsync();

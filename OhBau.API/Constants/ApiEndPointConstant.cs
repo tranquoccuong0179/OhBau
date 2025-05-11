@@ -27,5 +27,25 @@
             public const string Auth = AuthEndPoint;
         }
 
+        public static class Parent
+        {
+            public const string ParentEndPoint = ApiEndpoint + "/parent";
+            public const string CreateParent = ParentEndPoint;
+        }
+
+        public static class ParentRelation
+        {
+            public const string ParentRelationEndPoint = ApiEndpoint + "/parent-relation";
+            public const string GetParentRelation = ParentRelationEndPoint;
+        }
+
+        public static class Chapter
+        {
+            public const string AddChapter = "add-chapter";
+            public const string GetChapters = "get-chapters";
+            public const string UpdateChapter = "update-chapter";
+            public const string GetChapter = "get-chapter";
+        }
+
     }
 }

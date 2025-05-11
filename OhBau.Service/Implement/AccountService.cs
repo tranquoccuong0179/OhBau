@@ -150,6 +150,7 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<RegisterResponse>> RegisterAccount(RegisterRequest request)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var isEmailExist = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
@@ -171,12 +172,27 @@ namespace OhBau.Service.Implement
 
                 var parent = _mapper.Map<Parent>(request.RegisterParentRequest);
                 parent.AccountId = account.Id;
+
+                //Create Account Order
+                var createOrder = new Cart
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedDate = DateTime.Now,
+                    AccountId = account.Id,
+                    TotalPrice = 0
+                };
+
+                await _unitOfWork.GetRepository<Cart>().InsertAsync(createOrder);
+
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<Parent>().InsertAsync(parent);
 
                 bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
 
                 if (isSuccessfully)
                 {
+                    await _unitOfWork.CommitTransactionAsync();
+
                     return new BaseResponse<RegisterResponse>()
                     {
                         status = StatusCodes.Status200OK.ToString(),
@@ -189,6 +205,7 @@ namespace OhBau.Service.Implement
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
         }

@@ -14,5 +14,8 @@ namespace OhBau.Service.Interface
     {
         Task<BaseResponse<CreateCourseResponse>> CreateCourse(CreateCourseRequest request);
         Task<BaseResponse<Paginate<GetCoursesResponse>>> GetCoursesWithFilterOrSearch(int pageSize, int pageNumber,string? categoryName, string? search);
+        Task<BaseResponse<string>> UpdateCourse(Guid courseId, UpdateCourse request);
+        Task<BaseResponse<string>> DeleteCourse(Guid courseId);
+      
     }
 }

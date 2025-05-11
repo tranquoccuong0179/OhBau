@@ -33,6 +33,11 @@ namespace OhBau.API
             services.AddScoped<IDoctorService, DoctorService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<ICourseService, CourseService>();
+            services.AddScoped<IParentService, ParentService>();
+            services.AddScoped<IParentRelationService, ParentRelationService>();
+            services.AddScoped<IChapterService, ChapterService>();
+            services.AddScoped<ICartService, CartrService>();
+            services.AddScoped<IOrderSerivce,OrderService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)

@@ -8,9 +8,18 @@ using Serilog;
 using OhBau.API.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using VNPayService.Config;
+using Microsoft.Extensions.Options;
+using VNPayService;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//VNPay Config
+var vnPaySection = builder.Configuration.GetSection("VNPayConfig");
+builder.Services.Configure<VNPayConfig>(vnPaySection);
+builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<VNPayConfig>>().Value);
+builder.Services.AddScoped<IVnPayService,VNPayService.VNPayService>();
 
 //Serilog Config
 Log.Logger = new LoggerConfiguration()

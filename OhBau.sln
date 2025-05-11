@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhBau.API", "OhBau.API\OhBau.API.csproj", "{3E4326E4-65F2-47C6-9785-C0EAE658ADD8}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhBau.Service", "OhBau.Service\OhBau.Service.csproj", "{E1961C84-B62B-49C3-9BEB-7A878626B51B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhBau.Repository", "OhBau.Repository\OhBau.Repository.csproj", "{836EDD6D-1EBB-4FFB-AB98-96DE006AAFB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VNPayService", "VNPayService\VNPayService.csproj", "{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{836EDD6D-1EBB-4FFB-AB98-96DE006AAFB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{836EDD6D-1EBB-4FFB-AB98-96DE006AAFB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{836EDD6D-1EBB-4FFB-AB98-96DE006AAFB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

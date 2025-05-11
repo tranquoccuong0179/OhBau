@@ -61,6 +61,39 @@ namespace OhBau.Service.Implement
             }
         }
 
+        public async Task<BaseResponse<string>> DeleteCourse(Guid courseId)
+        {
+            try
+            {
+                var checkDelele = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == courseId);
+                if (checkDelele == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Course not found",
+                        data = null
+                    };
+                }
+
+                checkDelele.Active = false;
+                checkDelele.DeleteAt = DateTime.Now;
+                 _unitOfWork.GetRepository<Course>().DeleteAsync(checkDelele);
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Delete Success",
+                    data = null
+                };
+            }
+            catch (Exception ex) { 
+            
+               throw new Exception(ex.ToString(), ex);  
+            }
+        }
+
         public async Task<BaseResponse<Paginate<GetCoursesResponse>>> GetCoursesWithFilterOrSearch(int pageSize, int pageNumber, string? categoryName, string? search)
         {
             Expression<Func<Course, bool>> predicate = null;
@@ -114,6 +147,48 @@ namespace OhBau.Service.Implement
             };
 
             throw new NotImplementedException();
+        }
+
+        public async Task<BaseResponse<string>> UpdateCourse(Guid courseId, UpdateCourse request)
+        {
+            try
+            {
+                var getCourse = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == courseId);
+                if (getCourse == null)
+                {
+
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Course not found",
+                        data = null
+                    };
+                }
+
+                getCourse.Name = request.Name ?? getCourse.Name;
+                getCourse.Duration = request.Duration != 0 ? request.Duration : getCourse.Duration;
+                getCourse.Price = request.Price != 0 ? request.Price : getCourse.Duration;
+                getCourse.CategoryId = request.CategoryId != null ? request.CategoryId : getCourse.CategoryId;
+                getCourse.Active = request.Active != null ? request.Active : getCourse.Active;
+                getCourse.CreateAt = getCourse.CreateAt;
+                getCourse.UpdateAt = getCourse.UpdateAt;
+                getCourse.DeleteAt = getCourse.DeleteAt;
+
+                _unitOfWork.GetRepository<Course>().UpdateAsync(getCourse);
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Update course success",
+                    data = null
+                };
+            }
+            catch (Exception ex) {
+
+                throw new Exception(ex.ToString());
+            }
+
         }
     }
 }

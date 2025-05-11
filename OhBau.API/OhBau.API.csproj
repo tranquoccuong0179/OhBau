@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OhBau.Service\OhBau.Service.csproj" />
+    <ProjectReference Include="..\VNPayService\VNPayService.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-
+using OhBau.Model.Enum;
 namespace OhBau.Model.Entity;
 
 public partial class OhBauContext : DbContext
@@ -51,6 +51,16 @@ public partial class OhBauContext : DbContext
     public virtual DbSet<Slot> Slots { get; set; }
 
     public virtual DbSet<FeedBacks> FeedBacks { get; set; }
+
+    public virtual DbSet<Cart> Cart { get; set; }
+
+    public virtual DbSet<CartItems> CartItems { get; set; }
+
+    public virtual DbSet<Order> Orders { get; set; }
+
+    public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+
+    public virtual DbSet<Transaction> Transactions { get; set; }
 
     public static string GetConnectionString(string connectionStringName)
     {
@@ -360,8 +370,10 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
         });
 
+        modelBuilder.Entity<Order>().Property(o => o.PaymentStatus).HasConversion<string>();
         OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
 }

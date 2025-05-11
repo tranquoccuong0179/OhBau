@@ -45,5 +45,35 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, ex.ToString());
             }
         }
+
+        [HttpPut("update-course{courseId}")]
+        public async Task<IActionResult> UpdateCourse(Guid courseId, [FromBody]UpdateCourse request)
+        {
+            try
+            {
+                var response = await _courseService.UpdateCourse(courseId, request);
+                return StatusCode(int.Parse(response.status),response);
+            }
+            catch (Exception ex) { 
+
+                _logger.LogError("[Update Course API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpDelete("delte-course{courseId}")]
+        public async Task<IActionResult> DeleteCourse([FromQuery] Guid courseId)
+        {
+            try
+            {
+                var response = await _courseService.DeleteCourse(courseId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Delete Course API] " + ex.Message, ex, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
     }
 }
