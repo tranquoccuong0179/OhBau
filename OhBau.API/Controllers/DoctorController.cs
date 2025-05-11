@@ -102,9 +102,87 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, ex.ToString());
             }
         }
-            
 
+        /// <summary>
+        /// API tạo mới một bác sĩ.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép tạo mới một bác sĩ bằng cách cung cấp thông tin qua `CreateDoctorRequest`.
+        /// - Các trường bắt buộc bao gồm `Phone`, `Email`, `Password`, `FullName`, `DOB`, `Gender`, `Content`, và `Address`.
+        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   POST /api/v1/doctor/create-doctor
+        ///   ```
+        /// - Ví dụ nội dung yêu cầu:
+        ///   ```json
+        ///   {
+        ///     "phone": "0987654321",
+        ///     "email": "doctor@example.com",
+        ///     "password": "P@ssw0rd123",
+        ///     "createMajorRequest": {
+        ///       "majorName": "Pediatrics"
+        ///     },
+        ///     "doctorRequest": {
+        ///       "fullName": "Doctor 1",
+        ///       "dob": "1985-03-15",
+        ///       "gender": "Male",
+        ///       "content": "Specialist in pediatric care",
+        ///       "address": "123 Tran Hung Dao, Hanoi"
+        ///     }
+        ///   }
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Tạo bác sĩ thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: định dạng email hoặc mật khẩu không đúng).
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": "Doctor created successfully",
+        ///     "message": "Tạo bác sĩ thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (400 Bad Request):
+        ///   ```json
+        ///   {
+        ///     "status": "400",
+        ///     "data": null,
+        ///     "message": "Dữ liệu đầu vào không hợp lệ",
+        ///     "errors": {
+        ///       "Email": ["Email is invalid"]
+        ///     }
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// - Translations:
+        ///   - Vietnamese: "Tạo bác sĩ thành công"
+        /// </remarks>
+        /// <param name="request">Thông tin bác sĩ cần tạo, bao gồm `Phone`, `Email`, `Password`, `CreateMajorRequest`, và `DoctorRequest`.</param>
+        /// <returns>
+        /// - `200 OK`: Tạo bác sĩ thành công.
+        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `500 Internal Server Error`: Lỗi hệ thống.
+        /// </returns>
+        /// <response code="200">Trả về thông báo khi tạo bác sĩ thành công.</response>
+        /// <response code="400">Trả về lỗi nếu thông tin đầu vào không hợp lệ.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPost("create-doctor")]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateDoctor([FromBody]CreateDoctorRequest request)
         {
             try
@@ -124,7 +202,86 @@ namespace OhBau.API.Controllers
             }
         }
 
+        /// <summary>
+        /// API chỉnh sửa thông tin bác sĩ.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép chỉnh sửa thông tin bác sĩ dựa trên `doctorId` và thông tin được cung cấp qua `DoctorRequest`.
+        /// - Các trường bắt buộc bao gồm `FullName`, `DOB`, `Gender`, `Content`, và `Address`.
+        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/doctor/edit-doctor-infor/{doctorId}
+        ///   ```
+        /// - Ví dụ nội dung yêu cầu:
+        ///   ```json
+        ///   {
+        ///     "fullName": "Doctor 1",
+        ///     "dob": "1985-03-15",
+        ///     "gender": "Male",
+        ///     "content": "Specialist in pediatric care",
+        ///     "address": "456 Le Loi, Hanoi"
+        ///   }
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Chỉnh sửa thông tin bác sĩ thành công. Trả về `BaseResponse&lt;DoctorRequest&gt;` chứa thông tin bác sĩ đã được cập nhật.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": {
+        ///       "fullName": "Doctor 1",
+        ///       "dob": "1985-03-15",
+        ///       "gender": "Male",
+        ///       "content": "Specialist in pediatric care",
+        ///       "address": "456 Le Loi, Hanoi",
+        ///       "active": true,
+        ///       "createAt": "2025-05-11T00:00:00"
+        ///     },
+        ///     "message": "Chỉnh sửa thông tin bác sĩ thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (400 Bad Request):
+        ///   ```json
+        ///   {
+        ///     "status": "400",
+        ///     "data": null,
+        ///     "message": "Dữ liệu đầu vào không hợp lệ",
+        ///     "errors": {
+        ///       "FullName": ["Full Name can only contain letters and spaces."]
+        ///     }
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="doctorId">ID của bác sĩ cần chỉnh sửa (định dạng GUID).</param>
+        /// <param name="request">Thông tin bác sĩ cần cập nhật, bao gồm `FullName`, `DOB`, `Gender`, `Content`, và `Address`.</param>
+        /// <returns>
+        /// - `200 OK`: Chỉnh sửa thông tin bác sĩ thành công.
+        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `500 Internal Server Error`: Lỗi hệ thống.
+        /// </returns>
+        /// <response code="200">Trả về thông tin bác sĩ đã được cập nhật.</response>
+        /// <response code="400">Trả về lỗi nếu thông tin đầu vào không hợp lệ.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPut("edit-doctor-infor/{doctorId}")]
+        [ProducesResponseType(typeof(BaseResponse<DoctorRequest>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<DoctorRequest>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<DoctorRequest>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<DoctorRequest>), StatusCodes.Status500InternalServerError)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> EditDoctorInfor(Guid doctorId, [FromBody]DoctorRequest request)
         {
             try
@@ -142,8 +299,73 @@ namespace OhBau.API.Controllers
             }
         }
 
-        
+        /// <summary>
+        /// API chỉnh sửa chuyên khoa.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép chỉnh sửa thông tin chuyên khoa dựa trên `majorId` và thông tin được cung cấp qua `EditMajorRequest`.
+        /// - Trường bắt buộc là `MajorName`.
+        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/doctor/edit-major/{majorId}
+        ///   ```
+        /// - Ví dụ nội dung yêu cầu:
+        ///   ```json
+        ///   {
+        ///     "majorName": "Cardiology"
+        ///   }
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Chỉnh sửa chuyên khoa thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": "Major updated successfully",
+        ///     "message": "Chỉnh sửa chuyên khoa thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (400 Bad Request):
+        ///   ```json
+        ///   {
+        ///     "status": "400",
+        ///     "data": null,
+        ///     "message": "Dữ liệu đầu vào không hợp lệ",
+        ///     "errors": {
+        ///       "MajorName": ["MajorName is required"]
+        ///     }
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="majorId">ID của chuyên khoa cần chỉnh sửa (định dạng GUID).</param>
+        /// <param name="request">Thông tin chuyên khoa cần cập nhật, bao gồm `MajorName`.</param>
+        /// <returns>
+        /// - `200 OK`: Chỉnh sửa chuyên khoa thành công.
+        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `500 Internal Server Error`: Lỗi hệ thống.
+        /// </returns>
+        /// <response code="200">Trả về thông báo khi chỉnh sửa chuyên khoa thành công.</response>
+        /// <response code="400">Trả về lỗi nếu thông tin đầu vào không hợp lệ.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPut("edit-major/{majorId}")]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status401Unauthorized)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> EditMajor(Guid majorId, [FromBody]EditMajorRequest request )
         {
             try
@@ -163,8 +385,64 @@ namespace OhBau.API.Controllers
             }
         }
 
-
+        /// <summary>
+        /// API xóa bác sĩ.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép xóa một bác sĩ dựa trên `doctorId`.
+        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/doctor/DeleteDoctor/{doctorId}
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Xóa bác sĩ thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
+        ///   - `404 Not Found`: Không tìm thấy bác sĩ với ID đã cung cấp.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": "Doctor deleted successfully",
+        ///     "message": "Xóa bác sĩ thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (404 Not Found):
+        ///   ```json
+        ///   {
+        ///     "status": "404",
+        ///     "data": null,
+        ///     "message": "Không tìm thấy bác sĩ với ID này"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// - Translations:
+        ///   - Vietnamese: "Xóa bác sĩ thành công"
+        /// </remarks>
+        /// <param name="doctorId">ID của bác sĩ cần xóa (định dạng GUID).</param>
+        /// <returns>
+        /// - `200 OK`: Xóa bác sĩ thành công.
+        /// - `404 Not Found`: Không tìm thấy bác sĩ với ID đã cung cấp.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `500 Internal Server Error`: Lỗi hệ thống.
+        /// </returns>
+        /// <response code="200">Trả về thông báo khi xóa bác sĩ thành công.</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy bác sĩ.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPut("DeleteDoctor/{doctorId}")]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status401Unauthorized)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult> DeleteDoctor(Guid doctorId)
         {
             try
@@ -178,7 +456,64 @@ namespace OhBau.API.Controllers
             }
         }
 
+        /// <summary>
+        /// API xóa chuyên khoa.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép xóa một chuyên khoa dựa trên `majorId`.
+        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/doctor/delete-major/{majorId}
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Xóa chuyên khoa thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
+        ///   - `404 Not Found`: Không tìm thấy chuyên khoa với ID đã cung cấp.
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": "Major deleted successfully",
+        ///     "message": "Xóa chuyên khoa thành công"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (404 Not Found):
+        ///   ```json
+        ///   {
+        ///     "status": "404",
+        ///     "data": null,
+        ///     "message": "Không tìm thấy chuyên khoa với ID này"
+        ///   }
+        ///   ```
+        /// - Ví dụ phản hồi lỗi (401 Unauthorized):
+        ///   ```json
+        ///   {
+        ///     "status": "401",
+        ///     "data": null,
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///   }
+        ///   ```
+        /// - Translations:
+        ///   - Vietnamese: "Xóa chuyên khoa thành công"
+        /// </remarks>
+        /// <param name="majorId">ID của chuyên khoa cần xóa (định dạng GUID).</param>
+        /// <returns>
+        /// - `200 OK`: Xóa chuyên khoa thành công.
+        /// - `404 Not Found`: Không tìm thấy chuyên khoa với ID đã cung cấp.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `500 Internal Server Error`: Lỗi hệ thống.
+        /// </returns>
+        /// <response code="200">Trả về thông báo khi xóa chuyên khoa thành công.</response>
+        /// <response code="404">Trả về lỗi nếu không tìm thấy chuyên khoa.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPut("delete-major/{majorId}")]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status401Unauthorized)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
         public async Task<IActionResult>DeleteMajor(Guid majorId)
         {
             try

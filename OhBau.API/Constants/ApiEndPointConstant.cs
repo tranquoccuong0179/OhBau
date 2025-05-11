@@ -39,6 +39,7 @@
             public const string GetParentRelation = ParentRelationEndPoint;
         }
 
+
         public static class Chapter
         {
             public const string AddChapter = "add-chapter";
@@ -47,5 +48,13 @@
             public const string GetChapter = "get-chapter";
         }
 
+        public static class Fetus
+        {
+            public const string FetusEndPoint = ApiEndpoint + "/fetus";
+            public const string CreateFetus = FetusEndPoint;
+            public const string GetAllFetus = FetusEndPoint;
+            public const string GetFetusById = FetusEndPoint + "/{id}";
+            public const string GetFetusByCode = FetusEndPoint + "/code";
+        }
     }
 }
