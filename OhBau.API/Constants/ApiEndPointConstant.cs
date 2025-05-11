@@ -55,6 +55,7 @@
             public const string GetAllFetus = FetusEndPoint;
             public const string GetFetusById = FetusEndPoint + "/{id}";
             public const string GetFetusByCode = FetusEndPoint + "/code";
+            public const string UpdateFetus = FetusEndPoint + "/{fetusId}";
         }
     }
 }

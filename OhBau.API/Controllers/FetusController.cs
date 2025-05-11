@@ -12,9 +12,11 @@ namespace OhBau.API.Controllers
     public class FetusController : BaseController<FetusController>
     {
         private readonly IFetusService _fetusService;
-        public FetusController(ILogger<FetusController> logger, IFetusService fetusService) : base(logger)
+        private readonly IDoctorService _doctorService;
+        public FetusController(ILogger<FetusController> logger, IFetusService fetusService, IDoctorService doctorService) : base(logger)
         {
             _fetusService = fetusService;
+            _doctorService = doctorService;
         }
 
 
@@ -303,6 +305,10 @@ namespace OhBau.API.Controllers
             var response = await _fetusService.GetFetusByCode(code);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        [HttpPut(ApiEndPointConstant.Fetus.UpdateFetus)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusResponse>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> EditFetusInformation(Guid fetusId, [FromBody] EditFetusInformationRequest request)
         {
             try
