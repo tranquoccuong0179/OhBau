@@ -19,6 +19,7 @@
             public const string UpdateAccount = AccountEndPoint;
             public const string DeleteAccount = AccountEndPoint + "/{id}";
             public const string GetAccountProfile = AccountEndPoint + "/profile";
+            public const string ChangePassword = AccountEndPoint + "/change-password";
         }
 
         public static class Authentication
@@ -56,6 +57,7 @@
             public const string GetFetusById = FetusEndPoint + "/{id}";
             public const string GetFetusByCode = FetusEndPoint + "/code";
             public const string UpdateFetus = FetusEndPoint + "/{fetusId}";
+            public const string DeleteFetus = FetusEndPoint + "/{id}";
         }
     }
 }

@@ -164,6 +164,28 @@ namespace OhBau.Service.Implement
             }
         }
 
+        public async Task<BaseResponse<bool>> DeleteFetus(Guid id)
+        {
+            var fetus = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
+                predicate: f => f.Id.Equals(id) && f.Active == true);
+
+            if (fetus == null)
+            {
+                throw new NotFoundException("Không tìm thấy thai nhi");
+            }
+
+            fetus.Active = false;
+            _unitOfWork.GetRepository<Fetus>().UpdateAsync(fetus);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Xóa thai nhi thành công",
+                data = true
+            };
+        }
+
         public async Task<BaseResponse<IPaginate<GetFetusResponse>>> GetAllFetus(int page, int size)
         {
             var responses = await _unitOfWork.GetRepository<Fetus>().GetPagingListAsync(
