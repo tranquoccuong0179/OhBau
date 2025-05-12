@@ -210,6 +210,40 @@ namespace OhBau.Service.Implement
             }
         }
 
+        public async Task<BaseResponse<bool>> ChangePassword(ChangePasswordRequest request)
+        {
+            Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(id) && a.Active == true);
+
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            if (!account.Password.Equals(PasswordUtil.HashPassword(request.OldPassword)))
+            {
+                throw new BadHttpRequestException("Mật khẩu cũ không khớp");
+            }
+
+            if (!request.NewPassword.Equals(request.ConfirmPassword))
+            {
+                throw new BadHttpRequestException("Mật khẩu xác nhận không khớp");
+            }
+
+            account.Password = PasswordUtil.HashPassword(request.NewPassword);
+
+            _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Thay đổi mật khẩu thành công",
+                data = true
+            };
+        }
+
         public async Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request)
         {
             try

@@ -386,5 +386,61 @@ namespace OhBau.API.Controllers
             var response = await _accountService.DeleteAccount(id);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        /// <summary>
+        /// API thay đổi mật khẩu của tài khoản người dùng.
+        /// </summary>
+        /// <remarks>
+        /// - API này cho phép người dùng thay đổi mật khẩu bằng cách cung cấp thông tin qua `ChangePasswordRequest`.
+        /// - Tất cả các trường trong `ChangePasswordRequest` (`OldPassword`, `NewPassword`, `ConfirmPassword`) đều bắt buộc.
+        /// - Yêu cầu xác thực (người dùng phải đăng nhập để sử dụng API này).
+        /// - Ví dụ yêu cầu:
+        ///   ```
+        ///   PUT /api/v1/account/change-password
+        ///   ```
+        /// - Ví dụ nội dung yêu cầu:
+        ///   ```json
+        ///   {
+        ///     "oldPassword": "123",
+        ///     "newPassword": "123456",
+        ///     "confirmPassword": "123456"
+        ///   }
+        ///   ```
+        /// - Kết quả trả về:
+        ///   - `200 OK`: Thay đổi mật khẩu thành công. Trả về `BaseResponse&lt;bool&gt;` với giá trị `true`.
+        ///   - `401 Unauthorized`: Người dùng chưa đăng nhập hoặc không có quyền truy cập.
+        ///   - `404 NotFound`: Tài khoản không tồn tại.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: mật khẩu cũ không đúng, `NewPassword` và `ConfirmPassword` không khớp).
+        /// - Ví dụ phản hồi thành công (200 OK):
+        ///   ```json
+        ///   {
+        ///     "status": "200",
+        ///     "data": true,
+        ///     "message": "Thay đổi mật khẩu thành công"
+        ///   }
+        ///   ```
+        /// </remarks>
+        /// <param name="request">Thông tin yêu cầu thay đổi mật khẩu. Phải bao gồm `OldPassword`, `NewPassword`, và `ConfirmPassword`.</param>
+        /// <returns>
+        /// - `200 OK`: Thay đổi mật khẩu thành công.
+        /// - `401 Unauthorized`: Người dùng chưa đăng nhập hoặc không có quyền.
+        /// - `404 NotFound`: Tài khoản không tồn tại.
+        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: mật khẩu cũ không đúng, `NewPassword` và `ConfirmPassword` không khớp).
+        /// </returns>
+        /// <response code="200">Trả về kết quả khi mật khẩu được thay đổi thành công.</response>
+        /// <response code="401">Trả về lỗi nếu người dùng chưa đăng nhập hoặc không có quyền.</response>
+        /// <response code="404">Trả về lỗi nếu tài khoản không tồn tại.</response>
+        /// <response code="400">Trả về lỗi nếu yêu cầu không hợp lệ.</response>
+        [HttpPut(ApiEndPointConstant.Account.ChangePassword)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var response = await _accountService.ChangePassword(request);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

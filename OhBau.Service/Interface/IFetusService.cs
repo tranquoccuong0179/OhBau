@@ -16,5 +16,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<IPaginate<GetFetusResponse>>> GetAllFetus(int page, int size);
         Task<BaseResponse<GetFetusResponse>> GetFetusById(Guid id);
         Task<BaseResponse<GetFetusResponse>> GetFetusByCode(string code);
+        Task<BaseResponse<bool>> DeleteFetus(Guid id);
     }
 }

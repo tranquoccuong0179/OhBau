@@ -129,6 +129,8 @@ app.MapGet("/test-telegram-error", () =>
     throw new Exception("Đây là Exception test gửi về Telegram");
 });
 
+app.UseCors(CorsConstant.PolicyName);
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
