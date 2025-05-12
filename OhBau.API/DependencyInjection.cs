@@ -39,6 +39,8 @@ namespace OhBau.API
             services.AddScoped<ICartService, CartrService>();
             services.AddScoped<IOrderSerivce,OrderService>();
             services.AddScoped<IFetusService, FetusService>();
+            services.AddScoped<IBlogService, BlogService>();
+            services.AddScoped<ICommentService, CommentService>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)

@@ -15,5 +15,7 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<string>> AddCourseToCart(Guid courseId,Guid accountId);
         Task<BaseResponse<Paginate<GetCartByAccount>>>GetCartItemByAccount(Guid accountId,int pageNumber, int pageSize);
         Task<BaseResponse<Paginate<GetCartDetailResponse>>>GetCartDetails(Guid accountId,int pageNumber, int pagesize);
+
+        Task<BaseResponse<string>> DeleteCartItem(Guid itemId);
     }
 }

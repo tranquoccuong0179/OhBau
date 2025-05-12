@@ -98,8 +98,6 @@ namespace OhBau.Service.Implement
                        UnitPrice = o.Course.Price,
                 }).ToList();
 
-              
-
                 var result = new GetCartByAccount
                 {
                     CardId = getCartItems.Items.Select(x => x.Cart.Id).FirstOrDefault(),
@@ -177,6 +175,40 @@ namespace OhBau.Service.Implement
 
                 throw new NotImplementedException();
 
+            }
+        }
+
+        public async Task<BaseResponse<string>> DeleteCartItem(Guid itemId)
+        {
+            try
+            {
+                var checkDelete = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(condition => condition.Id == itemId);
+                if (checkDelete == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Cart item not found",
+                        data = null
+                    };
+                }
+
+                var getCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(predicate: x => x.Id == checkDelete.CartId);
+                getCart.TotalPrice = getCart.TotalPrice - checkDelete.UnitPrice;
+                _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
+                _unitOfWork.GetRepository<CartItems>().DeleteAsync(checkDelete);
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Delte cart item success",
+                    data = null
+                };
+            }
+            catch (Exception ex) { 
+                
+                throw new NotImplementedException(); 
             }
         }
 

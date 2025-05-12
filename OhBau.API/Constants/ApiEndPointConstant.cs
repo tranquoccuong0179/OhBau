@@ -59,5 +59,19 @@
             public const string UpdateFetus = FetusEndPoint + "/{fetusId}";
             public const string DeleteFetus = FetusEndPoint + "/{id}";
         }
+
+        public static class Blog
+        {
+            public const string GetBlogs = "get-blogs";
+            public const string GetBlog = "get-blog";
+            public const string DeleteBlog = "delete-blog";
+        }
+
+        public static class Comment
+        {
+            public const string CreateComment = "comment";
+            public const string Reply = "reply";
+            public const string GetComments = "get-comments";
+        }
     }
 }
