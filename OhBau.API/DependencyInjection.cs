@@ -42,6 +42,7 @@ namespace OhBau.API
             services.AddScoped<IFetusService, FetusService>();
             services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<IMotherHealthService, MotherHealthService>();
             services.AddScoped<HtmlSanitizerUtil>();
             return services;
         }

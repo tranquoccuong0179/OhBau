@@ -75,5 +75,12 @@
             public const string Reply = "reply";
             public const string GetComments = "get-comments";
         }
+
+        public static class MotherHealthRecord
+        {
+            public const string MotherHealthRecordEndPoint = ApiEndpoint + "/mother-health";
+            public const string UpdateMotherHealth = MotherHealthRecordEndPoint + "/{id}";
+            public const string GetMotherHealth = MotherHealthRecordEndPoint + "/{id}";
+        }
     }
 }
