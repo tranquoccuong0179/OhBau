@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OhBau.Model.Entity;
+using OhBau.Model.Utils;
 using OhBau.Repository.Implement;
 using OhBau.Repository.Interface;
 using OhBau.Service.CloudinaryService;
@@ -41,6 +42,7 @@ namespace OhBau.API
             services.AddScoped<IFetusService, FetusService>();
             services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<HtmlSanitizerUtil>();
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
