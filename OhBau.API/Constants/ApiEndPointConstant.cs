@@ -62,9 +62,11 @@
 
         public static class Blog
         {
+            public const string CreateBlog = "create";
             public const string GetBlogs = "get-blogs";
             public const string GetBlog = "get-blog";
             public const string DeleteBlog = "delete-blog";
+            public const string UpdateBlog = "update-blog/{id}";
         }
 
         public static class Comment
