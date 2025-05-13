@@ -191,7 +191,7 @@ namespace OhBau.Service.Implement
 
             if (!blog.AccountId.Equals(account.Id))
             {
-                throw new BadHttpRequestException("Blog này không phải của tài khoản này");
+                throw new ForbiddentException("Blog này không phải của tài khoản này");
             }
 
             blog.Title = string.IsNullOrEmpty(request.Title) ? blog.Title : request.Title;

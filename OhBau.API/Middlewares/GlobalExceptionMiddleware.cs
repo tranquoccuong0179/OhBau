@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using OhBau.Model.Exception;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace OhBau.API.Middlewares
 {
@@ -113,6 +114,16 @@ namespace OhBau.API.Middlewares
                     {
                         status = HttpStatusCode.BadRequest.ToString(),
                         message = badRequestEx.Message,
+                        data = null
+                    };
+                    _logger.LogInformation(exception.Message);
+                    break;
+                case ForbiddentException forbiddentEx:
+                    response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    errorResponse = new BaseResponse<object>
+                    {
+                        status = HttpStatusCode.Forbidden.ToString(),
+                        message = forbiddentEx.Message,
                         data = null
                     };
                     _logger.LogInformation(exception.Message);

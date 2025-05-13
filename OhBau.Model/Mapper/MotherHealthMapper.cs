@@ -14,6 +14,8 @@ namespace OhBau.Model.Mapper
         public MotherHealthMapper()
         {
             CreateMap<MotherHealthRecord, GetMotherHealthResponse>();
+
+            CreateMap<MotherHealthRecord, UpdateMotherHealthResponse>();
         }
     }
 }
