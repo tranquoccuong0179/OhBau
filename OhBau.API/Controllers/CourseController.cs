@@ -33,17 +33,8 @@ namespace OhBau.API.Controllers
         [HttpGet("get-courses")]
         public async Task<IActionResult> GetCourse([FromQuery] int pageSize, [FromQuery] int pageNumber, [FromQuery] string? CategoryName, [FromQuery] string? Name)
         {
-            try
-            {
-                var reponse = await _courseService.GetCoursesWithFilterOrSearch(pageSize, pageNumber, CategoryName, Name);
-                return StatusCode(int.Parse(reponse.status), reponse);
-            }
-            catch (Exception ex)
-            {
-
-                _logger.LogError("[Get Courese API ]" + ex.ToString(), ex.StackTrace);
-                return StatusCode(500, ex.ToString());
-            }
+             var reponse = await _courseService.GetCoursesWithFilterOrSearch(pageSize, pageNumber, CategoryName, Name);
+             return StatusCode(int.Parse(reponse.status), reponse);
         }
 
         [HttpPut("update-course{courseId}")]

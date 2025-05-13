@@ -617,16 +617,8 @@ namespace OhBau.API.Controllers
         [ProducesErrorResponseType(typeof(BaseResponse<Paginate<GetDoctorsResponse>>))]
         public async Task<IActionResult> GetDoctorWithSearch([FromQuery]int pageSize, [FromQuery]int pageNumber, [FromQuery]string? doctorName)
         {
-            try
-            {
                 var response = await _doctorService.GetDoctors(pageSize, pageNumber,doctorName);
                 return StatusCode(int.Parse(response.status), response);
-            }
-            catch (Exception ex) { 
-                
-                _logger.LogError(ex, ex.StackTrace);
-                return StatusCode(500, ex.ToString() );
-            }
         }
 
 
@@ -693,16 +685,8 @@ namespace OhBau.API.Controllers
         [HttpGet("get-doctor-infor")]
         public async Task<IActionResult> GetDoctorInfor([FromQuery] Guid doctorID)
         {
-            try
-            {
                 var response = await _doctorService.GetDoctorInfo(doctorID);
                 return StatusCode(int.Parse(response.status),response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"[Get Docotr Infor] " + ex.Message, ex.StackTrace);
-                return StatusCode(500, ex.ToString());
-            }
         }
 
     }

@@ -15,6 +15,8 @@ using VNPayService;
 var builder = WebApplication.CreateBuilder(args);
 
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped(typeof(GenericCacheInvalidator<>));
 //VNPay Config
 var vnPaySection = builder.Configuration.GetSection("VNPayConfig");
 builder.Services.Configure<VNPayConfig>(vnPaySection);

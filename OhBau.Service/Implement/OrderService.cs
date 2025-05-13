@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
@@ -21,8 +22,19 @@ namespace OhBau.Service.Implement
 {
     public class OrderService : BaseService<OrderService>, IOrderSerivce
     {
-        public OrderService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<OrderService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Order> _orderCacheInvalidator;
+        private readonly GenericCacheInvalidator<OrderDetail> _orderDetailCacheInvalidator;
+        public OrderService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<OrderService> logger, 
+            IMapper mapper, 
+            IHttpContextAccessor httpContextAccessor, 
+            GenericCacheInvalidator<Order> orderCacheInvalidator,
+            IMemoryCache cache,
+            GenericCacheInvalidator<OrderDetail> orderDetailCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _orderCacheInvalidator = orderCacheInvalidator;
+            _cache = cache;
+            _orderDetailCacheInvalidator = orderDetailCacheInvalidator;
         }
 
         public async Task<BaseResponse<CreateOrderResponse>> CreateOrder(CreateOrderRequest request)
@@ -76,6 +88,9 @@ namespace OhBau.Service.Implement
                     await _unitOfWork.CommitAsync();
                     await _unitOfWork.CommitTransactionAsync();
 
+                    _orderCacheInvalidator.InvalidateEntityList();
+                    _orderCacheInvalidator.InvalidateEntity(checkOrderready.Id);
+
                     return new BaseResponse<CreateOrderResponse>
                     {
                         status = StatusCodes.Status200OK.ToString(),
@@ -119,6 +134,9 @@ namespace OhBau.Service.Implement
                         Price = newItem.UnitPrice
                     });
                 }
+
+                _orderCacheInvalidator.InvalidateEntityList();
+                _orderCacheInvalidator.InvalidateEntity(createNewOrder.Id);
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();

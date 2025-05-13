@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
@@ -15,6 +16,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Blog;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Blog;
+using OhBau.Model.Payload.Response.Order;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
@@ -24,10 +26,18 @@ namespace OhBau.Service.Implement
     public class BlogService : BaseService<BlogService>, IBlogService
     {
         private readonly HtmlSanitizerUtil _sanitizer;
-        public BlogService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<BlogService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HtmlSanitizerUtil sanitizer) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Blog> _blogCacheInvalidator;
+        public BlogService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<BlogService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,
+            HtmlSanitizerUtil sanitizer,
+            GenericCacheInvalidator<Blog> blogCacheInvalidator,
+            IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _sanitizer = sanitizer;
+            _cache = cache;
+            _blogCacheInvalidator = blogCacheInvalidator;
         }
+
 
         public async Task<BaseResponse<CreateNewBlogResponse>> CreateBlog(CreateBlogRequest request)
         {
@@ -53,6 +63,8 @@ namespace OhBau.Service.Implement
 
             await _unitOfWork.GetRepository<Blog>().InsertAsync(blog);
             await _unitOfWork.CommitAsync();
+
+            _blogCacheInvalidator.InvalidateEntityList();
 
             return new BaseResponse<CreateNewBlogResponse>
             {
@@ -84,6 +96,10 @@ namespace OhBau.Service.Implement
             checkDelete.DeletedDate = DateTime.Now;
             _unitOfWork.GetRepository<Blog>().UpdateAsync(checkDelete);
             await _unitOfWork.CommitAsync();
+
+            _blogCacheInvalidator.InvalidateEntity(blogId);
+            _blogCacheInvalidator.InvalidateEntityList();
+
             return new BaseResponse<string>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -94,6 +110,17 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<GetBlog>> GetBlog(Guid blogId)
         {
+
+            var cachedBlog = _blogCacheInvalidator.GetEntityCache<GetBlog>(blogId);
+            if (cachedBlog != null)
+            {
+                return new BaseResponse<GetBlog>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get blog success",
+                    data = cachedBlog
+                };
+            }
             var getBlog = await _unitOfWork.GetRepository<Blog>().SingleOrDefaultAsync(
                 predicate: x => x.Id == blogId,
                 include: i => i.Include(a => a.Account)
@@ -123,6 +150,8 @@ namespace OhBau.Service.Implement
                 ReasonReject = getBlog.ReasonReject
             };
 
+            _blogCacheInvalidator.SetEntityCache(blogId, mapItem, TimeSpan.FromMinutes(30));
+
             return new BaseResponse<GetBlog>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -133,6 +162,22 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetBlogs>>> GetBlogs(int pageNumber, int pageSize, string? title)
         {
+
+            var listParams = new ListParameters<Blog>(pageNumber, pageSize);
+            listParams.AddFilter("Title", title);
+
+            var cacheKey = _blogCacheInvalidator.GetCacheKeyForList(listParams);
+
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetBlogs> cachedResult))
+            {
+                return new BaseResponse<Paginate<GetBlogs>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Lấy danh sách blog thành công (từ cache)",
+                    data = cachedResult
+                };
+            }
+
             Expression<Func<Blog, bool>> predicate = x => x.isDelete == false && x.Status.Equals(BlogStatusEnum.Published);
 
             if (!string.IsNullOrEmpty(title))
@@ -163,6 +208,14 @@ namespace OhBau.Service.Implement
                 Total = mapItems.Count,
                 TotalPages = getBlogs.Total
             };
+
+            var cacheOption = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+            };
+
+            cacheOption.AddExpirationToken(_blogCacheInvalidator.GetListCacheToken());
+            _cache.Set(cacheKey, pagedResponse,cacheOption);
 
             return new BaseResponse<Paginate<GetBlogs>>
             {
@@ -200,6 +253,9 @@ namespace OhBau.Service.Implement
 
             _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
             await _unitOfWork.CommitAsync();
+
+            _blogCacheInvalidator.InvalidateEntity(id);
+            _blogCacheInvalidator.InvalidateEntityList();
 
             UpdateBlogResponse response = new UpdateBlogResponse
             {

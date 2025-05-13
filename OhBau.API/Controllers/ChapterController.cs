@@ -33,32 +33,15 @@ namespace OhBau.API.Controllers
         [HttpGet(ApiEndPointConstant.Chapter.GetChapters)]
         public async Task<IActionResult> GetChapters([FromQuery]Guid courseId, [FromQuery]int pageNumber, [FromQuery]int pageSize, [FromQuery]string?title, string? courseName)
         {
-            try
-            {
                 var response = await _chapterService.GetChaptersByCourse(courseId, pageNumber, pageSize, title, courseName);
                 return StatusCode(int.Parse(response.status), response);
-            }
-            catch (Exception ex) {
-
-                _logger.LogError("[Get Chapters API]" + ex.Message, ex.StackTrace);
-                return StatusCode(500,ex.ToString());
-            }
         }
 
         [HttpGet(ApiEndPointConstant.Chapter.GetChapter)]
         public async Task<IActionResult> GetChapter([FromQuery] Guid chapterId)
         {
-            try
-            {
                 var response = await _chapterService.GetChapter(chapterId);
                 return StatusCode(int.Parse(response.status),response);
-            }
-            catch (Exception ex)
-            {
-
-                _logger.LogError("[Get Chapter API] " + ex.Message, ex.StackTrace);
-                return StatusCode(500, ex.ToString());
-            }
         }
 
         [HttpPut("update-chapter/{chapterId}")]
