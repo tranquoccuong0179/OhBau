@@ -62,6 +62,9 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Transaction> Transactions { get; set; }
 
+    public virtual DbSet<Blog> Blogs { get; set; }
+
+    public virtual DbSet<Comments> Comments { get; set; }
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()
@@ -371,6 +374,7 @@ public partial class OhBauContext : DbContext
         });
 
         modelBuilder.Entity<Order>().Property(o => o.PaymentStatus).HasConversion<string>();
+        modelBuilder.Entity<Blog>().Property(b => b.Status).HasConversion<string>();
         OnModelCreatingPartial(modelBuilder);
     }
 

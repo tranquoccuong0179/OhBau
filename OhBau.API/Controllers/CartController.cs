@@ -8,7 +8,7 @@ namespace OhBau.API.Controllers
 {
     [ApiController]
     [Route("api/v1/cart")]
-    public class CartController(ICartService _orderService, ILogger<CartController> _logger) : Controller
+    public class CartController(ICartService _cartService, ILogger<CartController> _logger) : Controller
     {
         [HttpPost("add-course-to-cart")]
         [Authorize(Roles = "FATHER,MOTHER")]
@@ -17,7 +17,7 @@ namespace OhBau.API.Controllers
             try
             {
                 var accountId = UserUtil.GetAccountId(HttpContext);
-                var response = await _orderService.AddCourseToCart(request.CourseId, accountId!.Value);
+                var response = await _cartService.AddCourseToCart(request.CourseId, accountId!.Value);
                 return StatusCode(int.Parse(response.status), response);   
             }
             catch (Exception ex) {
@@ -34,7 +34,7 @@ namespace OhBau.API.Controllers
             try
             {
                 var accountId = UserUtil.GetAccountId(HttpContext);
-                var response = await _orderService.GetCartItemByAccount(accountId!.Value, pageNumber, pageSize);
+                var response = await _cartService.GetCartItemByAccount(accountId!.Value, pageNumber, pageSize);
                 return StatusCode(int.Parse(response.status),response);
             }
             catch (Exception ex) { 
@@ -51,7 +51,7 @@ namespace OhBau.API.Controllers
             try
             {
                 var accountId = UserUtil.GetAccountId(HttpContext);
-                var response = await _orderService.GetCartDetails(accountId!.Value,pageNumber, pageSize);
+                var response = await _cartService.GetCartDetails(accountId!.Value,pageNumber, pageSize);
                 return StatusCode(int.Parse(response.status), response);
             }
             catch (Exception ex) {
@@ -60,5 +60,19 @@ namespace OhBau.API.Controllers
             }
         }
 
+        [HttpDelete("delete-cart-item")]
+        public async Task<IActionResult> DeleteCartItem([FromQuery] Guid itemId)
+        {
+            try
+            {
+                var response = await _cartService.DeleteCartItem(itemId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Delete cart item API]:" + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
     }
 }
