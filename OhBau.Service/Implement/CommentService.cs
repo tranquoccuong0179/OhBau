@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
@@ -20,8 +22,14 @@ namespace OhBau.Service.Implement
 {
     public class CommentService : BaseService<CommentService>, ICommentService
     {
-        public CommentService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CommentService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Comments> _commentCacheINvalidator;
+        public CommentService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CommentService> logger, 
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, 
+            GenericCacheInvalidator<Comments> commentCacheINvalidator,IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _commentCacheINvalidator = commentCacheINvalidator;
+            _cache = cache;
         }
 
         public async Task<BaseResponse<string>> Comment(Guid accountId,CommentRequest request)
@@ -43,6 +51,10 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.GetRepository<Comments>().InsertAsync(createComment);
                 await _unitOfWork.CommitAsync();
+                
+                _commentCacheINvalidator.InvalidateEntityList();
+                _commentCacheINvalidator.InvalidateEntity(createComment.Id);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -89,6 +101,10 @@ namespace OhBau.Service.Implement
 
                 _unitOfWork.GetRepository<Comments>().UpdateAsync(getComment);
                 await _unitOfWork.CommitAsync();
+
+                _commentCacheINvalidator.InvalidateEntityList();
+                _commentCacheINvalidator.InvalidateEntity(commentId);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -99,7 +115,6 @@ namespace OhBau.Service.Implement
 
                 throw new Exception(ex.ToString());
             }
-            throw new NotImplementedException();
         }
 
         public async Task<BaseResponse<string>> EditComment(Guid accountId, EditComment request)
@@ -132,6 +147,9 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Comments>().UpdateAsync(getComment);
                 await _unitOfWork.CommitAsync();
 
+                _commentCacheINvalidator.InvalidateEntityList();
+                _commentCacheINvalidator.InvalidateEntity(request.CommentId);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -146,6 +164,20 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetComments>>> GetComments(Guid blogId,int pageNumber, int pageSize)
         {
+            var listParameter = new ListParameters<GetComments>(pageNumber, pageSize);
+
+            var cacheKey = _commentCacheINvalidator.GetCacheKeyForList(listParameter);
+
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetComments> getCommentsCache))
+            {
+                return new BaseResponse<Paginate<GetComments>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get comment success",
+                    data = getCommentsCache
+                };
+            }
+
             var getComments = await _unitOfWork.GetRepository<Comments>().GetPagingListAsync(
                 predicate: x => x.BlogId == blogId && x.isDelete == false,
                 include: i => i
@@ -176,6 +208,13 @@ namespace OhBau.Service.Implement
                 Total = getComments.Total,
             };
 
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+            
+            _cache.Set(cacheKey, pagedResponse ,options);
+
             return new BaseResponse<Paginate<GetComments>>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -200,6 +239,9 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.GetRepository<Comments>().InsertAsync(reply);
                 await _unitOfWork.CommitAsync();
+                
+                _commentCacheINvalidator.InvalidateEntityList();
+                _commentCacheINvalidator.InvalidateEntity(reply.Id);
 
                 return new BaseResponse<string>
                 {

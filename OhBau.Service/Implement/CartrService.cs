@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Blog;
 using OhBau.Model.Payload.Response.Cart;
 using OhBau.Model.Payload.Response.Order;
 using OhBau.Repository.Interface;
@@ -19,7 +21,12 @@ namespace OhBau.Service.Implement
 {
     public class CartrService : BaseService<CartrService>, ICartService
     {
-        public CartrService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CartrService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Cart> _cartCacheInvalidator;
+        public CartrService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CartrService> logger, 
+            IMapper mapper, 
+            IHttpContextAccessor httpContextAccessor,
+            GenericCacheInvalidator<Cart> cartCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
 
@@ -67,6 +74,10 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
+
+                _cartCacheInvalidator.InvalidateEntityList();
+                _cartCacheInvalidator.InvalidateEntity(addNewCourse.Id);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -81,9 +92,22 @@ namespace OhBau.Service.Implement
         }
 
         public async Task<BaseResponse<Paginate<GetCartByAccount>>> GetCartItemByAccount(Guid accountId, int pageNumber, int pageSize)
-        {
-            try
-            {
+        {              
+                var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
+                listParameter.AddFilter("accountId", accountId);
+                
+                var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+
+                if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
+                {
+                    return new BaseResponse<Paginate<GetCartByAccount>>
+                    {
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Get cart success",
+                        data = cachedResult
+                    };
+                }
+
                 var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
                                                                                                                  i.Include(c => c.Course)
@@ -113,6 +137,14 @@ namespace OhBau.Service.Implement
                     TotalPages = getCartItems.TotalPages
                 };
 
+                var cacheOption = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                };
+
+                cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
+                _cache.Set(cacheKey, pagedResposne, cacheOption);
+
                 return new BaseResponse<Paginate<GetCartByAccount>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -121,61 +153,69 @@ namespace OhBau.Service.Implement
                 };
                                                                                                   
             }
-            catch (Exception ex) { 
-                
-                throw new Exception(ex.ToString());
-            }
-        }
+        
 
         public async Task<BaseResponse<Paginate<Model.Payload.Response.Cart.GetCartDetailResponse>>> GetCartDetails(Guid accountId, int pageNumber, int pageSize)
         {
-            try
+
+            var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
+            listParameter.AddFilter("accountId", accountId);
+
+            var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetCartDetailResponse> getCartDetail))
             {
-                var getCartDetails = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(
-                    predicate: x => x.Cart.AccountId == accountId,
-                    include: i => i.Include(x => x.Course)
-                                   .Include(c => c.Cart).ThenInclude(a => a.Account),
-                    page: pageNumber,
-                    size: pageSize
-                );
-
-                var mapItems = getCartDetails.Items.Select(c => new CartItemDetail
-                {
-                    DetailId = c.Id,
-                    Name = c.Course.Name,
-                    Duration = c.Course.Duration,
-                    Price = c.Course.Price,
-                    Rating = c.Course.Rating
-                }).ToList();
-
-                var result = new GetCartDetailResponse
-                {
-                    CartItems = mapItems,
-                    TotalPrice  = getCartDetails.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault(),
-                };
-
-                var pagedResposne = new Paginate<GetCartDetailResponse>
-                {
-                    Items = new List<GetCartDetailResponse> { result },
-                    Page = pageNumber,
-                    Size = pageSize,
-                    Total = mapItems.Count,
-                    TotalPages = getCartDetails.TotalPages
-                };
-
-
                 return new BaseResponse<Paginate<GetCartDetailResponse>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get cart detail success",
-                    data = pagedResposne
+                    message = "Get cart items success",
+                    data = getCartDetail
                 };
             }
-            catch (Exception ex) {
+            var getCartDetails = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(
+                predicate: x => x.Cart.AccountId == accountId,
+                include: i => i.Include(x => x.Course)
+                               .Include(c => c.Cart).ThenInclude(a => a.Account),
+                page: pageNumber,
+                size: pageSize
+            );
 
-                throw new NotImplementedException();
+            var mapItems = getCartDetails.Items.Select(c => new CartItemDetail
+            {
+                DetailId = c.Id,
+                Name = c.Course.Name,
+                Duration = c.Course.Duration,
+                Price = c.Course.Price,
+                Rating = c.Course.Rating
+            }).ToList();
 
-            }
+            var result = new GetCartDetailResponse
+            {
+                CartItems = mapItems,
+                TotalPrice = getCartDetails.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault(),
+            };
+
+            var pagedResposne = new Paginate<GetCartDetailResponse>
+            {
+                Items = new List<GetCartDetailResponse> { result },
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count,
+                TotalPages = getCartDetails.TotalPages
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cacheKey, result, options);
+
+            return new BaseResponse<Paginate<GetCartDetailResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get cart detail success",
+                data = pagedResposne
+            };
         }
 
         public async Task<BaseResponse<string>> DeleteCartItem(Guid itemId)
@@ -199,6 +239,9 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<CartItems>().DeleteAsync(checkDelete);
                 await _unitOfWork.CommitAsync();
 
+                _cartCacheInvalidator.InvalidateEntityList();
+                _cartCacheInvalidator.InvalidateEntity(itemId);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -211,7 +254,5 @@ namespace OhBau.Service.Implement
                 throw new NotImplementedException(); 
             }
         }
-
-
     }
 }

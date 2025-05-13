@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Azure;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
@@ -22,8 +23,14 @@ namespace OhBau.Service.Implement
 {
     public class FetusService : BaseService<FetusService>, IFetusService
     {
-        public FetusService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<FetusService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Fetus> _fetusCacheInvalidator;
+        public FetusService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<FetusService> logger, 
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, GenericCacheInvalidator<Fetus> fetusCacheInvalidator,
+            IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _fetusCacheInvalidator = fetusCacheInvalidator;
+            _cache = cache;
         }
 
         public async Task<BaseResponse<CreateFetusResponse>> CreateFetus(CreateFetusRequest request)
@@ -138,6 +145,9 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.CommitTransactionAsync();
 
+                _fetusCacheInvalidator.InvalidateEntityList();
+                _fetusCacheInvalidator.InvalidateEntity(fetus.Id);
+
                 return new BaseResponse<CreateFetusResponse>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -178,6 +188,9 @@ namespace OhBau.Service.Implement
             _unitOfWork.GetRepository<Fetus>().UpdateAsync(fetus);
             await _unitOfWork.CommitAsync();
 
+            _fetusCacheInvalidator.InvalidateEntityList();
+            _fetusCacheInvalidator.InvalidateEntity(fetus.Id);
+
             return new BaseResponse<bool>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -188,6 +201,20 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<IPaginate<GetFetusResponse>>> GetAllFetus(int page, int size)
         {
+            var listParameter = new ListParameters<Fetus>(page, size);
+            var cacheKey = _fetusCacheInvalidator.GetCacheKeyForList(listParameter);
+            
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetFetusResponse> GetFetus))
+            {
+
+                return new BaseResponse<IPaginate<GetFetusResponse>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "List fetus",
+                    data = GetFetus
+                };
+            }
+
             var responses = await _unitOfWork.GetRepository<Fetus>().GetPagingListAsync(
                 selector: f => _mapper.Map<GetFetusResponse>(f),
                 predicate: f => f.Active == true,
@@ -224,6 +251,17 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<GetFetusResponse>> GetFetusById(Guid id)
         {
+            var cacheKey = _fetusCacheInvalidator.GetEntityCache<GetFetusResponse>(id);
+            
+            if (cacheKey != null)
+            {
+                return new BaseResponse<GetFetusResponse>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Tìm thấy fetus",
+                    data = cacheKey
+                };
+            }
             var response = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
                 selector: f => _mapper.Map<GetFetusResponse>(f),
                 predicate: f => f.Id.Equals(id) && f.Active == true);

@@ -31,33 +31,19 @@ namespace OhBau.API.Controllers
         [Authorize(Roles = "FATHER,MOTHER")]
         public async Task<IActionResult> GetCartByAccount([FromQuery] int pageNumber,[FromQuery]int pageSize)
         {
-            try
-            {
+            
                 var accountId = UserUtil.GetAccountId(HttpContext);
                 var response = await _cartService.GetCartItemByAccount(accountId!.Value, pageNumber, pageSize);
                 return StatusCode(int.Parse(response.status),response);
-            }
-            catch (Exception ex) { 
-              _logger.LogError("[Get cart by account API] " + ex.Message,ex.StackTrace);
-              return StatusCode(500, ex.ToString());
-            }
         }
 
         [HttpGet("get-cart-items-details")]
         [Authorize(Roles = "FATHER,MOTHER")]
         public async Task<IActionResult> GetCartDetails([FromQuery]int pageNumber, [FromQuery] int pageSize)
         {
-
-            try
-            {
-                var accountId = UserUtil.GetAccountId(HttpContext);
-                var response = await _cartService.GetCartDetails(accountId!.Value,pageNumber, pageSize);
-                return StatusCode(int.Parse(response.status), response);
-            }
-            catch (Exception ex) {
-                _logger.LogError("[Get cart items details API] " + ex.Message, ex.StackTrace);
-                return StatusCode(500, ex.ToString());
-            }
+            var accountId = UserUtil.GetAccountId(HttpContext);
+            var response = await _cartService.GetCartDetails(accountId!.Value, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         [HttpDelete("delete-cart-item")]

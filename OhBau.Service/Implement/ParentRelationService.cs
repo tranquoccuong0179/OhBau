@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Exception;
@@ -21,6 +22,8 @@ namespace OhBau.Service.Implement
 {
     public class ParentRelationService : BaseService<ParentRelationService>, IParentRelationService
     {
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<ParentRelation> _parentRelationCacheInvalidator;
         public ParentRelationService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<ParentRelationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
@@ -28,6 +31,7 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<GetParentRelationResponse>> GetParentRelation()
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
                 predicate: a => a.Id.Equals(userId) && a.Active == true);
 

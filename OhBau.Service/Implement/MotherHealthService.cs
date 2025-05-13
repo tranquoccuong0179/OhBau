@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Exception;
@@ -18,12 +19,29 @@ namespace OhBau.Service.Implement
 {
     public class MotherHealthService : BaseService<MotherHealthService>, IMotherHealthService
     {
-        public MotherHealthService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<MotherHealthService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<MotherHealthRecord> _motherHealthInvalidator;
+        public MotherHealthService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<MotherHealthService> logger
+            , IMapper mapper, IHttpContextAccessor httpContextAccessor, 
+            GenericCacheInvalidator<MotherHealthRecord> motherHealthInvalidator,
+            IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _motherHealthInvalidator = motherHealthInvalidator;
+            _cache = cache;
         }
 
         public async Task<BaseResponse<GetMotherHealthResponse>> GetMotherHealth(Guid id)
         {
+            var cacheKey = _motherHealthInvalidator.GetEntityCache<GetMotherHealthResponse>(id);
+            if (cacheKey != null)
+            {
+                return new BaseResponse<GetMotherHealthResponse>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Lấy thông tin sức khỏe của mẹ thành công",
+                    data = cacheKey
+                };
+            }
             var motherHealth = await _unitOfWork.GetRepository<MotherHealthRecord>().SingleOrDefaultAsync(
                 predicate: m => m.Id.Equals(id) && m.Active == true);
 
@@ -32,6 +50,8 @@ namespace OhBau.Service.Implement
                 throw new NotFoundException("Không tìm thấy ghi chú sức khỏe của mẹ");
             }
             var response = _mapper.Map<GetMotherHealthResponse>(motherHealth);
+
+            _motherHealthInvalidator.SetEntityCache(id, response, TimeSpan.FromMinutes(30));
 
             return new BaseResponse<GetMotherHealthResponse>
             {
@@ -58,6 +78,9 @@ namespace OhBau.Service.Implement
             await _unitOfWork.CommitAsync();
 
             var response = _mapper.Map<UpdateMotherHealthResponse>(motherHealth);
+
+            _motherHealthInvalidator.InvalidateEntityList();
+            _motherHealthInvalidator.InvalidateEntity(id);
 
             return new BaseResponse<UpdateMotherHealthResponse>
             {

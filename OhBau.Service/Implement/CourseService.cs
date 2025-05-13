@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
@@ -20,8 +21,15 @@ namespace OhBau.Service.Implement
 {
     public class CourseService : BaseService<CourseService>, ICourseService
     {
-        public CourseService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CourseService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<Course> _courseCacheInvalidator;
+        public CourseService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CourseService> logger,
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, 
+            GenericCacheInvalidator<Course> courseCacheInvalidator,
+            IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _courseCacheInvalidator = courseCacheInvalidator;
+            _cache = cache;
         }
 
         public async Task<BaseResponse<CreateCourseResponse>> CreateCourse(CreateCourseRequest request)
@@ -48,6 +56,10 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.GetRepository<Course>().InsertAsync(createNewCourse);
                 await _unitOfWork.CommitAsync();
+
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(createNewCourse.Id);
+
                 return new BaseResponse<CreateCourseResponse>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -81,6 +93,9 @@ namespace OhBau.Service.Implement
                  _unitOfWork.GetRepository<Course>().DeleteAsync(checkDelele);
                 await _unitOfWork.CommitAsync();
 
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(courseId);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -96,6 +111,21 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetCoursesResponse>>> GetCoursesWithFilterOrSearch(int pageSize, int pageNumber, string? categoryName, string? search)
         {
+            var listParameter = new ListParameters<Course>(pageNumber, pageSize);
+            listParameter.AddFilter("Category", categoryName);
+            listParameter.AddFilter("Search", search);
+
+            var cacheKey = _courseCacheInvalidator.GetCacheKeyForList(listParameter);
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetCoursesResponse> GetCourses))
+            {
+                return new BaseResponse<Paginate<GetCoursesResponse>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get course success",
+                    data = GetCourses
+                };
+            }
+
             Expression<Func<Course, bool>> predicate = null;
             if (!string.IsNullOrEmpty(categoryName))
             {
@@ -115,7 +145,7 @@ namespace OhBau.Service.Implement
                                                                                           include: i => i.Include(c => c.Category),
                                                                                           page:pageNumber,
                                                                                           size:pageSize);
-
+     
             var mappedItem = getCourses.Items.Select(c => new GetCoursesResponse
             {
                 Id = c.Id,
@@ -139,6 +169,12 @@ namespace OhBau.Service.Implement
                 TotalPages = getCourses.TotalPages
             };
 
+            var options = new MemoryCacheEntryOptions { 
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cacheKey, pagedReponse, options);
+
             return new BaseResponse<Paginate<GetCoursesResponse>>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -146,7 +182,6 @@ namespace OhBau.Service.Implement
                 data = pagedReponse
             };
 
-            throw new NotImplementedException();
         }
 
         public async Task<BaseResponse<string>> UpdateCourse(Guid courseId, UpdateCourse request)
@@ -176,6 +211,9 @@ namespace OhBau.Service.Implement
 
                 _unitOfWork.GetRepository<Course>().UpdateAsync(getCourse);
                 await _unitOfWork.CommitAsync();
+
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(courseId);
 
                 return new BaseResponse<string>
                 {
