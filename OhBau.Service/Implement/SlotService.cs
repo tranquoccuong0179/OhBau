@@ -7,6 +7,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
+using OhBau.Model.Exception;
+using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Blog;
 using OhBau.Model.Payload.Request.Slot;
 using OhBau.Model.Payload.Response;
@@ -24,9 +26,8 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<CreateSlotResponse>> CreateSlot(CreateSlotRequest request)
         {
-            var slotRepo = _unitOfWork.GetRepository<Slot>();
 
-            var isNameExists = await slotRepo
+            var isNameExists = await _unitOfWork.GetRepository<Slot>()
                 .SingleOrDefaultAsync(predicate: s => s.Name == request.Name);
 
             if (isNameExists != null)
@@ -34,7 +35,7 @@ namespace OhBau.Service.Implement
                 throw new BadHttpRequestException("Tên slot đã tồn tại");
             }
 
-            var isTimeConflict = await slotRepo.SingleOrDefaultAsync(
+            var isTimeConflict = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(
                 predicate: s =>
                     (request.StartTime >= s.StartTime && request.StartTime < s.EndTime) ||
                     (request.EndTime > s.StartTime && request.EndTime <= s.EndTime) ||
@@ -47,7 +48,7 @@ namespace OhBau.Service.Implement
             }
             var slot = _mapper.Map<Slot>(request);
 
-            await slotRepo.InsertAsync(slot);
+            await _unitOfWork.GetRepository<Slot>().InsertAsync(slot);
             await _unitOfWork.CommitAsync();
 
             return new BaseResponse<CreateSlotResponse>
@@ -55,6 +56,41 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Tạo thành công slot",
                 data = _mapper.Map<CreateSlotResponse>(slot)
+            };
+        }
+
+        public async Task<BaseResponse<IPaginate<GetSlotResponse>>> GetAllSlot(int page, int size)
+        {
+            var slots = await _unitOfWork.GetRepository<Slot>().GetPagingListAsync(
+                selector: s => _mapper.Map<GetSlotResponse>(s),
+                predicate: s => s.Active == true,
+                page: page,
+                size: size);
+
+            return new BaseResponse<IPaginate<GetSlotResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách slot thành công",
+                data = slots
+            };
+        }
+
+        public async Task<BaseResponse<GetSlotResponse>> GetSlot(Guid id)
+        {
+            var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(
+                selector: s => _mapper.Map<GetSlotResponse>(s),
+                predicate: s => s.Id.Equals(id) && s.Active == true);
+
+            if (slot == null)
+            {
+                throw new NotFoundException("Không tìm thấy slot");
+            }
+
+            return new BaseResponse<GetSlotResponse>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy thông tin slot thành công",
+                data = slot
             };
         }
     }

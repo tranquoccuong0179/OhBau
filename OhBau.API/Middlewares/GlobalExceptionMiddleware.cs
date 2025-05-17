@@ -112,7 +112,7 @@ namespace OhBau.API.Middlewares
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     errorResponse = new BaseResponse<object>
                     {
-                        status = HttpStatusCode.BadRequest.ToString(),
+                        status = StatusCodes.Status400BadRequest.ToString(),
                         message = badRequestEx.Message,
                         data = null
                     };
@@ -122,7 +122,7 @@ namespace OhBau.API.Middlewares
                     response.StatusCode = (int)HttpStatusCode.Forbidden;
                     errorResponse = new BaseResponse<object>
                     {
-                        status = HttpStatusCode.Forbidden.ToString(),
+                        status = StatusCodes.Status403Forbidden.ToString(),
                         message = forbiddentEx.Message,
                         data = null
                     };

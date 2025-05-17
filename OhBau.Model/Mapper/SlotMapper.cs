@@ -22,6 +22,8 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()));
 
             CreateMap<Slot, CreateSlotResponse>();
+
+            CreateMap<Slot, GetSlotResponse>();
         }
     }
 }
