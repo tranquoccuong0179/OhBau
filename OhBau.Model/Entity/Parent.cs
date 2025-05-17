@@ -8,6 +8,7 @@ public partial class Parent
     public Guid Id { get; set; }
 
     public string FullName { get; set; } = null!;
+    public string? CCCD { get; set; } = null!;
 
     public DateOnly Dob { get; set; }
 
