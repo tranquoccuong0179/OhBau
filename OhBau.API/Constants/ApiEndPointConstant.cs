@@ -87,6 +87,8 @@
         {
             public const string SlotEndPoint = ApiEndpoint + "/slot";
             public const string CreateSlot = SlotEndPoint;
+            public const string GetAllSlot = SlotEndPoint;
+            public const string GetSlot = SlotEndPoint + "/{id}";
         }
     }
 }
