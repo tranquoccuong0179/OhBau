@@ -6,6 +6,7 @@ using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Response.Fetus;
 using OhBau.Service.Interface;
 using OhBau.Model.Paginate;
+using Microsoft.AspNetCore.Authorization;
 
 namespace OhBau.API.Controllers
 {
@@ -360,6 +361,7 @@ namespace OhBau.API.Controllers
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = "FATHER, MOTHER")]
         public async Task<IActionResult> EditFetusInformation(Guid fetusId, [FromBody] EditFetusInformationRequest request)
         {
             try

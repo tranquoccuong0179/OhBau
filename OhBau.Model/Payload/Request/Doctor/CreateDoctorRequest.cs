@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using OhBau.Model.Entity;
 using OhBau.Model.Enum;
 using OhBau.Model.Payload.Request.Major;
 
@@ -44,6 +45,8 @@ namespace OhBau.Model.Payload.Request.Doctor
         public CreateMajorRequest CreateMajorRequest { get; set; }
 
         public DoctorRequest DoctorRequest { get; set; }
+
+
 
 
     }

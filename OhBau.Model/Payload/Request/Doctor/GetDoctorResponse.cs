@@ -28,5 +28,14 @@ namespace OhBau.Model.Payload.Request.Doctor
         public string Phone { get; set; }
 
         public bool? Active { get; set; }
+
+        public List<string> Experence {  get; set; } = null!;
+        public List<string> Focus {  get; set; } = null!;
+
+        public List<string> MedicalProfile { get; set; }
+        public List<string> CareerPath { get; set; }
+
+        public List<string> OutStanding {  get; set; }
+
     }
 }
