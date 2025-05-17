@@ -332,6 +332,7 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.DeleteAt).HasColumnType("datetime");
             entity.Property(e => e.Dob).HasColumnName("DOB");
             entity.Property(e => e.FullName).HasMaxLength(50);
+            entity.Property(e => e.CCCD).HasMaxLength(50);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Account).WithMany(p => p.Parents)

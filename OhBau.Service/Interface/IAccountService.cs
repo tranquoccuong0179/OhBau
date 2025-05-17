@@ -15,5 +15,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<bool>> DeleteAccount(Guid id);
         Task<BaseResponse<GetParentResponse>> GetAccountProfile();
         Task<BaseResponse<bool>> ChangePassword(ChangePasswordRequest request);
+
     }
 }

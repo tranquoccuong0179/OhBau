@@ -82,5 +82,11 @@
             public const string UpdateMotherHealth = MotherHealthRecordEndPoint + "/{id}";
             public const string GetMotherHealth = MotherHealthRecordEndPoint + "/{id}";
         }
+
+        public static class Slot
+        {
+            public const string SlotEndPoint = ApiEndpoint + "/slot";
+            public const string CreateSlot = SlotEndPoint;
+        }
     }
 }

@@ -43,6 +43,7 @@ namespace OhBau.API
             services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IMotherHealthService, MotherHealthService>();
+            services.AddScoped<ISlotService, SlotService>();
             services.AddScoped<HtmlSanitizerUtil>();
             return services;
         }
