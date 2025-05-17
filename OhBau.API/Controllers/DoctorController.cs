@@ -107,15 +107,15 @@ namespace OhBau.API.Controllers
         /// API tạo mới một bác sĩ.
         /// </summary>
         /// <remarks>
-        /// - API này cho phép tạo mới một bác sĩ bằng cách cung cấp thông tin qua `CreateDoctorRequest`.
-        /// - Các trường bắt buộc bao gồm `Phone`, `Email`, `Password`, `FullName`, `DOB`, `Gender`, `Content`, và `Address`.
-        /// - API yêu cầu xác thực (JWT) và chỉ có thể được gọi bởi ADMIN.
+        /// - API này cho phép Admin tạo mới một bác sĩ bằng cách cung cấp thông tin qua `CreateDoctorRequest`.
+        /// - Các trường bắt buộc bao gồm `Phone`, `Email`, `Password` (trong `CreateDoctorRequest`), và `FullName`, `DOB`, `Gender`, `Content`, `Address`, `MedicalProfile`, `CareerPath`, `OutStanding`, `Experence`, `Focus` (trong `DoctorRequest`).
+        /// - Các trường `MedicalProfile`, `CareerPath`, `OutStanding`, `Experence`, `Focus` phải được cung cấp dưới dạng chuỗi phân tách bằng `|` (ví dụ: "Item1|Item2|Item3") để lưu trữ danh sách thông tin.
+        /// - API yêu cầu xác thực (JWT) và chỉ dành cho người dùng có vai trò Admin.
         /// - Ví dụ yêu cầu:
         ///   ```
         ///   POST /api/v1/doctor/create-doctor
-        ///   ```
-        /// - Ví dụ nội dung yêu cầu:
-        ///   ```json
+        ///   Authorization: Bearer &lt;JWT_token&gt;
+        ///   Content-Type: application/json
         ///   {
         ///     "phone": "0987654321",
         ///     "email": "doctor@example.com",
@@ -127,15 +127,20 @@ namespace OhBau.API.Controllers
         ///       "fullName": "Doctor 1",
         ///       "dob": "1985-03-15",
         ///       "gender": "Male",
-        ///       "content": "Specialist in pediatric care",
-        ///       "address": "123 Tran Hung Dao, Hanoi"
+        ///       "content": "Chuyên gia chăm sóc nhi khoa",
+        ///       "address": "123 Trần Hưng Đạo, Hà Nội",
+        ///       "medicalProfile": "Bệnh viện Nhi Trung ương|Chứng chỉ Nhi khoa",
+        ///       "careerPath": "Bác sĩ nội trú 2010-2013|Trưởng khoa Nhi 2018-nay",
+        ///       "outStanding": "Giải thưởng Y học 2020|Công bố 10 bài báo khoa học",
+        ///       "experence": "10 năm kinh nghiệm Nhi khoa|5 năm quản lý khoa",
+        ///       "focus": "Nhi khoa tổng quát|Bệnh truyền nhiễm trẻ em"
         ///     }
         ///   }
         ///   ```
         /// - Kết quả trả về:
         ///   - `200 OK`: Tạo bác sĩ thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
-        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: định dạng email hoặc mật khẩu không đúng).
-        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: định dạng email, mật khẩu, hoặc các trường bắt buộc không đúng).
+        ///   - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền Admin.
         ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
         /// - Ví dụ phản hồi thành công (200 OK):
         ///   ```json
@@ -152,7 +157,8 @@ namespace OhBau.API.Controllers
         ///     "data": null,
         ///     "message": "Dữ liệu đầu vào không hợp lệ",
         ///     "errors": {
-        ///       "Email": ["Email is invalid"]
+        ///       "Email": ["Email is invalid"],
+        ///       "MedicalProfile": ["MedicalProfile is required"]
         ///     }
         ///   }
         ///   ```
@@ -161,22 +167,20 @@ namespace OhBau.API.Controllers
         ///   {
         ///     "status": "401",
         ///     "data": null,
-        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền truy cập"
+        ///     "message": "Không cung cấp token hợp lệ hoặc không có quyền Admin"
         ///   }
         ///   ```
-        /// - Translations:
-        ///   - Vietnamese: "Tạo bác sĩ thành công"
         /// </remarks>
         /// <param name="request">Thông tin bác sĩ cần tạo, bao gồm `Phone`, `Email`, `Password`, `CreateMajorRequest`, và `DoctorRequest`.</param>
         /// <returns>
         /// - `200 OK`: Tạo bác sĩ thành công.
         /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ.
-        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền truy cập.
+        /// - `401 Unauthorized`: Không cung cấp token hợp lệ hoặc không có quyền Admin.
         /// - `500 Internal Server Error`: Lỗi hệ thống.
         /// </returns>
         /// <response code="200">Trả về thông báo khi tạo bác sĩ thành công.</response>
         /// <response code="400">Trả về lỗi nếu thông tin đầu vào không hợp lệ.</response>
-        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ.</response>
+        /// <response code="401">Trả về lỗi nếu không cung cấp token hợp lệ hoặc không có quyền Admin.</response>
         /// <response code="500">Trả về lỗi nếu có vấn đề hệ thống.</response>
         [HttpPost("create-doctor")]
         [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
