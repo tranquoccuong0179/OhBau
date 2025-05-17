@@ -30,8 +30,8 @@ namespace OhBau.Model.Payload.Request.Doctor
         public string Content {  get; set; }
 
         [Required(ErrorMessage = "Address is required")]
-        [RegularExpression(@"^[a-zA-Z0-9\s,.-]{5,100}$", 
-        ErrorMessage = "Address must be between 5 and 100 characters, and can include letters, numbers, spaces, commas, periods, and hyphens.")]
+        [RegularExpression(@"^[\p{L}0-9\s,.\-]{5,500}$",
+        ErrorMessage = "Address must be between 5 and 500 characters, and can include letters (including Vietnamese), numbers, spaces, commas, periods, and hyphens.")]
         [DataType(DataType.Text)]
         public string Address { get; set; }
 
@@ -41,5 +41,19 @@ namespace OhBau.Model.Payload.Request.Doctor
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime CreateAt {  get; set; } = DateTime.Now;
 
+        [Required(ErrorMessage = "Medical profile is required")]
+        public string MedicalProfile { get; set; }
+
+        [Required(ErrorMessage = "CareerPath profile is required")]
+        public string CareerPath { get; set; }
+
+        [Required(ErrorMessage = "OutStanding profile is required")]
+        public string OutStanding { get; set; }
+
+        [Required(ErrorMessage = "Experence profile is required")]
+        public string Experence { get; set; }
+
+        [Required(ErrorMessage = "Experence profile is required")]
+        public string Focus { get; set; }
     }
 }

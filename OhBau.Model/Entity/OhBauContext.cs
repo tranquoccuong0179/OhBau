@@ -65,6 +65,8 @@ public partial class OhBauContext : DbContext
     public virtual DbSet<Blog> Blogs { get; set; }
 
     public virtual DbSet<Comments> Comments { get; set; }
+
+
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()

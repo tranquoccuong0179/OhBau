@@ -107,6 +107,7 @@ namespace OhBau.Service.Implement
                 var mapItems = getChapter.Items.Select(x => new GetChapters
                 {
                     Id = x.Id,
+                    Image = x.ImageUrl,
                     Title = x.Title,
                     Content = x.Content
                 }).ToList();

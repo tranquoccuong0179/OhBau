@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace OhBau.Model.Entity;
 
@@ -31,11 +32,20 @@ public partial class Doctor
 
     public DateTime? DeleteAt { get; set; }
 
+    public string? MedicalProfile { get; set; }
+
+    public string? CareerPath { get; set; }
+
+    public string? OutStanding { get; set; }
+
+    public string? Experence { get; set; }
+
+    public string? Focus { get; set; }
+
     public virtual Account Account { get; set; } = null!;
 
     public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
-
     public virtual Major Major { get; set; } = null!;
 }

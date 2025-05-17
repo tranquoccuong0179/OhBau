@@ -12,6 +12,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Request;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;
@@ -97,14 +98,21 @@ namespace OhBau.Service.Implement
                     Active = request.DoctorRequest?.Active,
                     CreateAt = request?.DoctorRequest?.CreateAt,
                     UpdateAt = null,
-                    DeleteAt = null
+                    DeleteAt = null,
+                    Experence = request.DoctorRequest.Experence,
+                    CareerPath = request.DoctorRequest.CareerPath,
+                    Focus  = request.DoctorRequest.Focus,
+                    MedicalProfile = request.DoctorRequest.MedicalProfile,
+                    OutStanding = request.DoctorRequest.OutStanding
                 };
                 await _unitOfWork.GetRepository<Doctor>().InsertAsync(createDoctor);
+
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
                 _doctorCacheInvalidator.InvalidateEntityList();
                 _doctorCacheInvalidator.InvalidateEntity(createDoctor.Id);
+
 
                 return new BaseResponse<string>
                 {
@@ -263,6 +271,7 @@ namespace OhBau.Service.Implement
                 predicate: x => x.Id == doctorId,
                 include: q => q.Include(m => m.Major)
                                .Include(a => a.Account));
+             
             if (getInfor == null)
             {
                 return new BaseResponse<GetDoctorResponse>
@@ -273,6 +282,25 @@ namespace OhBau.Service.Implement
                 };
             }
 
+         
+
+            var medicalProfile = getInfor.MedicalProfile?
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).ToList() ?? new List<string>();
+
+            var careerPath = getInfor.CareerPath?
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).ToList() ?? new List<string>();
+
+            var outStanding = getInfor.OutStanding?
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).ToList() ?? new List<string>();
+
+            var focus = getInfor.Focus.Split('|', StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(s => s.Trim()).ToList() ?? new List<string>();
+
+            var experence = getInfor.Experence.Split("|",StringSplitOptions.RemoveEmptyEntries)
+                                       .Select(s => s.Trim()).ToList() ?? new List<string>();
             var response = new GetDoctorResponse
             {
                 Id = getInfor.Id,
@@ -282,11 +310,17 @@ namespace OhBau.Service.Implement
                 Gender = getInfor.Gender.ToString(), 
                 Content = getInfor.Content,
                 Address = getInfor.Address,
-                MajorId = getInfor.MajorId,
+                MajorId = getInfor.MajorId, 
                 Major = getInfor.Major.Name,
                 Email = getInfor.Account.Email, 
                 Phone = getInfor.Account.Phone,
-                Active = getInfor.Active
+                Active = getInfor.Active,
+                Experence = experence,
+                Focus = focus,
+                MedicalProfile = medicalProfile,
+                CareerPath = careerPath,
+                OutStanding = outStanding
+                
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
@@ -299,7 +333,6 @@ namespace OhBau.Service.Implement
                 data = response
             };
 
-            throw new NotImplementedException();
         }
 
         public async Task<BaseResponse<DoctorRequest>> EditDoctorInfor(Guid doctorId, DoctorRequest request)
@@ -309,8 +342,7 @@ namespace OhBau.Service.Implement
                 var getDoctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
                                                                        predicate: x => x.Id == doctorId,
                                                                        include: q => q.Include(m => m.Major)
-                                                                                      .Include(a => a.Account)
-                                                                   );
+                                                                                      .Include(a => a.Account));
                 if (getDoctor == null)
                 {
                     return new BaseResponse<DoctorRequest>
@@ -338,6 +370,11 @@ namespace OhBau.Service.Implement
                 getDoctor.CreateAt = getDoctor.CreateAt;
                 getDoctor.UpdateAt = DateTime.Now;
                 getDoctor.DeleteAt = null;
+                getDoctor.MedicalProfile = request.MedicalProfile ?? getDoctor.MedicalProfile;
+                getDoctor.CareerPath = request.CareerPath ?? getDoctor.CareerPath;
+                getDoctor.Experence = request.Experence ?? getDoctor.Experence;
+                getDoctor.OutStanding = request.OutStanding ?? getDoctor.OutStanding;
+                getDoctor.Focus = request.Focus ?? getDoctor.Focus;
 
                  _unitOfWork.GetRepository<Doctor>().UpdateAsync(getDoctor);
                 await _unitOfWork.CommitAsync();
