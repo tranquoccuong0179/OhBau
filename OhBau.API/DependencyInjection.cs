@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OhBau.Model.Entity;
@@ -44,7 +45,18 @@ namespace OhBau.API
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IMotherHealthService, MotherHealthService>();
             services.AddScoped<ISlotService, SlotService>();
+            services.AddScoped<IDoctorSlotService, DoctorSlotService>();
             services.AddScoped<HtmlSanitizerUtil>();
+            return services;
+        }
+
+        public static IServiceCollection AddOcrServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            var apiKey = GetOcrApiKey(configuration);
+            var apiUrl = GetOcrApiUrl(configuration);
+
+            services.AddSingleton(_ => apiKey);
+            services.AddSingleton(_ => apiUrl);
             return services;
         }
         public static IServiceCollection AddHttpClientServices(this IServiceCollection services)
@@ -102,6 +114,15 @@ namespace OhBau.API
             var strConn = config["ConnectionStrings:DefautDB"];
 
             return strConn;
+        }
+
+        private static string GetOcrApiKey(IConfiguration configuration)
+        {
+            return configuration.GetValue<string>("OCR:ApiKey");
+        }
+        private static string GetOcrApiUrl(IConfiguration configuration)
+        {
+            return configuration.GetValue<string>("OCR:ApiUrl");
         }
     }
 }

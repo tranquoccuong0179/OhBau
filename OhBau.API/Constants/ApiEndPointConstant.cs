@@ -90,5 +90,11 @@
             public const string GetAllSlot = SlotEndPoint;
             public const string GetSlot = SlotEndPoint + "/{id}";
         }
+
+        public static class DoctorSlot
+        {
+            public const string DoctorSlotEndPoint = ApiEndpoint + "/doctor-slot";
+            public const string CreateDoctorSlot = DoctorSlotEndPoint;
+        }
     }
 }
