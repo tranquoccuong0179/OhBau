@@ -91,7 +91,6 @@ namespace OhBau.Service.Implement
             var doctorSlotsToInsert = new List<DoctorSlot>();
             var slotIds = requests.Select(r => r.SlotId).Distinct().ToList();
 
-            // Kiểm tra tất cả khung giờ
             var slots = await _unitOfWork.GetRepository<Slot>()
                 .GetListAsync(predicate: s => slotIds.Contains(s.Id) && s.Active == true);
 
@@ -101,7 +100,6 @@ namespace OhBau.Service.Implement
                 throw new NotFoundException($"Không tìm thấy khung giờ với ID: {string.Join(", ", missingSlotIds)}");
             }
 
-            // Kiểm tra khung giờ đã tồn tại cho bác sĩ
             var existingDoctorSlots = await _unitOfWork.GetRepository<DoctorSlot>()
                 .GetListAsync(predicate: ds => ds.DoctorId.Equals(doctor.Id) && slotIds.Contains(ds.SlotId) && ds.Active == true);
 
@@ -113,11 +111,10 @@ namespace OhBau.Service.Implement
                 throw new BadHttpRequestException($"Bác sĩ đã thêm khung giờ với ID: {string.Join(", ", duplicateSlotIds)}");
             }
 
-            // Tạo danh sách DoctorSlot để thêm
             foreach (var request in requests)
             {
                 var slot = slots.First(s => s.Id == request.SlotId);
-                var doctorSlot = _mapper.Map<DoctorSlot>(request); // Giả sử request chứa dữ liệu cần thiết
+                var doctorSlot = _mapper.Map<DoctorSlot>(request);
                 doctorSlot.DoctorId = doctor.Id;
                 doctorSlot.SlotId = slot.Id;
                 doctorSlot.Active = true;
@@ -126,7 +123,6 @@ namespace OhBau.Service.Implement
                 createdDoctorSlots.Add(_mapper.Map<CreateDoctorSlotResponse>(doctorSlot));
             }
 
-            // Thêm tất cả DoctorSlot bằng InsertRangeAsync
             await _unitOfWork.GetRepository<DoctorSlot>().InsertRangeAsync(doctorSlotsToInsert);
             await _unitOfWork.CommitAsync();
 
