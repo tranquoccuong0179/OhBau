@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OhBau.Model.Payload.Response.DoctorSlot
 {
-    public class CreateDoctorSlotReponse
+    public class CreateDoctorSlotResponse
     {
         public Guid Id { get; set; }
         public Guid DoctorId { get; set; }

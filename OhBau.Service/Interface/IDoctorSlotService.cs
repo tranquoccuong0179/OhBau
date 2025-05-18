@@ -11,6 +11,8 @@ namespace OhBau.Service.Interface
 {
     public interface IDoctorSlotService
     {
-        Task<BaseResponse<CreateDoctorSlotReponse>> CreateDoctorSlot(CreateDoctorSlotRequest request);
+        Task<BaseResponse<List<CreateDoctorSlotResponse>>> CreateDoctorSlot(List<CreateDoctorSlotRequest> request);
+        Task<BaseResponse<bool>> Active(Guid id);
+        Task<BaseResponse<bool>> UnActive(Guid id);
     }
 }

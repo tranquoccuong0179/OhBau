@@ -17,13 +17,33 @@ namespace OhBau.API.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.DoctorSlot.CreateDoctorSlot)]
-        [ProducesResponseType(typeof(BaseResponse<CreateDoctorSlotReponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse<CreateDoctorSlotReponse>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(BaseResponse<CreateDoctorSlotReponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<List<CreateDoctorSlotResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<List<CreateDoctorSlotResponse>>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<List<CreateDoctorSlotResponse>>), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> CreateDoctorSlot([FromBody] CreateDoctorSlotRequest request)
+        public async Task<IActionResult> CreateDoctorSlot([FromBody] List<CreateDoctorSlotRequest> request)
         {
             var response = await _doctorSlotService.CreateDoctorSlot(request);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPost(ApiEndPointConstant.DoctorSlot.ActiveDoctorSlot)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> ActiveDoctorSlot([FromRoute] Guid id)
+        {
+            var response = await _doctorSlotService.Active(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPost(ApiEndPointConstant.DoctorSlot.UnActiveDoctorSlot)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status400BadRequest)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UnActiveDoctorSlot([FromRoute] Guid id)
+        {
+            var response = await _doctorSlotService.UnActive(id);
             return StatusCode(int.Parse(response.status), response);
         }
     }
