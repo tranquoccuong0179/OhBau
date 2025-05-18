@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -23,13 +24,51 @@ namespace OhBau.Service.Implement
         {
         }
 
-        public async Task<BaseResponse<CreateDoctorSlotReponse>> CreateDoctorSlot(CreateDoctorSlotRequest request)
+        public async Task<BaseResponse<bool>> Active(Guid id)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
 
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
                 predicate: a => a.Id.Equals(userId) && a.Active == true);
-            
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().SingleOrDefaultAsync(
+                predicate: ds => ds.Id.Equals(id) && ds.DoctorId.Equals(doctor.Id));
+            if (doctorSlot == null)
+            {
+                throw new NotFoundException("Khung giờ khám không tồn tại hoặc không thuộc về bác sĩ này");
+            }
+
+            doctorSlot.Active = true;
+
+            _unitOfWork.GetRepository<DoctorSlot>().UpdateAsync(doctorSlot);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Kích hoạt slot cho bác sĩ thành công",
+                data = true
+            };
+        }
+
+        public async Task<BaseResponse<List<CreateDoctorSlotResponse>>> CreateDoctorSlot(List<CreateDoctorSlotRequest> requests)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+
             if (account == null)
             {
                 throw new NotFoundException("Không tìm thấy tài khoản");
@@ -43,33 +82,97 @@ namespace OhBau.Service.Implement
                 throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
             }
 
-            var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(
-                predicate: s => s.Id.Equals(request.SlotId) && s.Active == true);
-
-            if (slot == null)
+            if (requests == null || !requests.Any())
             {
-                throw new NotFoundException("Không tìm thấy khung giờ đã chọn");
+                throw new BadHttpRequestException("Danh sách yêu cầu không được rỗng");
             }
 
-            var existingDoctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().SingleOrDefaultAsync(
-                predicate: ds => ds.SlotId.Equals(request.SlotId) && ds.DoctorId.Equals(doctor.Id) && ds.Active == true);
+            var createdDoctorSlots = new List<CreateDoctorSlotResponse>();
+            var doctorSlotsToInsert = new List<DoctorSlot>();
+            var slotIds = requests.Select(r => r.SlotId).Distinct().ToList();
 
-            if (existingDoctorSlot != null)
+            // Kiểm tra tất cả khung giờ
+            var slots = await _unitOfWork.GetRepository<Slot>()
+                .GetListAsync(predicate: s => slotIds.Contains(s.Id) && s.Active == true);
+
+            if (slots.Count != slotIds.Count)
             {
-                throw new BadHttpRequestException("Bác sĩ đã thêm khung giờ này rồi");
+                var missingSlotIds = slotIds.Except(slots.Select(s => s.Id)).ToList();
+                throw new NotFoundException($"Không tìm thấy khung giờ với ID: {string.Join(", ", missingSlotIds)}");
             }
 
-            var doctorSlot = _mapper.Map<DoctorSlot>(slot);
-            doctorSlot.DoctorId = doctor.Id;
+            // Kiểm tra khung giờ đã tồn tại cho bác sĩ
+            var existingDoctorSlots = await _unitOfWork.GetRepository<DoctorSlot>()
+                .GetListAsync(predicate: ds => ds.DoctorId.Equals(doctor.Id) && slotIds.Contains(ds.SlotId) && ds.Active == true);
 
-            await _unitOfWork.GetRepository<DoctorSlot>().InsertAsync(doctorSlot);
+            var existingSlotIds = existingDoctorSlots.Select(ds => ds.SlotId).ToList();
+            var duplicateSlotIds = slotIds.Intersect(existingSlotIds).ToList();
+
+            if (duplicateSlotIds.Any())
+            {
+                throw new BadHttpRequestException($"Bác sĩ đã thêm khung giờ với ID: {string.Join(", ", duplicateSlotIds)}");
+            }
+
+            // Tạo danh sách DoctorSlot để thêm
+            foreach (var request in requests)
+            {
+                var slot = slots.First(s => s.Id == request.SlotId);
+                var doctorSlot = _mapper.Map<DoctorSlot>(request); // Giả sử request chứa dữ liệu cần thiết
+                doctorSlot.DoctorId = doctor.Id;
+                doctorSlot.SlotId = slot.Id;
+                doctorSlot.Active = true;
+
+                doctorSlotsToInsert.Add(doctorSlot);
+                createdDoctorSlots.Add(_mapper.Map<CreateDoctorSlotResponse>(doctorSlot));
+            }
+
+            // Thêm tất cả DoctorSlot bằng InsertRangeAsync
+            await _unitOfWork.GetRepository<DoctorSlot>().InsertRangeAsync(doctorSlotsToInsert);
             await _unitOfWork.CommitAsync();
 
-            return new BaseResponse<CreateDoctorSlotReponse>
+            return new BaseResponse<List<CreateDoctorSlotResponse>>
             {
                 status = StatusCodes.Status200OK.ToString(),
-                message = "Bác sĩ thêm khung giờ thành công",
-                data = _mapper.Map<CreateDoctorSlotReponse>(doctorSlot)
+                message = "Bác sĩ thêm các khung giờ thành công",
+                data = createdDoctorSlots
+            };
+        }
+
+        public async Task<BaseResponse<bool>> UnActive(Guid id)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().SingleOrDefaultAsync(
+                predicate: ds => ds.Id.Equals(id) && ds.DoctorId.Equals(doctor.Id));
+            if (doctorSlot == null)
+            {
+                throw new NotFoundException("Khung giờ khám không tồn tại hoặc không thuộc về bác sĩ này");
+            }
+
+            doctorSlot.Active = false;
+
+            _unitOfWork.GetRepository<DoctorSlot>().UpdateAsync(doctorSlot);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Hủy slot cho bác sĩ thành công",
+                data = true
             };
         }
     }
