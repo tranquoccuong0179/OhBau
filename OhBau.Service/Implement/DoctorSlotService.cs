@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Exception;
+using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.DoctorSlot;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.DoctorSlot;
@@ -131,6 +132,72 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Bác sĩ thêm các khung giờ thành công",
                 data = createdDoctorSlots
+            };
+        }
+
+        public async Task<BaseResponse<IPaginate<GetDoctorSlotResponse>>> GetAllDoctorSlot(int page, int size)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
+                selector: ds => _mapper.Map<GetDoctorSlotResponse>(ds),
+                predicate: ds => ds.DoctorId.Equals(doctor.Id),
+                page: page,
+                size: size);
+
+            return new BaseResponse<IPaginate<GetDoctorSlotResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách khung giờ của bác sĩ thành công",
+                data = doctorSlot
+            };
+        }
+
+        public async Task<BaseResponse<GetDoctorSlotResponse>> GetDoctorSlot(Guid id)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().SingleOrDefaultAsync(
+                selector: ds => _mapper.Map<GetDoctorSlotResponse>(ds),
+                predicate: ds => ds.Id.Equals(id) && ds.DoctorId.Equals(doctor.Id));
+            if (doctorSlot == null)
+            {
+                throw new NotFoundException("Khung giờ khám không tồn tại hoặc không thuộc về bác sĩ này");
+            }
+
+            return new BaseResponse<GetDoctorSlotResponse>()
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy thông tin khung giờ khám của bác sĩ thành công",
+                data = doctorSlot
             };
         }
 

@@ -5,6 +5,7 @@ using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
 using OhBau.Model.Payload.Response.DoctorSlot;
 using OhBau.Model.Payload.Request.DoctorSlot;
+using OhBau.Model.Paginate;
 
 namespace OhBau.API.Controllers
 {
@@ -27,7 +28,29 @@ namespace OhBau.API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-        [HttpPost(ApiEndPointConstant.DoctorSlot.ActiveDoctorSlot)]
+        [HttpGet(ApiEndPointConstant.DoctorSlot.GetAllDoctorSlot)]
+        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetDoctorSlotResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetDoctorSlotResponse>>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllDoctorSlot([FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _doctorSlotService.GetAllDoctorSlot(pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpGet(ApiEndPointConstant.DoctorSlot.GetDoctorSlot)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetDoctorSlot([FromRoute] Guid id)
+        {
+            var response = await _doctorSlotService.GetDoctorSlot(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPut(ApiEndPointConstant.DoctorSlot.ActiveDoctorSlot)]
         [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
@@ -37,7 +60,7 @@ namespace OhBau.API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-        [HttpPost(ApiEndPointConstant.DoctorSlot.UnActiveDoctorSlot)]
+        [HttpPut(ApiEndPointConstant.DoctorSlot.UnActiveDoctorSlot)]
         [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status400BadRequest)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
