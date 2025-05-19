@@ -95,6 +95,8 @@
         {
             public const string DoctorSlotEndPoint = ApiEndpoint + "/doctor-slot";
             public const string CreateDoctorSlot = DoctorSlotEndPoint;
+            public const string GetAllDoctorSlot = DoctorSlotEndPoint;
+            public const string GetDoctorSlot = DoctorSlotEndPoint + "/{id}";
             public const string ActiveDoctorSlot = DoctorSlotEndPoint + "/{id}/active";
             public const string UnActiveDoctorSlot = DoctorSlotEndPoint + "/{id}/unactive";
         }

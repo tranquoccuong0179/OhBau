@@ -22,6 +22,9 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()));
 
             CreateMap<DoctorSlot, CreateDoctorSlotResponse>();
+
+            CreateMap<DoctorSlot, GetDoctorSlotResponse>()
+                .ForMember(dest => dest.GetSlot, opt => opt.MapFrom(src => src.Slot));
         }
     }
 }
