@@ -24,11 +24,14 @@ namespace VNPayService
     public class VNPayService :BaseService<VNPayService> ,IVnPayService
     {
         private readonly VNPayConfig _vnPayConfig;
+        private readonly GenericCacheInvalidator<MyCourse> _mycourseCacheInvalidator;
         public VNPayService(IUnitOfWork<OhBauContext> unitOfWork, 
             ILogger<VNPayService> logger, IMapper mapper, 
-            IHttpContextAccessor httpContextAccessor, VNPayConfig vnPayConfig) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, VNPayConfig vnPayConfig,
+            GenericCacheInvalidator<MyCourse> myCourseCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _vnPayConfig = vnPayConfig;
+            _mycourseCacheInvalidator = myCourseCacheInvalidator;
         }
 
         public async Task<string> CreatePayment(CreateOrder request)
@@ -151,8 +154,42 @@ namespace VNPayService
                 order.PaymentStatus = PaymentStatusEnum.Paid;
             }
 
-             _unitOfWork.GetRepository<Order>().UpdateAsync(order);
-            await _unitOfWork.CommitAsync();
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+                var getAccountByOrder = await _unitOfWork.GetRepository<Account>().GetByConditionAsync(x => x.Id == order.AccountId);
+                var getOrderDetailByOrder = await _unitOfWork.GetRepository<OrderDetail>().GetListAsync(predicate: x => x.OrderId == order.Id);
+
+                foreach (var orderDetail in getOrderDetailByOrder)
+                {
+                    var addNewMyCourse = new MyCourse
+                    {
+                        AccountId = getAccountByOrder.Id,
+                        CourseId = orderDetail.CourseId,
+                        CreateAt = DateTime.Now,
+                    };
+
+                    await _unitOfWork.GetRepository<MyCourse>().InsertAsync(addNewMyCourse);
+                    _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                }
+
+                var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
+                getCartByAccount.TotalPrice = 0;
+                
+                var getCartItemByCart = await _unitOfWork.GetRepository<CartItems>().GetListAsync(predicate: x => x.CartId == getCartByAccount.Id);
+
+                _unitOfWork.GetRepository<CartItems>().DeleteRangeAsync(getCartItemByCart);
+                _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                _mycourseCacheInvalidator.InvalidateEntityList();
+            }
+            catch (Exception ex) {
+                
+              await  _unitOfWork.RollbackTransactionAsync();
+                throw new Exception(ex.ToString());
+            }
 
             return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
         }

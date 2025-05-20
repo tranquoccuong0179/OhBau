@@ -37,5 +37,8 @@ namespace OhBau.Model.Payload.Request.Doctor
 
         public List<string> OutStanding {  get; set; }
 
+        public int totalFeedbacks { get; set; }
+        public double Rating {  get; set; }
+
     }
 }

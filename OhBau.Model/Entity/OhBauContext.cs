@@ -66,6 +66,10 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Comments> Comments { get; set; }
 
+    public virtual DbSet<CourseRating> CourseRating { get; set; }
+
+    public virtual DbSet<FavoriteCourses> FavoriteCourses { get; set; }
+
 
     public static string GetConnectionString(string connectionStringName)
     {
@@ -311,7 +315,6 @@ public partial class OhBauContext : DbContext
         {
             entity.ToTable("MyCourse");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Account).WithMany(p => p.MyCourses)
@@ -378,6 +381,10 @@ public partial class OhBauContext : DbContext
 
         modelBuilder.Entity<Order>().Property(o => o.PaymentStatus).HasConversion<string>();
         modelBuilder.Entity<Blog>().Property(b => b.Status).HasConversion<string>();
+
+        modelBuilder.Entity<FavoriteCourses>().HasKey(c => new { c.AccountId, c.CourseId });
+        modelBuilder.Entity<MyCourse>().HasKey(c => new {c.AccountId, c.CourseId});
+
         OnModelCreatingPartial(modelBuilder);
     }
 

@@ -42,10 +42,14 @@ namespace OhBau.API
             services.AddScoped<IOrderSerivce,OrderService>();
             services.AddScoped<IFetusService, FetusService>();
             services.AddScoped<IBlogService, BlogService>();
+            services.AddScoped<ICourseRating, CourseRatingService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IMotherHealthService, MotherHealthService>();
             services.AddScoped<ISlotService, SlotService>();
             services.AddScoped<IDoctorSlotService, DoctorSlotService>();
+            services.AddScoped<IFavoriteCourseService, FavoriteCourseService>();
+            services.AddScoped<IMyCourseService, MyCourseService>();
+
             services.AddScoped<HtmlSanitizerUtil>();
             return services;
         }

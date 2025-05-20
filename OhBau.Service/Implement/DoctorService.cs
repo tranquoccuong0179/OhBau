@@ -270,7 +270,8 @@ namespace OhBau.Service.Implement
             var getInfor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
                 predicate: x => x.Id == doctorId,
                 include: q => q.Include(m => m.Major)
-                               .Include(a => a.Account));
+                               .Include(a => a.Account)
+                               .Include(f => f.Feedbacks));
              
             if (getInfor == null)
             {
@@ -301,26 +302,36 @@ namespace OhBau.Service.Implement
 
             var experence = getInfor.Experence.Split("|",StringSplitOptions.RemoveEmptyEntries)
                                        .Select(s => s.Trim()).ToList() ?? new List<string>();
+
+            double rating = 0;
+            int totalFeedbacks = 0;
+            if (getInfor.Feedbacks.Count > 0)
+            {
+                rating = getInfor.Feedbacks.Average(s => s.Rating);
+                totalFeedbacks = getInfor.Feedbacks.Count;
+            }
+
             var response = new GetDoctorResponse
             {
                 Id = getInfor.Id,
                 FullName = getInfor.FullName,
                 Avatar = getInfor.Avatar,
                 Dob = getInfor.Dob,
-                Gender = getInfor.Gender.ToString(), 
+                Gender = getInfor.Gender.ToString(),
                 Content = getInfor.Content,
                 Address = getInfor.Address,
-                MajorId = getInfor.MajorId, 
+                MajorId = getInfor.MajorId,
                 Major = getInfor.Major.Name,
-                Email = getInfor.Account.Email, 
+                Email = getInfor.Account.Email,
                 Phone = getInfor.Account.Phone,
                 Active = getInfor.Active,
                 Experence = experence,
                 Focus = focus,
                 MedicalProfile = medicalProfile,
                 CareerPath = careerPath,
-                OutStanding = outStanding
-                
+                OutStanding = outStanding,
+                Rating = rating,
+                totalFeedbacks = totalFeedbacks
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
