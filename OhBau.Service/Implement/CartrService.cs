@@ -36,7 +36,22 @@ namespace OhBau.Service.Implement
             try
             {
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
-                var checkAlready = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(x => x.CartId == getCartByAccount.Id && x.CourseId == courseId);
+
+                var checkAlready = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(
+                    x => x.CartId == getCartByAccount.Id && x.CourseId == courseId);
+
+                var checkMyCourse = await _unitOfWork.GetRepository<MyCourse>().GetByConditionAsync(x => x.CourseId == courseId && x.AccountId == accountId);
+
+                if (checkMyCourse != null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status208AlreadyReported.ToString(),
+                        message = "You have already purchased this course",
+                        data = null
+                    };
+                }
+
                 if (checkAlready != null)
                 {
                     return new BaseResponse<string>
@@ -128,6 +143,7 @@ namespace OhBau.Service.Implement
                     cartItem = mapItem,
                     TotalPrice = getCartItems.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault()
                 };
+
                 var pagedResposne = new Paginate<GetCartByAccount>
                 {
                     Items = new List<GetCartByAccount> { result },

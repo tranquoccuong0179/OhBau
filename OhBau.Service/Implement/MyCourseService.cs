@@ -1,0 +1,94 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using OhBau.Model.Entity;
+using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.MyCourse;
+using OhBau.Repository.Interface;
+using OhBau.Service.Interface;
+
+namespace OhBau.Service.Implement
+{
+    public class MyCourseService : BaseService<MyCourseService>, IMyCourseService
+    {
+        private readonly IMemoryCache _cache;
+        private readonly GenericCacheInvalidator<MyCourse> _myCourseCacheInvalidator;
+        public MyCourseService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<MyCourseService> logger, 
+            IMapper mapper, IHttpContextAccessor httpContextAccessor,
+            IMemoryCache cache,
+            GenericCacheInvalidator<MyCourse> myCourseCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        {
+            _cache = cache;
+            _myCourseCacheInvalidator = myCourseCacheInvalidator;
+        }
+
+        public async Task<BaseResponse<Paginate<MyCoursesResponse>>> MyCourses(Guid accountId, int pageNumber, int pageSize, string? courseName)
+        {
+            var listParameter = new ListParameters<MyCourse>(pageNumber, pageSize);
+            listParameter.AddFilter("courseName", courseName);
+            var cache = _myCourseCacheInvalidator.GetCacheKeyForList(listParameter);
+            if (_cache.TryGetValue(cache, out Paginate<MyCoursesResponse> MyCourses))
+            {
+                return new BaseResponse<Paginate<MyCoursesResponse>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get my courses success(cache)",
+                    data = MyCourses
+                };
+            }
+
+            Expression<Func<MyCourse,bool>> predicate = x => x.AccountId == accountId;
+            
+            if (!string.IsNullOrEmpty(courseName))
+            {
+                predicate = x => x.AccountId == accountId && x.Course.Name.Contains(courseName);
+            }
+
+            var getCoursesByAccount = await _unitOfWork.GetRepository<MyCourse>().GetPagingListAsync(
+                predicate:predicate,
+                include: x => x.Include(c => c.Course),
+                page: pageNumber,
+                size: pageSize
+                );
+
+            var mapItems = getCoursesByAccount.Items.Select(mc => new MyCoursesResponse
+            {
+                Id = mc.CourseId,
+                Name = mc.Course.Name,
+                Duration = mc.Course.Duration,
+                Rating = mc.Course.Rating
+            }).ToList();
+
+            var pagedResponse = new Paginate<MyCoursesResponse>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache, pagedResponse ,options);
+
+            return new BaseResponse<Paginate<MyCoursesResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get my course success",
+                data = pagedResponse
+            };
+        }
+    }
+}

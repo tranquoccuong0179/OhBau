@@ -46,6 +46,6 @@ public partial class Doctor
 
     public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
 
-    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+    public virtual ICollection<Feedback>? Feedbacks { get; set; } = new List<Feedback>();
     public virtual Major Major { get; set; } = null!;
 }

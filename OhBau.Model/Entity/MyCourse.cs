@@ -5,8 +5,6 @@ namespace OhBau.Model.Entity;
 
 public partial class MyCourse
 {
-    public Guid Id { get; set; }
-
     public Guid AccountId { get; set; }
 
     public Guid CourseId { get; set; }
