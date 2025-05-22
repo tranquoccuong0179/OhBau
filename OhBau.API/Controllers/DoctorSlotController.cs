@@ -29,14 +29,26 @@ namespace OhBau.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.DoctorSlot.GetAllDoctorSlot)]
-        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetDoctorSlotResponse>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetDoctorSlotResponse>>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotsForUserResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotsForUserResponse>), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetAllDoctorSlot([FromQuery] int? page, [FromQuery] int? size)
+        public async Task<IActionResult> GetAllDoctorSlot([FromQuery] int? page, [FromQuery] int? size, [FromQuery] DateOnly date)
         {
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
-            var response = await _doctorSlotService.GetAllDoctorSlot(pageNumber, pageSize);
+            var response = await _doctorSlotService.GetAllDoctorSlot(pageNumber, pageSize, date);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpGet(ApiEndPointConstant.DoctorSlot.GetAllDoctorSlotForUser)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotsForUserResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotsForUserResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllDoctorSlotForUser([FromRoute] Guid id, [FromQuery] DateOnly date, [FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _doctorSlotService.GetAllDoctorSlotForUser(id, date, pageNumber, pageSize);
             return StatusCode(int.Parse(response.status), response);
         }
 
@@ -44,9 +56,9 @@ namespace OhBau.API.Controllers
         [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<GetDoctorSlotResponse>), StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(ProblemDetails))]
-        public async Task<IActionResult> GetDoctorSlot([FromRoute] Guid id)
+        public async Task<IActionResult> GetDoctorSlot([FromRoute] Guid id, [FromQuery] DateOnly date)
         {
-            var response = await _doctorSlotService.GetDoctorSlot(id);
+            var response = await _doctorSlotService.GetDoctorSlot(id, date);
             return StatusCode(int.Parse(response.status), response);
         }
 

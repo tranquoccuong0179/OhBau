@@ -24,7 +24,9 @@ namespace OhBau.Model.Mapper
             CreateMap<DoctorSlot, CreateDoctorSlotResponse>();
 
             CreateMap<DoctorSlot, GetDoctorSlotResponse>()
-                .ForMember(dest => dest.GetSlot, opt => opt.MapFrom(src => src.Slot));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Slot, opt => opt.MapFrom(src => src.Slot))
+                .ForMember(dest => dest.IsBooking, opt => opt.Ignore());
         }
     }
 }

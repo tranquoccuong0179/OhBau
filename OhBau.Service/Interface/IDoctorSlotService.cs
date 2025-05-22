@@ -15,8 +15,9 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<List<CreateDoctorSlotResponse>>> CreateDoctorSlot(List<CreateDoctorSlotRequest> request);
         Task<BaseResponse<bool>> Active(Guid id);
         Task<BaseResponse<bool>> UnActive(Guid id);
-        Task<BaseResponse<IPaginate<GetDoctorSlotResponse>>> GetAllDoctorSlot(int page, int size);
-        Task<BaseResponse<GetDoctorSlotResponse>> GetDoctorSlot(Guid id);
+        Task<BaseResponse<GetDoctorSlotsForUserResponse>> GetAllDoctorSlot(int page, int size, DateOnly date);
+        Task<BaseResponse<GetDoctorSlotResponse>> GetDoctorSlot(Guid id, DateOnly date);
+        Task<BaseResponse<IPaginate<GetDoctorSlotsForUserResponse>>> GetAllDoctorSlotForUser(Guid id, DateOnly date, int page, int size);
 
     }
 }
