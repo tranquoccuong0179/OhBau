@@ -20,7 +20,6 @@ using OhBau.Model.Payload.Response.DoctorSlot;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OhBau.Service.Implement
 {
