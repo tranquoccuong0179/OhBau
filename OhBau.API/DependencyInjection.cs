@@ -49,6 +49,7 @@ namespace OhBau.API
             services.AddScoped<IDoctorSlotService, DoctorSlotService>();
             services.AddScoped<IFavoriteCourseService, FavoriteCourseService>();
             services.AddScoped<IMyCourseService, MyCourseService>();
+            services.AddScoped<IBookingService, BookingService>();
 
             services.AddScoped<HtmlSanitizerUtil>();
             return services;

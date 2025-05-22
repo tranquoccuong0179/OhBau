@@ -101,5 +101,11 @@
             public const string UnActiveDoctorSlot = DoctorSlotEndPoint + "/{id}/unactive";
             public const string GetAllDoctorSlotForUser = DoctorSlotEndPoint + "/{id}/user";
         }
+
+        public static class Booking
+        {
+            public const string BookingEndPoint = ApiEndpoint + "/booking";
+            public const string CreateBooking = BookingEndPoint;
+        }
     }
 }
