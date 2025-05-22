@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
+using AngleSharp.Io;
 using AutoMapper;
+using Azure;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Exception;
@@ -16,6 +20,7 @@ using OhBau.Model.Payload.Response.DoctorSlot;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OhBau.Service.Implement
 {
@@ -135,7 +140,7 @@ namespace OhBau.Service.Implement
             };
         }
 
-        public async Task<BaseResponse<IPaginate<GetDoctorSlotResponse>>> GetAllDoctorSlot(int page, int size)
+        public async Task<BaseResponse<GetDoctorSlotsForUserResponse>> GetAllDoctorSlot(int page, int size, DateOnly date)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
@@ -147,57 +152,146 @@ namespace OhBau.Service.Implement
             }
 
             var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
-                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+                predicate: d => d.AccountId.Equals(userId));
 
             if (doctor == null)
             {
                 throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
             }
 
-            var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
-                selector: ds => _mapper.Map<GetDoctorSlotResponse>(ds),
+            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
                 predicate: ds => ds.DoctorId.Equals(doctor.Id),
+                include: ds => ds.Include(d => d.Slot),
                 page: page,
                 size: size);
 
-            return new BaseResponse<IPaginate<GetDoctorSlotResponse>>
+            var doctorSlotResponses = new List<GetDoctorSlotResponse>();
+            foreach (var doctorSlot in doctorSlots.Items)
+            {
+                var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                    predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
+                        && b.CreateAt.HasValue
+                        && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                        && b.Active == true);
+
+                var isBooked = booking != null;
+
+
+                var doctorSlotResponse = _mapper.Map<GetDoctorSlotResponse>(doctorSlot);
+                doctorSlotResponse.IsBooking = isBooked;
+                doctorSlotResponses.Add(doctorSlotResponse);
+            }
+
+            var response = new GetDoctorSlotsForUserResponse
+            {
+                Name = doctor.FullName,
+                DoctorSlots = doctorSlotResponses
+            };
+            return new BaseResponse<GetDoctorSlotsForUserResponse>
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Lấy danh sách khung giờ của bác sĩ thành công",
-                data = doctorSlot
+                data = response
             };
         }
 
-        public async Task<BaseResponse<GetDoctorSlotResponse>> GetDoctorSlot(Guid id)
+        public async Task<BaseResponse<IPaginate<GetDoctorSlotsForUserResponse>>> GetAllDoctorSlotForUser(Guid id, DateOnly date, int page, int size)
+        {
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: d => d.Id.Equals(id) && d.Active == true,
+                include: d => d.Include(d => d.DoctorSlots).ThenInclude(ds => ds.Slot));
+
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
+                predicate: ds => ds.DoctorId.Equals(id) && ds.Active == true,
+                include: ds => ds.Include(d => d.Slot).Include(d => d.Doctor),
+                page: page,
+                size: size);
+
+            var responses = new List<GetDoctorSlotResponse>();
+            var doctorSlotResponses = new List<GetDoctorSlotResponse>();
+            foreach (var doctorSlot in doctorSlots.Items)
+            {
+                var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                    predicate: b => b.DotorSlot.Equals(doctorSlot.Id)
+                        && b.CreateAt.HasValue
+                        && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                        && b.Active == true);
+
+                var isBooked = booking != null;
+
+                var doctorSlotResponse = _mapper.Map<GetDoctorSlotResponse>(doctorSlot);
+                doctorSlotResponse.IsBooking = isBooked;
+                doctorSlotResponses.Add(doctorSlotResponse);
+            }
+
+            var response = new GetDoctorSlotsForUserResponse
+            {
+                Name = doctor.FullName,
+                DoctorSlots = doctorSlotResponses
+            };
+
+            return new BaseResponse<IPaginate<GetDoctorSlotsForUserResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách khung giờ của bác sĩ thành công",
+                data = new Paginate<GetDoctorSlotsForUserResponse>(
+                    new List<GetDoctorSlotsForUserResponse> { response },
+                    doctorSlots.Page,
+                    doctorSlots.Size,
+                    doctorSlots.Total)
+            };
+        }
+
+        public async Task<BaseResponse<GetDoctorSlotResponse>> GetDoctorSlot(Guid id, DateOnly date)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
                 predicate: a => a.Id.Equals(userId) && a.Active == true);
+
             if (account == null)
             {
                 throw new NotFoundException("Không tìm thấy tài khoản");
             }
 
             var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
-                predicate: d => d.AccountId.Equals(userId) && d.Active == true);
+                predicate: d => d.AccountId.Equals(userId) && d.Active == true,
+                include: d => d.Include(d => d.DoctorSlots).ThenInclude(ds => ds.Slot));
+
             if (doctor == null)
             {
                 throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
             }
 
             var doctorSlot = await _unitOfWork.GetRepository<DoctorSlot>().SingleOrDefaultAsync(
-                selector: ds => _mapper.Map<GetDoctorSlotResponse>(ds),
-                predicate: ds => ds.Id.Equals(id) && ds.DoctorId.Equals(doctor.Id));
+                predicate: ds => ds.Id.Equals(id) && ds.DoctorId.Equals(doctor.Id),
+                include: ds => ds.Include(ds => ds.Slot).Include(ds => ds.Doctor));
+
             if (doctorSlot == null)
             {
                 throw new NotFoundException("Khung giờ khám không tồn tại hoặc không thuộc về bác sĩ này");
             }
 
-            return new BaseResponse<GetDoctorSlotResponse>()
+            var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                predicate: b => b.DotorSlot.Equals(doctorSlot.Id)
+                    && b.CreateAt.HasValue
+                    && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                    && b.Active == true);
+
+            var isBooked = booking != null;
+
+            var response = _mapper.Map<GetDoctorSlotResponse>(doctorSlot);
+            response.IsBooking = isBooked;
+
+            return new BaseResponse<GetDoctorSlotResponse>
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Lấy thông tin khung giờ khám của bác sĩ thành công",
-                data = doctorSlot
+                data = response
             };
         }
 

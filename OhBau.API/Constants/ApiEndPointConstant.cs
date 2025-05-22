@@ -99,6 +99,7 @@
             public const string GetDoctorSlot = DoctorSlotEndPoint + "/{id}";
             public const string ActiveDoctorSlot = DoctorSlotEndPoint + "/{id}/active";
             public const string UnActiveDoctorSlot = DoctorSlotEndPoint + "/{id}/unactive";
+            public const string GetAllDoctorSlotForUser = DoctorSlotEndPoint + "/{id}/user";
         }
     }
 }

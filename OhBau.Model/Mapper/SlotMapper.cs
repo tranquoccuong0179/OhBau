@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using OhBau.Model.Entity;
 using OhBau.Model.Payload.Request.Slot;
+using OhBau.Model.Payload.Response.DoctorSlot;
 using OhBau.Model.Payload.Response.Slot;
 using OhBau.Model.Utils;
 
@@ -24,6 +25,8 @@ namespace OhBau.Model.Mapper
             CreateMap<Slot, CreateSlotResponse>();
 
             CreateMap<Slot, GetSlotResponse>();
+
+            CreateMap<Slot, SlotResponse>();
         }
     }
 }
