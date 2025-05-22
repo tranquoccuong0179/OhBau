@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhBau.Repository", "OhBau.R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VNPayService", "VNPayService\VNPayService.csproj", "{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailService", "EmailService\EmailService.csproj", "{D24DE81A-A8DD-4C09-8867-12E8984E5A45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6160FCB-9F5D-4527-9F1B-D962C8DBC64E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D24DE81A-A8DD-4C09-8867-12E8984E5A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D24DE81A-A8DD-4C09-8867-12E8984E5A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D24DE81A-A8DD-4C09-8867-12E8984E5A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D24DE81A-A8DD-4C09-8867-12E8984E5A45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
