@@ -30,6 +30,50 @@ namespace OhBau.Service.Implement
             _categoryCacheInvalidator = categoryCacheInvalidator;
         }
 
+        public async Task<BaseResponse<string>> CreateCategory(CreateCategoryRequest request)
+        {
+            try
+            {
+                var checkAlready = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(request.Name));
+                if (checkAlready != null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status208AlreadyReported.ToString(),
+                        message = "Category already exist",
+                        data = null
+                    };
+                }
+
+                var createCategory = new Category
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Active = true,
+                    CreateAt = DateTime.Now,
+                    UpdateAt = null,
+                    DeleteAt = null
+                };
+
+                await _unitOfWork.GetRepository<Category>().InsertAsync(createCategory);
+                await _unitOfWork.CommitAsync();
+
+                _categoryCacheInvalidator.InvalidateEntityList();
+                _categoryCacheInvalidator.InvalidateEntity(createCategory.Id);
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Create category success",
+                    data = null
+                };
+            }
+            catch (Exception ex) {
+
+                throw new Exception(ex.ToString());
+            }
+            throw new NotImplementedException();
+        }
+
         public async Task<BaseResponse<string>> DeleteCategory(Guid categoryId)
         {
             var checkCategory = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Id == categoryId);

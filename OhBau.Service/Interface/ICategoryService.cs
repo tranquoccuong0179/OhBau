@@ -14,7 +14,9 @@ namespace OhBau.Service.Interface
     {
         Task<BaseResponse<Paginate<CategoryResponse>>> GetCategories(int pageNumber, int pageSize);
         Task<BaseResponse<string>> EditCategory(Guid categoryId,EditCategoryRequest request);
-
         Task<BaseResponse<string>> DeleteCategory(Guid categoryId);
+
+        Task<BaseResponse<string>> CreateCategory(CreateCategoryRequest request);
+
     }
 }

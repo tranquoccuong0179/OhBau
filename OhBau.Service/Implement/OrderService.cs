@@ -165,5 +165,125 @@ namespace OhBau.Service.Implement
             }
         }
 
+        public async Task<BaseResponse<Paginate<GetOrderDetails>>> GetOrderDetails(Guid accountId, Guid orderId, int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<GetOrderDetails>(pageNumber, pageSize);
+            parameters.AddFilter("accountId", accountId);
+            parameters.AddFilter("orderId", orderId);
+
+            var cache = _orderDetailCacheInvalidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cache, out Paginate<GetOrderDetails> GetOrderDetails))
+            {
+                return new BaseResponse<Paginate<GetOrderDetails>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get order details success(cache)",
+                    data = GetOrderDetails
+                };
+            }
+
+            var checkAuthorize = await _unitOfWork.GetRepository<OrderDetail>().GetPagingListAsync(
+                predicate: x => x.Order.AccountId == accountId && x.OrderId == orderId,
+                include: i => i.Include(c => c.Course)
+                               .ThenInclude(c => c.Category)
+                               .Include(c => c.Order)
+                );
+
+            if (checkAuthorize == null)
+            {
+                return new BaseResponse<Paginate<GetOrderDetails>>
+                {
+                    status = StatusCodes.Status403Forbidden.ToString(),
+                    message = "You do not have the right to view orders that do not belong to you",
+                    data = null
+                };
+            }
+
+            var mapItems = checkAuthorize.Items.Select(c => new GetOrderDetails
+            {
+                Id = c.Id,
+                CourseName = c.Course.Name,
+                CategoryName = c.Course.Category.Name,
+                Duration = c.Course.Duration,
+                CourseRating = c.Course.Rating,
+                Price = c.Course.Price
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetOrderDetails>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache,pagedResponse,options);
+
+            return new BaseResponse<Paginate<GetOrderDetails>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get order details success",
+                data = pagedResponse
+            };
+
+        }
+
+        public async Task<BaseResponse<Paginate<GetOrders>>> GetOrders(Guid accountId, int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<Order>(pageNumber, pageSize);
+            parameters.AddFilter("accountId", accountId);
+
+            var cache = _orderCacheInvalidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cache, out Paginate<GetOrders> GetOrders))
+            {
+                return new BaseResponse<Paginate<GetOrders>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get orders success(cache)",
+                    data = GetOrders
+                };
+            }
+
+            var getOrders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync(predicate: x => x.AccountId == accountId, include: i => i.Include(a => a.Account),
+                page: pageNumber, size: pageSize);
+
+            var mapItems = getOrders.Items.Select(c => new GetOrders
+            {
+                Id = c.Id,
+                TotalPrice = c.TotalPrice,
+                CreatedDate = c.CreatedDate,
+                PaymentStatus = c.PaymentStatus,
+                Email = c.Account.Email,
+                Phone = c.Account.Phone
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetOrders>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache,pagedResponse, options);
+
+            return new BaseResponse<Paginate<GetOrders>>
+            {
+                 status = StatusCodes.Status200OK.ToString(),
+                 message = "Get orders success",
+                 data = pagedResponse
+            };
+
+        }
     }
 }

@@ -11,6 +11,9 @@ using Microsoft.Extensions.Configuration;
 using VNPayService.Config;
 using Microsoft.Extensions.Options;
 using VNPayService;
+using EmailService.Config;
+using Microsoft.Extensions.DependencyInjection;
+using EmailService.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +25,13 @@ var vnPaySection = builder.Configuration.GetSection("VNPayConfig");
 builder.Services.Configure<VNPayConfig>(vnPaySection);
 builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<VNPayConfig>>().Value);
 builder.Services.AddScoped<IVnPayService,VNPayService.VNPayService>();
+
+//Email Sender
+var emailSection = builder.Configuration.GetSection("EmailSetting");
+builder.Services.Configure<EmailSetting>(emailSection);
+builder.Services.AddSingleton(reslover => reslover.GetRequiredService<IOptions<EmailSetting>>().Value);
+var emailSetting = emailSection.Get<EmailSetting>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 //Serilog Config
 Log.Logger = new LoggerConfiguration()

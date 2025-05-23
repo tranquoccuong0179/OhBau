@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OhBau.Model.Payload.Request.Order;
+using OhBau.Model.Utils;
 using OhBau.Service.Interface;
 
 namespace OhBau.API.Controllers
@@ -23,6 +24,24 @@ namespace OhBau.API.Controllers
                 _logger.LogError("[Create Order API] " + ex.Message,ex.StackTrace);
                 return StatusCode(500,ex.ToString());
             }
+        }
+
+        [HttpGet("get-orders")]
+        [Authorize]
+        public async Task<IActionResult> GetOrders([FromQuery]int pageNumber, [FromQuery]int pageSize)
+        {
+            var accountId = UserUtil.GetAccountId(HttpContext);
+            var response = await _orderService.GetOrders(accountId!.Value, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status),response);
+        }
+
+        [HttpGet("get-order-details")]
+        [Authorize]
+        public async Task<IActionResult> GetOrderDetails([FromQuery] Guid orderId, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var accountId = UserUtil.GetAccountId(HttpContext);
+            var response = await _orderService.GetOrderDetails(accountId!.Value,orderId, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
         }
     }
 }

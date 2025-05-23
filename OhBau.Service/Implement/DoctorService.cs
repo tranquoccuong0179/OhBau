@@ -103,7 +103,8 @@ namespace OhBau.Service.Implement
                     CareerPath = request.DoctorRequest.CareerPath,
                     Focus  = request.DoctorRequest.Focus,
                     MedicalProfile = request.DoctorRequest.MedicalProfile,
-                    OutStanding = request.DoctorRequest.OutStanding
+                    OutStanding = request.DoctorRequest.OutStanding,
+                    WorkSchedule = request.DoctorRequest.WorkSchedule
                 };
                 await _unitOfWork.GetRepository<Doctor>().InsertAsync(createDoctor);
 
@@ -331,7 +332,8 @@ namespace OhBau.Service.Implement
                 CareerPath = careerPath,
                 OutStanding = outStanding,
                 Rating = rating,
-                totalFeedbacks = totalFeedbacks
+                totalFeedbacks = totalFeedbacks,
+                WorkSchedule = getInfor.WorkSchedule
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
@@ -386,6 +388,7 @@ namespace OhBau.Service.Implement
                 getDoctor.Experence = request.Experence ?? getDoctor.Experence;
                 getDoctor.OutStanding = request.OutStanding ?? getDoctor.OutStanding;
                 getDoctor.Focus = request.Focus ?? getDoctor.Focus;
+                getDoctor.WorkSchedule = request.WorkSchedule ?? getDoctor?.WorkSchedule;
 
                  _unitOfWork.GetRepository<Doctor>().UpdateAsync(getDoctor);
                 await _unitOfWork.CommitAsync();
@@ -558,6 +561,56 @@ namespace OhBau.Service.Implement
             
                 throw new Exception(ex.ToString());
             }
+        }
+
+        public async Task<BaseResponse<Paginate<GetMajors>>> GetMajors(int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<GetMajors>(pageNumber, pageSize);
+            var cache = _majorCacheInvalidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cache, out Paginate<GetMajors> GetMajors))
+            {
+                return new BaseResponse<Paginate<GetMajors>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get majors succes(cache)",
+                    data = GetMajors
+                };
+            }
+
+            var getMajors = await _unitOfWork.GetRepository<Major>().GetPagingListAsync(page:pageNumber, size: pageSize);
+
+            var mapItems = getMajors.Items.Select(c => new GetMajors
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Active = c.Active,
+                CreateAt = c.CreateAt,
+                UpdateAt = c.UpdateAt,
+                DeleteAt = c.DeleteAt
+
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetMajors>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache,pagedResponse, options);
+
+            return new BaseResponse<Paginate<GetMajors>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get majors success",
+                data =pagedResponse
+            };
         }
     }
 }

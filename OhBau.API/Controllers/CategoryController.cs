@@ -44,5 +44,20 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, ex?.ToString());
             }
         }
+
+        [HttpPost("create-category")]
+        public async Task<IActionResult> CreateCategory([FromBody]CreateCategoryRequest request)
+        {
+            try
+            {
+                var reponse = await _categoryService.CreateCategory(request);
+                return StatusCode(int.Parse(reponse.status),reponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Create category API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex?.ToString());
+            }
+        }
     }
 }
