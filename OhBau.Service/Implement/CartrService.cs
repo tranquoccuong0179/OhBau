@@ -26,8 +26,10 @@ namespace OhBau.Service.Implement
         public CartrService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CartrService> logger, 
             IMapper mapper, 
             IHttpContextAccessor httpContextAccessor,
-            GenericCacheInvalidator<Cart> cartCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            GenericCacheInvalidator<Cart> cartCacheInvalidator, IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _cartCacheInvalidator = cartCacheInvalidator;
+            _cache = cache;
         }
 
         public async Task<BaseResponse<string>> AddCourseToCart(Guid courseId, Guid accountId)
@@ -118,7 +120,7 @@ namespace OhBau.Service.Implement
                     return new BaseResponse<Paginate<GetCartByAccount>>
                     {
                         status = StatusCodes.Status200OK.ToString(),
-                        message = "Get cart success",
+                        message = "Get cart success(cache)",
                         data = cachedResult
                     };
                 }
@@ -178,12 +180,12 @@ namespace OhBau.Service.Implement
             listParameter.AddFilter("accountId", accountId);
 
             var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
-            if (_cache.TryGetValue(cacheKey, out Paginate<GetCartDetailResponse> getCartDetail))
+            if (_cache.TryGetValue(cacheKey, out Paginate<Model.Payload.Response.Cart.GetCartDetailResponse> getCartDetail))
             {
                 return new BaseResponse<Paginate<GetCartDetailResponse>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get cart items success",
+                    message = "Get cart items success(cache)",
                     data = getCartDetail
                 };
             }
@@ -224,7 +226,7 @@ namespace OhBau.Service.Implement
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             };
 
-            _cache.Set(cacheKey, result, options);
+            _cache.Set(cacheKey, pagedResposne, options);
 
             return new BaseResponse<Paginate<GetCartDetailResponse>>
             {

@@ -55,5 +55,7 @@ namespace OhBau.Model.Payload.Request.Doctor
 
         [Required(ErrorMessage = "Experence profile is required")]
         public string Focus { get; set; }
+
+        public string WorkSchedule { get; set;}
     }
 }

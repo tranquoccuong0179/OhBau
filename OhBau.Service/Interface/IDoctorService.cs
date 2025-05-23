@@ -34,5 +34,7 @@ namespace OhBau.Service.Interface
 
         Task<BaseResponse<string>> EditFetusInformation(Guid fetusId, EditFetusInformationRequest request);
 
+        Task<BaseResponse<Paginate<GetMajors>>> GetMajors(int pageNumber, int pageSize);
+
     }
 }

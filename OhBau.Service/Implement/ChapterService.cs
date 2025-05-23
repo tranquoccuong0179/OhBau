@@ -15,6 +15,7 @@ using OhBau.Model.Payload.Request.Chapter;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Chapter;
 using OhBau.Model.Payload.Response.Course;
+using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
 
@@ -24,13 +25,16 @@ namespace OhBau.Service.Implement
     {
         private readonly IMemoryCache _cache;
         private readonly GenericCacheInvalidator<Chapter> _chaperCacheInvalidator;
+        private readonly HtmlSanitizerUtil _sanitizer;
         public ChapterService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<ChapterService> logger, IMapper mapper
             , IHttpContextAccessor httpContextAccessor,
             IMemoryCache cache,
-            GenericCacheInvalidator<Chapter> chapterCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            GenericCacheInvalidator<Chapter> chapterCacheInvalidator,
+            HtmlSanitizerUtil util) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _cache = cache;
             _chaperCacheInvalidator = chapterCacheInvalidator;
+            _sanitizer = util;
         }   
 
         public async Task<BaseResponse<string>> CreateChaper(CreateChapterRequest request)
@@ -41,7 +45,7 @@ namespace OhBau.Service.Implement
                 {
                     Id = Guid.NewGuid(),
                     Title = request.Title,
-                    Content = request.Content,
+                    Content = _sanitizer.Sanitize(request.Content),
                     VideoUrl = request.VideoUrl,
                     ImageUrl = request.ImageUrl,
                     Active = request.Active,
@@ -163,6 +167,7 @@ namespace OhBau.Service.Implement
 
                 var mapItem = new GetChapter
                 {
+                    Id = getChapter.Id,
                     Title = getChapter.Title,
                     Content = getChapter.Content,
                     VideoUrl = getChapter.VideoUrl,

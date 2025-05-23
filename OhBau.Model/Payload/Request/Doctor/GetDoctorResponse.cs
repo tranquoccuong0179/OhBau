@@ -40,5 +40,7 @@ namespace OhBau.Model.Payload.Request.Doctor
         public int totalFeedbacks { get; set; }
         public double Rating {  get; set; }
 
+        public string? WorkSchedule {  get; set; } = null!;
+
     }
 }

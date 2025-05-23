@@ -10,11 +10,17 @@ using MailKit.Net.Smtp;
 
 namespace EmailService.Service
 {
-    public class EmailSender(EmailSetting _emailSetting)
+    public class EmailSender(EmailSetting _emailSetting) : IEmailSender
     {
-        public async Task SendMailSMTP(string toEmail, string subject, string message)
+        public async Task SendEmailAsync(string email, string subject, string message)
         {
-            var emailSender = CreateEmailMessage(toEmail, subject, message);
+            var emailMessage = CreateEmailMessage(email, subject, message);
+            await SendAsync(emailMessage);
+        }
+
+        public Task SendEmailWithAttachmentAsync(string email, string subject, string message, string attachmentPath)
+        {
+            throw new NotImplementedException();
         }
 
         private MimeMessage CreateEmailMessage(string email, string subject, string message)
@@ -33,7 +39,14 @@ namespace EmailService.Service
             using var client = new MailKit.Net.Smtp.SmtpClient();
             try
             {
-                await client.ConnectAsync(_emailSetting.SmtpServer, _emailSetting.Port, _emailSetting.UseSsl);
+                var options = _emailSetting.Port switch
+                {
+                    465 => MailKit.Security.SecureSocketOptions.SslOnConnect,
+                    587 => MailKit.Security.SecureSocketOptions.StartTls,
+                    _ => _emailSetting.UseSsl ? MailKit.Security.SecureSocketOptions.Auto : MailKit.Security.SecureSocketOptions.None
+                };
+
+                await client.ConnectAsync(_emailSetting.SmtpServer, _emailSetting.Port, options);
                 await client.AuthenticateAsync(_emailSetting.UserName, _emailSetting.Password);
                 await client.SendAsync(mailMessage);
             }

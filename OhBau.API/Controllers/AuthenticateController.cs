@@ -5,15 +5,18 @@ using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
 using OhBau.Model.Payload.Response.Authentication;
 using OhBau.Model.Payload.Request.Authentication;
+using EmailService.Service;
 
 namespace OhBau.API.Controllers
 {
     public class AuthenticateController : BaseController<AuthenticateController>
     {
         private readonly IAuthService _authService;
-        public AuthenticateController(ILogger<AuthenticateController> logger, IAuthService authService) : base(logger)
+        private readonly IEmailSender _emailSender;
+        public AuthenticateController(ILogger<AuthenticateController> logger, IAuthService authService, IEmailSender emailSender) : base(logger)
         {
             _authService = authService;
+            _emailSender = emailSender;
         }
 
         /// <summary>
@@ -64,6 +67,21 @@ namespace OhBau.API.Controllers
         {
             var response = await _authService.Authenticate(request);
             return StatusCode(int.Parse(response.status), response);
+        }
+
+
+        [HttpPost("send")]
+        public async Task<IActionResult> SendEmail(string email, string subject, string message)
+        {
+            try
+            {
+                 await _emailSender.SendEmailAsync(email, subject, message);
+                return Ok("Email sent successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error sending email: {ex.Message}");
+            }
         }
     }
 }

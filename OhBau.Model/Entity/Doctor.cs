@@ -42,6 +42,8 @@ public partial class Doctor
 
     public string? Focus { get; set; }
 
+    public string? WorkSchedule { get; set; }
+
     public virtual Account Account { get; set; } = null!;
 
     public virtual ICollection<DoctorSlot> DoctorSlots { get; set; } = new List<DoctorSlot>();
