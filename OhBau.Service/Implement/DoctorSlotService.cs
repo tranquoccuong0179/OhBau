@@ -139,7 +139,7 @@ namespace OhBau.Service.Implement
             };
         }
 
-        public async Task<BaseResponse<GetDoctorSlotsForUserResponse>> GetAllDoctorSlot(int page, int size, DateOnly date)
+        public async Task<BaseResponse<GetDoctorSlotsForUserResponse>> GetAllDoctorSlot(DateOnly date)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
             var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
@@ -158,18 +158,15 @@ namespace OhBau.Service.Implement
                 throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
             }
 
-            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
+            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetListAsync(
                 predicate: ds => ds.DoctorId.Equals(doctor.Id),
-                include: ds => ds.Include(d => d.Slot),
-                page: page,
-                size: size);
+                include: ds => ds.Include(d => d.Slot));
 
             var doctorSlotResponses = new List<GetDoctorSlotResponse>();
-            foreach (var doctorSlot in doctorSlots.Items)
+            foreach (var doctorSlot in doctorSlots)
             {
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                     predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
-                        && b.CreateAt.HasValue
                         && DateOnly.FromDateTime(b.CreateAt.Value) == date
                         && b.Active == true);
 
@@ -194,7 +191,7 @@ namespace OhBau.Service.Implement
             };
         }
 
-        public async Task<BaseResponse<IPaginate<GetDoctorSlotsForUserResponse>>> GetAllDoctorSlotForUser(Guid id, DateOnly date, int page, int size)
+        public async Task<BaseResponse<GetDoctorSlotsForUserResponse>> GetAllDoctorSlotForUser(Guid id, DateOnly date)
         {
             var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
                 predicate: d => d.Id.Equals(id) && d.Active == true,
@@ -205,19 +202,16 @@ namespace OhBau.Service.Implement
                 throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
             }
 
-            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetPagingListAsync(
+            var doctorSlots = await _unitOfWork.GetRepository<DoctorSlot>().GetListAsync(
                 predicate: ds => ds.DoctorId.Equals(id) && ds.Active == true,
-                include: ds => ds.Include(d => d.Slot).Include(d => d.Doctor),
-                page: page,
-                size: size);
+                include: ds => ds.Include(d => d.Slot).Include(d => d.Doctor));
 
             var responses = new List<GetDoctorSlotResponse>();
             var doctorSlotResponses = new List<GetDoctorSlotResponse>();
-            foreach (var doctorSlot in doctorSlots.Items)
+            foreach (var doctorSlot in doctorSlots)
             {
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                    predicate: b => b.DotorSlot.Equals(doctorSlot.Id)
-                        && b.CreateAt.HasValue
+                    predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                         && DateOnly.FromDateTime(b.CreateAt.Value) == date
                         && b.Active == true);
 
@@ -234,15 +228,11 @@ namespace OhBau.Service.Implement
                 DoctorSlots = doctorSlotResponses
             };
 
-            return new BaseResponse<IPaginate<GetDoctorSlotsForUserResponse>>
+            return new BaseResponse<GetDoctorSlotsForUserResponse>
             {
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Lấy danh sách khung giờ của bác sĩ thành công",
-                data = new Paginate<GetDoctorSlotsForUserResponse>(
-                    new List<GetDoctorSlotsForUserResponse> { response },
-                    doctorSlots.Page,
-                    doctorSlots.Size,
-                    doctorSlots.Total)
+                data = response
             };
         }
 
@@ -276,7 +266,7 @@ namespace OhBau.Service.Implement
             }
 
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                predicate: b => b.DotorSlot.Equals(doctorSlot.Id)
+                predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                     && b.CreateAt.HasValue
                     && DateOnly.FromDateTime(b.CreateAt.Value) == date
                     && b.Active == true);
