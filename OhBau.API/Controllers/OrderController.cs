@@ -43,5 +43,12 @@ namespace OhBau.API.Controllers
             var response = await _orderService.GetOrderDetails(accountId!.Value,orderId, pageNumber, pageSize);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAllOrders([FromQuery] int pageNumber, [FromQuery] int pageSize)
+        {
+            var response = await _orderService.GetAllOrders(pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

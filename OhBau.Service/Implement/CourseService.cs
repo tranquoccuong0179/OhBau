@@ -90,7 +90,7 @@ namespace OhBau.Service.Implement
 
                 checkDelele.Active = false;
                 checkDelele.DeleteAt = DateTime.Now;
-                 _unitOfWork.GetRepository<Course>().DeleteAsync(checkDelele);
+                 _unitOfWork.GetRepository<Course>().UpdateAsync(checkDelele);
                 await _unitOfWork.CommitAsync();
 
                 _courseCacheInvalidator.InvalidateEntityList();

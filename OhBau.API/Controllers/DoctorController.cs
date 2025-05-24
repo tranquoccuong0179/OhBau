@@ -693,5 +693,12 @@ namespace OhBau.API.Controllers
                 return StatusCode(int.Parse(response.status),response);
         }
 
+
+        [HttpGet("get-all-major")]
+        public async Task<IActionResult> GetAllMajors([FromQuery]int pageNumber, [FromQuery]int pageSize)
+        {
+            var response = await _doctorService.GetMajors(pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

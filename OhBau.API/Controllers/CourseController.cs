@@ -53,7 +53,7 @@ namespace OhBau.API.Controllers
         }
 
         [HttpDelete("delte-course{courseId}")]
-        public async Task<IActionResult> DeleteCourse([FromQuery] Guid courseId)
+        public async Task<IActionResult> DeleteCourse(Guid courseId)
         {
             try
             {
