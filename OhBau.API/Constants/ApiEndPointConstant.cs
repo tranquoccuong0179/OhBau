@@ -106,6 +106,9 @@
         {
             public const string BookingEndPoint = ApiEndpoint + "/booking";
             public const string CreateBooking = BookingEndPoint;
+            public const string GetAllBookingForAdmin = BookingEndPoint + "/admin";
+            public const string GetAllBookingForDoctor = BookingEndPoint + "/doctor";
+            public const string GetAllBookingForUser = BookingEndPoint + "/user";
         }
     }
 }
