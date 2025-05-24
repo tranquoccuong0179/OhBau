@@ -180,5 +180,25 @@ namespace OhBau.Service.Implement
                 data = bookings
             };
         }
+
+        public async Task<BaseResponse<GetBookingResponse>> GetBookingById(Guid id)
+        {
+            var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                selector: b => _mapper.Map<GetBookingResponse>(b),
+                predicate: b => b.Id.Equals(id) && b.Active == true);
+
+            if (booking == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin booking");
+            }
+
+
+            return new BaseResponse<GetBookingResponse>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy thông tin booking thành công",
+                data = booking
+            };
+        }
     }
 }

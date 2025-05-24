@@ -16,5 +16,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<IPaginate<GetBookingResponse>>> GetAllBookingForAdmin(int page, int size);
         Task<BaseResponse<IPaginate<GetBookingResponse>>> GetAllBookingForUser(int page, int size);
         Task<BaseResponse<IPaginate<GetBookingResponse>>> GetAllBookingForDoctor(int page, int size);
+        Task<BaseResponse<GetBookingResponse>> GetBookingById(Guid id);
     }
 }
