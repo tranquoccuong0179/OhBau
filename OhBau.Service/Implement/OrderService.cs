@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
 using OhBau.Model.Paginate;
@@ -163,6 +164,57 @@ namespace OhBau.Service.Implement
                     data = null
                 };
             }
+        }
+
+        public async Task<BaseResponse<Paginate<GetOrders>>> GetAllOrders( int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<Order>(pageNumber, pageSize);
+
+            var cache = _orderCacheInvalidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cache, out Paginate<GetOrders> GetAllOrders))
+            {
+                return new BaseResponse<Paginate<GetOrders>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get orders success(cache)",
+                    data = GetAllOrders
+                };
+            }
+
+            var getOrders = await _unitOfWork.GetRepository<Order>().GetPagingListAsync( include: i => i.Include(a => a.Account),
+                page: pageNumber, size: pageSize);
+
+            var mapItems = getOrders.Items.Select(c => new GetOrders
+            {
+                Id = c.Id,
+                TotalPrice = c.TotalPrice,
+                CreatedDate = c.CreatedDate,
+                PaymentStatus = c.PaymentStatus,
+                Email = c.Account.Email,
+                Phone = c.Account.Phone
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetOrders>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache, pagedResponse, options);
+
+            return new BaseResponse<Paginate<GetOrders>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get orders success",
+                data = pagedResponse
+            };
         }
 
         public async Task<BaseResponse<Paginate<GetOrderDetails>>> GetOrderDetails(Guid accountId, Guid orderId, int pageNumber, int pageSize)

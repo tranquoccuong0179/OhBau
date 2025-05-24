@@ -15,5 +15,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<CreateOrderResponse>> CreateOrder(CreateOrderRequest request);
         Task<BaseResponse<Paginate<GetOrders>>> GetOrders(Guid accountId, int pageNumber, int pageSize);
         Task<BaseResponse<Paginate<GetOrderDetails>>> GetOrderDetails(Guid accountId,Guid orderId, int pageNumber, int pageSize);
+        Task<BaseResponse<Paginate<GetOrders>>> GetAllOrders(int pageNumber, int pageSize);
     }
 }
