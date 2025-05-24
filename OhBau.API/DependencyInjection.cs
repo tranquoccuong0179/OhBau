@@ -51,7 +51,7 @@ namespace OhBau.API
             services.AddScoped<IMyCourseService, MyCourseService>();
             services.AddScoped<IBookingService, BookingService>();
             services.AddScoped<ICategoryService, CategoryService>();
-
+            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<HtmlSanitizerUtil>();
             return services;
         }

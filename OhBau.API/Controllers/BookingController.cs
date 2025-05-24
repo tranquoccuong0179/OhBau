@@ -62,5 +62,15 @@ namespace OhBau.API.Controllers
             var response = await _bookingService.GetAllBookingForUser(pageNumber, pageSize);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        [HttpGet(ApiEndPointConstant.Booking.GetBookingById)]
+        [ProducesResponseType(typeof(BaseResponse<GetBookingResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetBookingResponse>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetBookingById([FromRoute] Guid id)
+        {
+            var response = await _bookingService.GetBookingById(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }
