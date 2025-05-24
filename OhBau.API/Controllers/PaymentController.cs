@@ -31,6 +31,21 @@ namespace OhBau.API.Controllers
             }
         }
 
+        [HttpGet("booking/{id}")]
+        public async Task<IActionResult> CreatePaymentBooking([FromRoute] Guid id)
+        {
+            try
+            {
+                var result = await _vnPayService.CreatePaymentBooking(id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("VN Pay Create Payment API]", ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
         [HttpGet("return-payment")]
         public async Task<IActionResult> ReturnPayment()
         {

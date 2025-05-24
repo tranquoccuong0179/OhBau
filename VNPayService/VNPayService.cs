@@ -13,6 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
+using OhBau.Model.Exception;
+using OhBau.Model.Payload.Response;
+using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service;
 using VNPayService.Config;
@@ -261,6 +264,61 @@ namespace VNPayService
             {
                 throw new Exception(ex.ToString());
             }
+        }
+
+        public async Task<BaseResponse<string>> CreatePaymentBooking(Guid id)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                predicate: p => p.AccountId.Equals(userId) && p.Active == true);
+
+            if (parent == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bố mẹ");
+            }
+
+            var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                predicate: b => b.Id.Equals(id) && b.ParentId.Equals(parent.Id));
+
+            if (booking == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin booking hoặc không phải của bạn");
+            }
+
+            try
+            {
+                decimal vnpAmount = (decimal)100000 * 100;
+                var vnPay = new VNPayLibrary();
+                vnPay.AddRequestData("vnp_Version", "2.1.0");
+                vnPay.AddRequestData("vnp_Command", "pay");
+                vnPay.AddRequestData("vnp_TmnCode", _vnPayConfig.TmnCode);
+                vnPay.AddRequestData("vnp_Amount", vnpAmount.ToString("F0"));
+                vnPay.AddRequestData("vnp_CreateDate", TimeUtil.GetCurrentSEATime().ToString("yyyyMMddHHmmss"));
+                vnPay.AddRequestData("vnp_CurrCode", "VND");
+                vnPay.AddRequestData("vnp_IpAddr", _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+                vnPay.AddRequestData("vnp_Locale", "VN");
+                vnPay.AddRequestData("vnp_OrderInfo", booking.Id.ToString());
+                vnPay.AddRequestData("vnp_OrderType", "other");
+                vnPay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
+                vnPay.AddRequestData("vnp_TxnRef", booking.Id.ToString());
+
+                string paymentUrl = vnPay.CreateRequestUrl(_vnPayConfig.PaymentUrl, _vnPayConfig.SecretKey);
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.ToString());
+
+            }
+            throw new NotImplementedException();
         }
     }
 }
