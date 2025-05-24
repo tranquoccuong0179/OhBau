@@ -6,6 +6,7 @@ using OhBau.Service.Interface;
 using OhBau.Model.Payload.Response.Authentication;
 using OhBau.Model.Payload.Request.Authentication;
 using EmailService.Service;
+using EmailService.Request;
 
 namespace OhBau.API.Controllers
 {
@@ -69,13 +70,13 @@ namespace OhBau.API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-
-        [HttpPost("send")]
-        public async Task<IActionResult> SendEmail(string email, string subject, string message)
+        [HttpPost("send-mail")]
+        public async Task<IActionResult> SendEmail([FromBody] EmailDTO request)
         {
             try
             {
-                 await _emailSender.SendEmailAsync(email, subject, message);
+                await _emailSender.SendEmailAsync(request);
+
                 return Ok("Email sent successfully");
             }
             catch (Exception ex)
@@ -83,5 +84,6 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, $"Error sending email: {ex.Message}");
             }
         }
+
     }
 }
