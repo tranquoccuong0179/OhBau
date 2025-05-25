@@ -236,13 +236,24 @@ namespace OhBau.Service.Implement
                 };
             }
 
-            var responses = await _unitOfWork.GetRepository<Fetus>().GetPagingListAsync(
-                selector: f => _mapper.Map<GetFetusResponse>(f),
+            var fetusList = await _unitOfWork.GetRepository<Fetus>().GetPagingListAsync(
                 predicate: f => f.Active == true,
-                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)),
+                include: f => f.Include(f => f.FetusDetails),
                 page: page,
                 size: size);
 
+            var responses = new Paginate<GetFetusResponse>
+            {
+                Items = fetusList.Items.Select(f =>
+                {
+                    f.FetusDetails = f.FetusDetails.OrderByDescending(fd => fd.CreateAt).ToList();
+                    return _mapper.Map<GetFetusResponse>(f);
+                }).ToList(),
+                Page = fetusList.Page,
+                Size = fetusList.Size,
+                Total = fetusList.Total,
+                TotalPages = fetusList.TotalPages
+            };
 
             return new BaseResponse<IPaginate<GetFetusResponse>>
             {
@@ -254,15 +265,18 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<GetFetusResponse>> GetFetusByCode(string code)
         {
-            var response = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
-                selector : f => _mapper.Map<GetFetusResponse>(f),
+            var fetus = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
                 predicate: f => f.Code.Equals(code) && f.Active == true,
-                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)));
+                include: f => f.Include(f => f.FetusDetails));
 
-            if (response == null)
+            if (fetus == null)
             {
                 throw new NotFoundException("Không tìm thấy fetus");
             }
+
+            fetus.FetusDetails = fetus.FetusDetails.OrderByDescending(fd => fd.CreateAt).ToList();
+
+            var response = _mapper.Map<GetFetusResponse>(fetus);
 
             return new BaseResponse<GetFetusResponse>
             {
@@ -285,15 +299,18 @@ namespace OhBau.Service.Implement
                     data = cacheKey
                 };
             }
-            var response = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
-                selector: f => _mapper.Map<GetFetusResponse>(f),
+            var fetus = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
                 predicate: f => f.Id.Equals(id) && f.Active == true,
-                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)));
+                include: f => f.Include(f => f.FetusDetails));
 
-            if (response == null)
+            if (fetus == null)
             {
                 throw new NotFoundException("Không tìm thấy fetus");
             }
+
+            fetus.FetusDetails = fetus.FetusDetails.OrderByDescending(fd => fd.CreateAt).ToList();
+
+            var response = _mapper.Map<GetFetusResponse>(fetus);
 
             return new BaseResponse<GetFetusResponse>
             {
