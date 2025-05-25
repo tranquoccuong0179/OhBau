@@ -76,7 +76,7 @@ namespace VNPayService
                 vnPay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
                 vnPay.AddRequestData("vnp_TxnRef", createVnPayOrder.OrderID.ToString());
 
-                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID));
+                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID) && x.Status == PaymentStatusEnum.Pending);
                 if (checkTransaction != null)
                 {
                     return checkTransaction.PaymentUrl;
@@ -156,6 +156,7 @@ namespace VNPayService
             }
 
             var order = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(x => x.Id == orderId);
+            var transaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId == order.Id);
 
 
             if (order == null)
@@ -178,6 +179,16 @@ namespace VNPayService
                 return "{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}";
             }
 
+            if (vnp_ResponseCode == "24" && vnp_TransactionStatus == "02")
+            {
+                order.PaymentStatus = PaymentStatusEnum.Cancelled;
+                transaction.Status = PaymentStatusEnum.Cancelled;
+                _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
+                await _unitOfWork.CommitAsync();
+
+                return "{\"RspCode\":\"02\",\"Message\":\"Transaction canceled\"}";
+            }
             if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
             {
                 order.PaymentStatus = PaymentStatusEnum.Paid;
@@ -202,6 +213,7 @@ namespace VNPayService
                     _unitOfWork.GetRepository<Order>().UpdateAsync(order);
                 }
 
+                _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
                 getCartByAccount.TotalPrice = 0;
                 
@@ -216,8 +228,9 @@ namespace VNPayService
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
-
                 _mycourseCacheInvalidator.InvalidateEntityList();
+                return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
+
             }
             catch (Exception ex) {
                 
@@ -225,7 +238,6 @@ namespace VNPayService
                 throw new Exception(ex.ToString());
             }
 
-            return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
         }
 
         public async Task<PaymentResponse> ProcessVnPayReturn(Dictionary<string, string> queryParams)

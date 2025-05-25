@@ -12,6 +12,7 @@ namespace OhBau.Model.Enum
         Pending,      
         Paid,           
         Failed,        
-        Refunded
+        Refunded,
+        Cancelled
     }
 }
