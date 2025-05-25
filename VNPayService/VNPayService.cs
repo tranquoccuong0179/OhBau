@@ -354,6 +354,21 @@ namespace VNPayService
                 vnPay.AddRequestData("vnp_TxnRef", booking.Id.ToString());
 
                 string paymentUrl = vnPay.CreateRequestUrl(_vnPayConfig.PaymentUrl, _vnPayConfig.SecretKey);
+
+                var addTransaction = new Transaction
+                {
+                    Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
+                    Code = RandomCodeUtil.GenerateRandomCode(10),
+                    CreatedDate = DateTime.Now,
+                    PaymentUrl = paymentUrl,
+                    Status = PaymentStatusEnum.Pending,
+                    Provider = PaymentTypeEnum.VNPay,
+                    OrderId = booking.Id,
+
+                };
+
+                await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
+                await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {

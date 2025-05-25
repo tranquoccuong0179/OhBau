@@ -112,6 +112,7 @@
             public const string GetAllBookingForAdmin = BookingEndPoint + "/admin";
             public const string GetAllBookingForDoctor = BookingEndPoint + "/doctor";
             public const string GetAllBookingForUser = BookingEndPoint + "/user";
+            public const string UpdateStatusBooking = BookingEndPoint + "/{id}";
         }
 
         public static class Feedback
