@@ -270,6 +270,8 @@ public partial class OhBauContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Ac).HasColumnName("AC");
+            entity.Property(e => e.Weight).HasColumnName("Weight");
+            entity.Property(e => e.Height).HasColumnName("Height");
             entity.Property(e => e.Bpd).HasColumnName("BPD");
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Crl).HasColumnName("CRL");

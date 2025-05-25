@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OhBau.Model.Payload.Response.FetusResponse;
 
 namespace OhBau.Model.Payload.Response.Fetus
 {
@@ -18,8 +19,7 @@ namespace OhBau.Model.Payload.Response.Fetus
 
         public string? Code { get; set; } = null!;
 
-        public double? Weight { get; set; }
+        public List<GetFetusDetailResponse>? FetusDetails { get; set; }
 
-        public double? Height { get; set; }
     }
 }
