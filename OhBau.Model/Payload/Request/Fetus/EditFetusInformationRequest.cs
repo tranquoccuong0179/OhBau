@@ -13,6 +13,8 @@ namespace OhBau.Model.Payload.Request.Fetus
         [Range(1, 5200, ErrorMessage = "Weekly cannot be less than 1 and can be not greater than 5200.")]
         public int Weekly { get; set; }
 
+        public double Weight { get; set; }
+        public double Height { get; set; }
 
         [Range(0.1, 100, ErrorMessage = "GSD must be between 0.1 and 100 mm.")]
         public double Gsd { get; set; }

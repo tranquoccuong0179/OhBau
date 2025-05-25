@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Azure;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
@@ -15,6 +16,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Fetus;
+using OhBau.Model.Payload.Response.FetusResponse;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
@@ -87,6 +89,25 @@ namespace OhBau.Service.Implement
             {
                 var fetus = _mapper.Map<Fetus>(request);
                 await _unitOfWork.GetRepository<Fetus>().InsertAsync(fetus);
+
+                var fetusDetail = new FetusDetail
+                {
+                    Id = Guid.NewGuid(),
+                    Weekly = 0,
+                    Weight = 0,
+                    Height = 0,
+                    Gsd = 0,
+                    Crl = 0,
+                    Bpd = 0,
+                    Fl = 0,
+                    Hc = 0,
+                    Ac = 0,
+                    FetusId = fetus.Id,
+                    Active = true,
+                    CreateAt = TimeUtil.GetCurrentSEATime(),
+                    UpdateAt = TimeUtil.GetCurrentSEATime(),
+                };
+                await _unitOfWork.GetRepository<FetusDetail>().InsertAsync(fetusDetail);
 
                 var currentParentRelation = new ParentRelation
                 {
@@ -218,6 +239,7 @@ namespace OhBau.Service.Implement
             var responses = await _unitOfWork.GetRepository<Fetus>().GetPagingListAsync(
                 selector: f => _mapper.Map<GetFetusResponse>(f),
                 predicate: f => f.Active == true,
+                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)),
                 page: page,
                 size: size);
 
@@ -234,7 +256,8 @@ namespace OhBau.Service.Implement
         {
             var response = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
                 selector : f => _mapper.Map<GetFetusResponse>(f),
-                predicate: f => f.Code.Equals(code) && f.Active == true);
+                predicate: f => f.Code.Equals(code) && f.Active == true,
+                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)));
 
             if (response == null)
             {
@@ -264,7 +287,8 @@ namespace OhBau.Service.Implement
             }
             var response = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
                 selector: f => _mapper.Map<GetFetusResponse>(f),
-                predicate: f => f.Id.Equals(id) && f.Active == true);
+                predicate: f => f.Id.Equals(id) && f.Active == true,
+                include: f => f.Include(f => f.FetusDetails).ThenInclude(fd => fd.OrderByDescending(fd => fd.CreateAt)));
 
             if (response == null)
             {
@@ -276,6 +300,71 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Tìm thấy fetus",
                 data = response
+            };
+        }
+
+        public async Task<BaseResponse<UpdateFetusResponse>> UpdateFetus(Guid id, UpdateFetusRequest request)
+        {
+            var fetus = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
+                predicate: f => f.Id.Equals(id) && f.Active == true);
+
+            if (fetus == null)
+            {
+                throw new NotFoundException("Không tìm thấy thai nhi");
+            }
+
+            fetus.StartDate = request.StartDate.HasValue ? request.StartDate.Value : fetus.StartDate;
+            fetus.EndDate = request.EndDate ?? fetus.EndDate;
+            fetus.Name = request.Name ?? fetus.Name;
+
+            _unitOfWork.GetRepository<Fetus>().UpdateAsync(fetus);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<UpdateFetusResponse>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Cập nhật thành công",
+                data = _mapper.Map<UpdateFetusResponse>(fetus)
+            };
+
+        }
+
+        public async Task<BaseResponse<GetFetusDetailResponse>> UpdateFetusDetail(Guid id, EditFetusInformationRequest request)
+        {
+            var fetus = await _unitOfWork.GetRepository<Fetus>().SingleOrDefaultAsync(
+                predicate: f => f.Id.Equals(id) && f.Active == true);
+
+            if (fetus == null)
+            {
+                throw new NotFoundException("Không tìm thấy thai nhi");
+            }
+
+            var fetusDetail = new FetusDetail
+            {
+                Id = Guid.NewGuid(),
+                Weekly = request.Weekly,
+                Weight = request.Weight,
+                Height = request.Height,
+                Gsd = request.Gsd,
+                Crl = request.Crl,
+                Bpd = request.Bpd,
+                Fl = request.Fl,
+                Hc = request.Hc,
+                Ac = request.Ac,
+                FetusId = id,
+                Active = true,
+                CreateAt = TimeUtil.GetCurrentSEATime(),
+                UpdateAt = TimeUtil.GetCurrentSEATime(),
+            };
+
+            await _unitOfWork.GetRepository<FetusDetail>().InsertAsync(fetusDetail);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<GetFetusDetailResponse>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message =  "Cập nhật thành công",
+                data = _mapper.Map<GetFetusDetailResponse>(fetusDetail)
             };
         }
     }

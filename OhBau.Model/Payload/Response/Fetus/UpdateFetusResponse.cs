@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace OhBau.Model.Payload.Response.Fetus
 {
-    public class CreateFetusResponse
+    public class UpdateFetusResponse
     {
-        public Guid? Id { get; set; }
-
         public DateOnly? StartDate { get; set; }
 
         public DateOnly? EndDate { get; set; }
@@ -17,6 +15,5 @@ namespace OhBau.Model.Payload.Response.Fetus
         public string? Name { get; set; }
 
         public string? Code { get; set; }
-
     }
 }
