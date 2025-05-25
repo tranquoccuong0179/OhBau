@@ -6,6 +6,7 @@ using OhBau.Service.Interface;
 using OhBau.Model.Payload.Response.Booking;
 using OhBau.Model.Payload.Request.Booking;
 using OhBau.Model.Paginate;
+using OhBau.Model.Enum;
 
 namespace OhBau.API.Controllers
 {
@@ -70,6 +71,16 @@ namespace OhBau.API.Controllers
         public async Task<IActionResult> GetBookingById([FromRoute] Guid id)
         {
             var response = await _bookingService.GetBookingById(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPut(ApiEndPointConstant.Booking.UpdateStatusBooking)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> UpdateStatusBooking([FromRoute] Guid id, [FromQuery] TypeBookingEnum type)
+        {
+            var response = await _bookingService.UpdateStatusBooking(id, type);
             return StatusCode(int.Parse(response.status), response);
         }
     }

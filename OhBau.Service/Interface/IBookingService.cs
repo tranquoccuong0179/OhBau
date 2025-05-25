@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OhBau.Model.Enum;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Booking;
 using OhBau.Model.Payload.Response;
@@ -17,5 +18,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<IPaginate<GetBookingResponse>>> GetAllBookingForUser(int page, int size);
         Task<BaseResponse<IPaginate<GetBookingResponse>>> GetAllBookingForDoctor(int page, int size);
         Task<BaseResponse<GetBookingResponse>> GetBookingById(Guid id);
+        Task<BaseResponse<bool>> UpdateStatusBooking(Guid id, TypeBookingEnum type);
     }
 }

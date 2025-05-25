@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
+using OhBau.Model.Enum;
 using OhBau.Model.Exception;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Booking;
@@ -198,6 +199,48 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Lấy thông tin booking thành công",
                 data = booking
+            };
+        }
+
+        public async Task<BaseResponse<bool>> UpdateStatusBooking(Guid id, TypeBookingEnum type)
+        {
+            Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
+
+            var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
+                predicate: a => a.Id.Equals(userId) && a.Active == true);
+            if (account == null)
+            {
+                throw new NotFoundException("Không tìm thấy tài khoản");
+            }
+
+            var doctor = await _unitOfWork.GetRepository<Doctor>().SingleOrDefaultAsync(
+                predicate: p => p.AccountId.Equals(userId) && p.Active == true);
+
+            if (doctor == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin bác sĩ");
+            }
+
+            var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
+                predicate: b => b.Id.Equals(id) && b.DotorSlot.DoctorId.Equals(doctor.Id),
+                include: b => b.Include(b => b.DotorSlot).ThenInclude(ds => ds.Doctor));
+
+            if (booking == null)
+            {
+                throw new NotFoundException("Không tìm thấy booking hoặc booking không phải của bác sĩ này");
+            }
+
+            booking.Type = type.GetDescriptionFromEnum();
+            booking.UpdateAt = TimeUtil.GetCurrentSEATime();
+
+            _unitOfWork.GetRepository<Booking>().UpdateAsync(booking);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Cập nhật thành công",
+                data = true
             };
         }
     }
