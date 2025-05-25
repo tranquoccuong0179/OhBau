@@ -27,6 +27,14 @@ public partial class Booking
 
     public DateTime? DeleteAt { get; set; }
 
+    public string? FullName {  get; set; }
+
+    public int YearOld {  get; set; }
+
+    public string? Address {  get; set; }
+
+    public string? Phone {  get; set; }
+
     public virtual DoctorSlot DotorSlot { get; set; } = null!;
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();

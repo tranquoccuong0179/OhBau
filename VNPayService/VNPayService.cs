@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
@@ -309,7 +310,7 @@ namespace VNPayService
             }
         }
 
-        public async Task<BaseResponse<string>> CreatePaymentBooking(Guid id)
+        public async Task<string> CreatePaymentBooking(Guid id)
         {
             Guid? userId = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
 
@@ -369,6 +370,7 @@ namespace VNPayService
 
                 await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
                 await _unitOfWork.CommitAsync();
+                return paymentUrl;
             }
             catch (Exception ex)
             {
@@ -376,7 +378,6 @@ namespace VNPayService
                 throw new Exception(ex.ToString());
 
             }
-            throw new NotImplementedException();
         }
     }
 }
