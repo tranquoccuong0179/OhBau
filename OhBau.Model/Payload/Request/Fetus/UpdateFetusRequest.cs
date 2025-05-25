@@ -4,19 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OhBau.Model.Payload.Response.Fetus
+namespace OhBau.Model.Payload.Request.Fetus
 {
-    public class CreateFetusResponse
+    public class UpdateFetusRequest
     {
-        public Guid? Id { get; set; }
-
         public DateOnly? StartDate { get; set; }
 
         public DateOnly? EndDate { get; set; }
 
         public string? Name { get; set; }
-
-        public string? Code { get; set; }
-
     }
 }

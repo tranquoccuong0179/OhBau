@@ -7,6 +7,7 @@ using OhBau.Model.Payload.Response.Fetus;
 using OhBau.Service.Interface;
 using OhBau.Model.Paginate;
 using Microsoft.AspNetCore.Authorization;
+using OhBau.Model.Payload.Response.FetusResponse;
 
 namespace OhBau.API.Controllers
 {
@@ -307,78 +308,99 @@ namespace OhBau.API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
-        /// <summary>
-        /// API cập nhật thông tin thai nhi.
-        /// </summary>
-        /// <remarks>
-        /// - API này cho phép cập nhật thông tin thai nhi dựa trên `fetusId` và thông tin được cung cấp qua `EditFetusInformationRequest`.
-        /// - Tất cả các trường trong `EditFetusInformationRequest` (`Weekly`, `Gsd`, `Crl`, `Bpd`, `Fl`, `Hc`, `Ac`) đều bắt buộc và phải tuân thủ các giới hạn được định nghĩa.
-        /// - Yêu cầu xác thực (người dùng phải đăng nhập và có quyền truy cập, ví dụ: bác sĩ).
-        /// - Ví dụ yêu cầu:
-        ///   ```
-        ///   PUT /api/v1/fetus/{fetusId}
-        ///   ```
-        /// - Ví dụ nội dung yêu cầu:
-        ///   ```json
-        ///   {
-        ///     "weekly": 12,
-        ///     "gsd": 10.5,
-        ///     "crl": 45.0,
-        ///     "bpd": 20.0,
-        ///     "fl": 10.0,
-        ///     "hc": 80.0,
-        ///     "ac": 70.0
-        ///   }
-        ///   ```
-        /// - Kết quả trả về:
-        ///   - `200 OK`: Cập nhật thông tin thai nhi thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
-        ///   - `404 NotFound`: Không tìm thấy thai nhi với `fetusId` được cung cấp.
-        ///   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: giá trị ngoài phạm vi cho phép, dữ liệu không đúng định dạng).
-        ///   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
-        /// - Ví dụ phản hồi thành công (200 OK):
-        ///   ```json
-        ///   {
-        ///     "status": "200",
-        ///     "data": "Cập nhật thông tin thai nhi thành công",
-        ///     "message": "Cập nhật thông tin thai nhi thành công"
-        ///   }
-        ///   ```
-        /// </remarks>
-        /// <param name="fetusId">ID của thai nhi cần cập nhật thông tin.</param>
-        /// <param name="request">Thông tin cập nhật của thai nhi. Phải bao gồm `Weekly`, `Gsd`, `Crl`, `Bpd`, `Fl`, `Hc`, `Ac` với các giá trị hợp lệ.</param>
-        /// <returns>
-        /// - `200 OK`: Cập nhật thông tin thai nhi thành công.
-        /// - `404 NotFound`: Không tìm thấy thai nhi với `fetusId` được cung cấp.
-        /// - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: giá trị ngoài phạm vi, dữ liệu không đúng định dạng).
-        /// - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
-        /// </returns>
-        /// <response code="200">Trả về thông báo khi thông tin thai nhi được cập nhật thành công.</response>
-        /// <response code="404">Trả về lỗi nếu không tìm thấy thai nhi.</response>
-        /// <response code="400">Trả về lỗi nếu yêu cầu không hợp lệ.</response>
-        /// <response code="500">Trả về lỗi nếu hệ thống gặp sự cố.</response>
-        [HttpPut(ApiEndPointConstant.Fetus.UpdateFetus)]
-        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status500InternalServerError)]
-        [Authorize(Roles = "FATHER, MOTHER")]
-        public async Task<IActionResult> EditFetusInformation(Guid fetusId, [FromBody] EditFetusInformationRequest request)
+        ///// <summary>
+        ///// API cập nhật thông tin thai nhi.
+        ///// </summary>
+        ///// <remarks>
+        ///// - API này cho phép cập nhật thông tin thai nhi dựa trên `fetusId` và thông tin được cung cấp qua `EditFetusInformationRequest`.
+        ///// - Tất cả các trường trong `EditFetusInformationRequest` (`Weekly`, `Gsd`, `Crl`, `Bpd`, `Fl`, `Hc`, `Ac`) đều bắt buộc và phải tuân thủ các giới hạn được định nghĩa.
+        ///// - Yêu cầu xác thực (người dùng phải đăng nhập và có quyền truy cập, ví dụ: bác sĩ).
+        ///// - Ví dụ yêu cầu:
+        /////   ```
+        /////   PUT /api/v1/fetus/{fetusId}
+        /////   ```
+        ///// - Ví dụ nội dung yêu cầu:
+        /////   ```json
+        /////   {
+        /////     "weekly": 12,
+        /////     "gsd": 10.5,
+        /////     "crl": 45.0,
+        /////     "bpd": 20.0,
+        /////     "fl": 10.0,
+        /////     "hc": 80.0,
+        /////     "ac": 70.0
+        /////   }
+        /////   ```
+        ///// - Kết quả trả về:
+        /////   - `200 OK`: Cập nhật thông tin thai nhi thành công. Trả về `BaseResponse&lt;string&gt;` chứa thông báo thành công.
+        /////   - `404 NotFound`: Không tìm thấy thai nhi với `fetusId` được cung cấp.
+        /////   - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: giá trị ngoài phạm vi cho phép, dữ liệu không đúng định dạng).
+        /////   - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        ///// - Ví dụ phản hồi thành công (200 OK):
+        /////   ```json
+        /////   {
+        /////     "status": "200",
+        /////     "data": "Cập nhật thông tin thai nhi thành công",
+        /////     "message": "Cập nhật thông tin thai nhi thành công"
+        /////   }
+        /////   ```
+        ///// </remarks>
+        ///// <param name="fetusId">ID của thai nhi cần cập nhật thông tin.</param>
+        ///// <param name="request">Thông tin cập nhật của thai nhi. Phải bao gồm `Weekly`, `Gsd`, `Crl`, `Bpd`, `Fl`, `Hc`, `Ac` với các giá trị hợp lệ.</param>
+        ///// <returns>
+        ///// - `200 OK`: Cập nhật thông tin thai nhi thành công.
+        ///// - `404 NotFound`: Không tìm thấy thai nhi với `fetusId` được cung cấp.
+        ///// - `400 Bad Request`: Thông tin đầu vào không hợp lệ (ví dụ: giá trị ngoài phạm vi, dữ liệu không đúng định dạng).
+        ///// - `500 Internal Server Error`: Lỗi hệ thống khi xử lý yêu cầu.
+        ///// </returns>
+        ///// <response code="200">Trả về thông báo khi thông tin thai nhi được cập nhật thành công.</response>
+        ///// <response code="404">Trả về lỗi nếu không tìm thấy thai nhi.</response>
+        ///// <response code="400">Trả về lỗi nếu yêu cầu không hợp lệ.</response>
+        ///// <response code="500">Trả về lỗi nếu hệ thống gặp sự cố.</response>
+        //[HttpPut(ApiEndPointConstant.Fetus.UpdateFetus)]
+        //[ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status404NotFound)]
+        //[ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status500InternalServerError)]
+        //[Authorize(Roles = "FATHER, MOTHER")]
+        //public async Task<IActionResult> EditFetusInformation(Guid fetusId, [FromBody] EditFetusInformationRequest request)
+        //{
+        //    try
+        //    {
+        //        if (!ModelState.IsValid) {
+
+        //            return BadRequest(ModelState);
+        //        }
+
+        //        var response = await _doctorService.EditFetusInformation(fetusId,request);
+        //        return StatusCode(int.Parse(response.status), response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("[Edit Fetus Information API] " + ex.Message, ex.StackTrace,ex.ToString());
+        //        return StatusCode(500, ex.ToString());
+        //    }
+        //}
+
+        [HttpPut(ApiEndPointConstant.Fetus.UpdateFetusDetail)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusDetailResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusDetailResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusDetailResponse>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse<GetFetusDetailResponse>), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateFetusDetail([FromRoute] Guid id, [FromBody] EditFetusInformationRequest request)
         {
-            try
-            {
-                if (!ModelState.IsValid) {
+            var response = await _fetusService.UpdateFetusDetail(id, request);
+            return StatusCode(int.Parse(response.status), response);
+        }
 
-                    return BadRequest(ModelState);
-                }
-
-                var response = await _doctorService.EditFetusInformation(fetusId,request);
-                return StatusCode(int.Parse(response.status), response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[Edit Fetus Information API] " + ex.Message, ex.StackTrace,ex.ToString());
-                return StatusCode(500, ex.ToString());
-            }
+        [HttpPut(ApiEndPointConstant.Fetus.UpdateFetus)]
+        [ProducesResponseType(typeof(BaseResponse<UpdateFetusResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<UpdateFetusResponse>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse<UpdateFetusResponse>), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateFetus([FromRoute] Guid id, [FromBody] UpdateFetusRequest request)
+        {
+            var response = await _fetusService.UpdateFetus(id, request);
+            return StatusCode(int.Parse(response.status), response);
         }
 
         /// <summary>

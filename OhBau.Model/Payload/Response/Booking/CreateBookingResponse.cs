@@ -8,6 +8,8 @@ namespace OhBau.Model.Payload.Response.Booking
 {
     public class CreateBookingResponse
     {
+        public Guid Id { get; set; }
+
         public Guid ParentId { get; set; }
 
         public Guid DotorSlotId { get; set; }

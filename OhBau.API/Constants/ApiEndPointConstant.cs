@@ -56,8 +56,10 @@
             public const string GetAllFetus = FetusEndPoint;
             public const string GetFetusById = FetusEndPoint + "/{id}";
             public const string GetFetusByCode = FetusEndPoint + "/code";
-            public const string UpdateFetus = FetusEndPoint + "/{fetusId}";
+            //public const string UpdateFetus = FetusEndPoint + "/{fetusId}";
+            public const string UpdateFetus = FetusEndPoint + "/{id}";
             public const string DeleteFetus = FetusEndPoint + "/{id}";
+            public const string UpdateFetusDetail = FetusEndPoint + "/{id}/fetus-detail"; 
         }
 
         public static class Blog
@@ -110,6 +112,7 @@
             public const string GetAllBookingForAdmin = BookingEndPoint + "/admin";
             public const string GetAllBookingForDoctor = BookingEndPoint + "/doctor";
             public const string GetAllBookingForUser = BookingEndPoint + "/user";
+            public const string UpdateStatusBooking = BookingEndPoint + "/{id}";
         }
 
         public static class Feedback

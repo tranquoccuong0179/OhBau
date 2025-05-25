@@ -24,7 +24,10 @@ namespace OhBau.Model.Mapper
 
             CreateMap<Fetus, CreateFetusResponse>();
 
-            CreateMap<Fetus, GetFetusResponse>();
+            CreateMap<Fetus, GetFetusResponse>()
+                .ForMember(dest => dest.FetusDetails, opt => opt.MapFrom(src => src.FetusDetails));
+
+            CreateMap<Fetus, UpdateFetusResponse>();
         }
     }
 }
