@@ -42,8 +42,7 @@ namespace OhBau.Model.Payload.Request.Doctor
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime CreateAt { get; set; } = DateTime.Now;
         
-        public CreateMajorRequest CreateMajorRequest { get; set; }
-
+        public Guid MajorId { get; set; }
         public DoctorRequest DoctorRequest { get; set; }
 
 

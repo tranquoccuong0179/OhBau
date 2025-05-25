@@ -164,7 +164,7 @@ app.MapGet("/test-telegram-error", () =>
 app.UseCors(CorsConstant.PolicyName);
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-//app.UseMiddleware<VisitStatisticsMiddleWare>();
+app.UseMiddleware<VisitStatisticsMiddleWare>();
 
 app.UseHttpsRedirection();
 

@@ -73,16 +73,7 @@ namespace OhBau.Service.Implement
                 };
                 await _unitOfWork.GetRepository<Account>().InsertAsync(createAccount);
 
-                var createMajor = new Major
-                {
-                    Id = Guid.NewGuid(),
-                    Name = request.CreateMajorRequest.Name,
-                    Active = true,
-                    CreateAt = TimeUtil.GetCurrentSEATime(),
-                    UpdateAt = null,
-                    DeleteAt = null
-                };
-                await _unitOfWork.GetRepository<Major>().InsertAsync(createMajor);
+             
 
                 var createDoctor = new Doctor
                 {
@@ -93,7 +84,7 @@ namespace OhBau.Service.Implement
                     Gender = request.DoctorRequest.Gender,
                     Content = request.DoctorRequest.Content,
                     Address = request.DoctorRequest.Address,
-                    MajorId = createMajor.Id,
+                    MajorId = request.MajorId,
                     AccountId = createAccount.Id,
                     Active = request.DoctorRequest?.Active,
                     CreateAt = request?.DoctorRequest?.CreateAt,
