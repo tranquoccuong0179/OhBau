@@ -106,6 +106,16 @@
         {
             public const string BookingEndPoint = ApiEndpoint + "/booking";
             public const string CreateBooking = BookingEndPoint;
+            public const string GetBookingById = BookingEndPoint + "/{id}";
+            public const string GetAllBookingForAdmin = BookingEndPoint + "/admin";
+            public const string GetAllBookingForDoctor = BookingEndPoint + "/doctor";
+            public const string GetAllBookingForUser = BookingEndPoint + "/user";
+        }
+
+        public static class Feedback
+        {
+            public const string FeedbackEndPoint = ApiEndpoint + "/feedback";
+            public const string CreateFeedback = FeedbackEndPoint;
         }
     }
 }

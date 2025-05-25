@@ -143,7 +143,7 @@ namespace OhBau.API.Middlewares
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     errorResponse = new BaseResponse<object>
                     {
-                        status = HttpStatusCode.InternalServerError.ToString(),
+                        status = StatusCodes.Status500InternalServerError.ToString(),
                         message = "Lỗi hệ thống: " + exception.Message + exception.StackTrace + exception.ToString(),
                         data = null
                     };
