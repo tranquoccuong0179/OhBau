@@ -14,7 +14,7 @@ namespace VNPayService
         Task<string> CreatePayment(CreateOrder request);
         Task<string> VnPayReturn();
         Task<PaymentResponse> ProcessVnPayReturn(Dictionary<string, string> queryParams);
-        Task<BaseResponse<string>> CreatePaymentBooking(Guid id);
+        Task<string> CreatePaymentBooking(Guid id);
 
     }
 }
