@@ -7,14 +7,15 @@ using System.Threading.Tasks;
 using EmailService.Config;
 using MimeKit;
 using MailKit.Net.Smtp;
+using EmailService.Request;
 
 namespace EmailService.Service
 {
     public class EmailSender(EmailSetting _emailSetting) : IEmailSender
     {
-        public async Task SendEmailAsync(string email, string subject, string message)
+        public async Task SendEmailAsync(EmailDTO request)
         {
-            var emailMessage = CreateEmailMessage(email, subject, message);
+            var emailMessage = CreateEmailMessage(request.Email, request.Subject, request.Body);
             await SendAsync(emailMessage);
         }
 
