@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Enum;
+using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
 using OhBau.Service;
 using VNPayService.Config;
@@ -36,6 +38,7 @@ namespace VNPayService
 
         public async Task<string> CreatePayment(CreateOrder request)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
           
@@ -71,11 +74,35 @@ namespace VNPayService
                 vnPay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
                 vnPay.AddRequestData("vnp_TxnRef", createVnPayOrder.OrderID.ToString());
 
+                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID));
+                if (checkTransaction != null)
+                {
+                    return checkTransaction.PaymentUrl;
+                }
+
                 string paymentUrl = vnPay.CreateRequestUrl(_vnPayConfig.PaymentUrl,_vnPayConfig.SecretKey);
+      
+
+                var addTransaction = new Transaction
+                {
+                    Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
+                    Code = RandomCodeUtil.GenerateRandomCode(10),
+                    CreatedDate = DateTime.Now,
+                    PaymentUrl = paymentUrl,
+                    Status = PaymentStatusEnum.Pending,
+                    Provider = PaymentTypeEnum.VNPay,
+                    OrderId = createVnPayOrder.OrderID
+                
+                };
+
+                await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
                 return paymentUrl;
             }
-            catch (Exception ex) { 
-            
+            catch (Exception ex) {
+
+                await _unitOfWork.RollbackTransactionAsync();
                 throw new Exception(ex.ToString());
 
             }
@@ -180,6 +207,11 @@ namespace VNPayService
 
                 _unitOfWork.GetRepository<CartItems>().DeleteRangeAsync(getCartItemByCart);
                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
+
+                var getTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId == orderId);
+                getTransaction.Status = PaymentStatusEnum.Paid;
+                _unitOfWork.GetRepository<Transaction>().UpdateAsync(getTransaction);
+
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
