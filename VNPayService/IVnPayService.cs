@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OhBau.Model.Payload.Response;
 using VNPayService.DTO;
 
 namespace VNPayService
@@ -13,5 +14,7 @@ namespace VNPayService
         Task<string> CreatePayment(CreateOrder request);
         Task<string> VnPayReturn();
         Task<PaymentResponse> ProcessVnPayReturn(Dictionary<string, string> queryParams);
+        Task<BaseResponse<string>> CreatePaymentBooking(Guid id);
+
     }
 }

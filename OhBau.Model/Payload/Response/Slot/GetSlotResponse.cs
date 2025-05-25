@@ -8,6 +8,7 @@ namespace OhBau.Model.Payload.Response.Slot
 {
     public class GetSlotResponse
     {
+        public Guid Id { get; set; }
         public string? Name { get; set; } = null!;
 
         public TimeOnly StartTime { get; set; }
