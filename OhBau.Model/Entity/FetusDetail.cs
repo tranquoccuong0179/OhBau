@@ -10,7 +10,8 @@ public partial class FetusDetail
     public Guid Id { get; set; }
 
     public int Weekly { get; set; }
-
+    public double Weight { get; set; }
+    public double Height { get; set; }
     public double Gsd { get; set; }
 
     public double Crl { get; set; }

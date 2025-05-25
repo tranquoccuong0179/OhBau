@@ -15,10 +15,6 @@ public partial class Fetus
 
     public string Code { get; set; } = null!;
 
-    public double Weight { get; set; }
-
-    public double Height { get; set; }
-
     public bool? Active { get; set; }
 
     public DateTime? CreateAt { get; set; }
