@@ -64,10 +64,10 @@ namespace OhBau.Service.Implement
                 await _unitOfWork.GetRepository<Course>().InsertAsync(createNewCourse);
                 await _unitOfWork.CommitAsync();
 
-                //_courseCacheInvalidator.InvalidateEntityList();
-                //_courseCacheInvalidator.InvalidateEntity(createNewCourse.Id);
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(createNewCourse.Id);
 
-                await _redisService.RemoveByPatternAsync("Courses:*");
+                //await _redisService.RemoveByPatternAsync("Courses:*");
 
                 return new BaseResponse<CreateCourseResponse>
                 {
@@ -103,10 +103,10 @@ namespace OhBau.Service.Implement
                  _unitOfWork.GetRepository<Course>().UpdateAsync(checkDelele);
                 await _unitOfWork.CommitAsync();
 
-                //_courseCacheInvalidator.InvalidateEntityList();
-                //_courseCacheInvalidator.InvalidateEntity(courseId);
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(courseId);
 
-                await _redisService.RemoveByPatternAsync("Courses:*");
+                //await _redisService.RemoveByPatternAsync("Courses:*");
 
                 return new BaseResponse<string>
                 {
@@ -123,32 +123,32 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetCoursesResponse>>> GetCoursesWithFilterOrSearch(int pageSize, int pageNumber, string? categoryName, string? search)
         {
-            //var listParameter = new ListParameters<Course>(pageNumber, pageSize);
-            //listParameter.AddFilter("Category", categoryName);
-            //listParameter.AddFilter("Search", search);
+            var listParameter = new ListParameters<Course>(pageNumber, pageSize);
+            listParameter.AddFilter("Category", categoryName);
+            listParameter.AddFilter("Search", search);
 
-            //var cacheKey = _courseCacheInvalidator.GetCacheKeyForList(listParameter);
-            //if (_cache.TryGetValue(cacheKey, out Paginate<GetCoursesResponse> GetCourses))
-            //{
-            //    return new BaseResponse<Paginate<GetCoursesResponse>>
-            //    {
-            //        status = StatusCodes.Status200OK.ToString(),
-            //        message = "Get course success",
-            //        data = GetCourses
-            //    };
-            //}
-
-            var cacheKey = $"Courses:Page{pageNumber}_Size{pageSize}_Category:{categoryName}_Search:{search}";
-            var checkCacheData = await _redisService.GetAsync<Paginate<GetCoursesResponse>>(cacheKey);
-            if (checkCacheData != null)
+            var cacheKey = _courseCacheInvalidator.GetCacheKeyForList(listParameter);
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetCoursesResponse> GetCourses))
             {
                 return new BaseResponse<Paginate<GetCoursesResponse>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get course success (cache)",
-                    data = checkCacheData
+                    message = "Get course success",
+                    data = GetCourses
                 };
             }
+
+            //var cacheKey = $"Courses:Page{pageNumber}_Size{pageSize}_Category:{categoryName}_Search:{search}";
+            //var checkCacheData = await _redisService.GetAsync<Paginate<GetCoursesResponse>>(cacheKey);
+            //if (checkCacheData != null)
+            //{
+            //    return new BaseResponse<Paginate<GetCoursesResponse>>
+            //    {
+            //        status = StatusCodes.Status200OK.ToString(),
+            //        message = "Get course success (cache)",
+            //        data = checkCacheData
+            //    };
+            //}
 
             Expression<Func<Course, bool>> predicate = null;
             if (!string.IsNullOrEmpty(categoryName))
@@ -193,13 +193,14 @@ namespace OhBau.Service.Implement
                 TotalPages = getCourses.TotalPages
             };
 
-            //var options = new MemoryCacheEntryOptions { 
-            //    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
-            //};
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
 
-            //_cache.Set(cacheKey, pagedReponse, options);
+            _cache.Set(cacheKey, pagedReponse, options);
 
-            await _redisService.SetAsync(cacheKey, pagedReponse, TimeSpan.FromMinutes(30));
+            //await _redisService.SetAsync(cacheKey, pagedReponse, TimeSpan.FromMinutes(30));
 
 
             return new BaseResponse<Paginate<GetCoursesResponse>>
@@ -239,10 +240,10 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Course>().UpdateAsync(getCourse);
                 await _unitOfWork.CommitAsync();
 
-                //_courseCacheInvalidator.InvalidateEntityList();
-                //_courseCacheInvalidator.InvalidateEntity(courseId);
+                _courseCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntity(courseId);
 
-                await _redisService.RemoveByPatternAsync("Courses:*");
+                //await _redisService.RemoveByPatternAsync("Courses:*");
 
                 return new BaseResponse<string>
                 {
