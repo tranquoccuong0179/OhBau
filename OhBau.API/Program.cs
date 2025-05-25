@@ -14,6 +14,8 @@ using VNPayService;
 using EmailService.Config;
 using Microsoft.Extensions.DependencyInjection;
 using EmailService.Service;
+using StackExchange.Redis;
+using OhBau.Service.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,22 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
+// Redis Config
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+{
+    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+});
+
+builder.Services.AddScoped<IRedisService, RedisService>();
+
+
 // Add services to the container.
 
 builder.Services.AddControllers()
@@ -66,6 +84,7 @@ builder.Services.AddSingleton(sp =>
     return account;
 }      
 );
+
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {

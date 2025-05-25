@@ -77,7 +77,7 @@ namespace OhBau.API.Controllers
             {
                 await _emailSender.SendEmailAsync(request);
 
-                return Ok("Email sent successfully");
+                return Ok("Email sent successfully");   
             }
             catch (Exception ex)
             {
