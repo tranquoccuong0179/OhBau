@@ -66,9 +66,10 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<Comments> Comments { get; set; }
 
-    public virtual DbSet<CourseRating> CourseRating { get; set; }
+    public virtual DbSet<CourseRating> CourseRating { get; set; }   
 
     public virtual DbSet<FavoriteCourses> FavoriteCourses { get; set; }
+    public virtual DbSet<Topic> Topics { get; set;}
 
 
     public static string GetConnectionString(string connectionStringName)
@@ -108,6 +109,8 @@ public partial class OhBauContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
         });
+
+        modelBuilder.Entity<Topic>().ToTable("Topics");
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -150,8 +153,8 @@ public partial class OhBauContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
             entity.Property(e => e.VideoUrl).IsUnicode(false);
 
-            entity.HasOne(d => d.Course).WithMany(p => p.Chapters)
-                .HasForeignKey(d => d.CourseId)
+            entity.HasOne(d => d.Topic).WithMany(p => p.Chapters)
+                .HasForeignKey(d => d.TopicId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Chapter_Course");
         });

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OhBau.Model.Payload.Request.Course;
+using OhBau.Model.Payload.Request.Topic;
 using OhBau.Service.Interface;
 
 namespace OhBau.API.Controllers
@@ -64,6 +65,57 @@ namespace OhBau.API.Controllers
             {
                 _logger.LogError("[Delete Course API] " + ex.Message, ex, ex.StackTrace);
                 return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPost("create-topic")]
+        public async Task<IActionResult> CreateTopic([FromBody]CreateTopicRequest request)
+        {
+            try
+            {
+                var response = await _courseService.CreateTopic(request);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex) { 
+             
+                _logger.LogError("[Create Topic]" + ex.Message,ex.StackTrace);
+                return StatusCode(500,ex.ToString());
+            }
+        }
+
+        [HttpGet("get-topics")]
+        public async Task<IActionResult> GetTopics([FromQuery]Guid courseId, [FromQuery]string? courseName, [FromQuery]int pageNumber, [FromQuery]int pageSize)
+        {
+            var response = await _courseService.GetTopics(courseId, courseName, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPut("edit-topic{topicId}")]
+        public async Task<IActionResult> EditTopic(Guid topicId, [FromBody] EditTopicRequest request)
+        {
+            try
+            {
+                var response = await _courseService.UpdateTopics(topicId, request);
+                return StatusCode(int.Parse(response.status),response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Edit Topic API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpDelete("delete-topic")]
+        public async Task<IActionResult> DeleteTopic([FromQuery]Guid topicId)
+        {
+            try
+            {
+                var response = await _courseService.DeleteTopics(topicId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex) { 
+                _logger.LogError("[Delete Topic API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500,ex.ToString());
             }
         }
     }

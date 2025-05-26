@@ -15,7 +15,7 @@ public partial class Chapter
 
     public string ImageUrl { get; set; } = null!;
 
-    public Guid CourseId { get; set; }
+    public Guid TopicId { get; set; }
 
     public bool? Active { get; set; }
 
@@ -25,5 +25,6 @@ public partial class Chapter
 
     public DateTime? DeleteAt { get; set; }
 
-    public virtual Course Course { get; set; } = null!;
+    public virtual Topic Topic { get; set; }
+
 }

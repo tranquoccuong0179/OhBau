@@ -44,18 +44,18 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Redis Config
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
-{
-    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
-    return ConnectionMultiplexer.Connect(configuration);
-});
+//builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+//{
+//    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+//    return ConnectionMultiplexer.Connect(configuration);
+//});
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
-});
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+//});
 
-builder.Services.AddScoped<IRedisService, RedisService>();
+//builder.Services.AddScoped<IRedisService, RedisService>();
 
 
 // Add services to the container.

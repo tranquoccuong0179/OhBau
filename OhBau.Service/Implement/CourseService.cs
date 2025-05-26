@@ -15,8 +15,10 @@ using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Course;
+using OhBau.Model.Payload.Request.Topic;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Course;
+using OhBau.Model.Payload.Response.Topic;
 using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
 using OhBau.Service.Redis;
@@ -27,16 +29,17 @@ namespace OhBau.Service.Implement
     {
         private readonly IMemoryCache _cache;
         private readonly GenericCacheInvalidator<Course> _courseCacheInvalidator;
-        private readonly IRedisService _redisService;
+        //private readonly IRedisService _redisService;
+        private readonly GenericCacheInvalidator<Topic> _topicCacheValidator;
         public CourseService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CourseService> logger,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, 
             GenericCacheInvalidator<Course> courseCacheInvalidator,
             IMemoryCache cache,
-            IRedisService redisService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            GenericCacheInvalidator<Topic> topicCacheValidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _courseCacheInvalidator = courseCacheInvalidator;
             _cache = cache;
-            _redisService = redisService;
+            _topicCacheValidator = topicCacheValidator;
         }
 
         public async Task<BaseResponse<CreateCourseResponse>> CreateCourse(CreateCourseRequest request)
@@ -257,6 +260,178 @@ namespace OhBau.Service.Implement
                 throw new Exception(ex.ToString());
             }
 
+        }
+
+        public async Task<BaseResponse<CreateTopicResponse>> CreateTopic(CreateTopicRequest request)
+        {
+            try
+            {
+                var createTopic = new Topic
+                {
+                    Id = Guid.NewGuid(),
+                    Title = request.Title,
+                    Description = request.Description,
+                    CourseId = request.CourseId,
+                    IsDelete = false,
+                };
+
+                await _unitOfWork.GetRepository<Topic>().InsertAsync(createTopic);
+                await _unitOfWork.CommitAsync();
+            
+                _topicCacheValidator.InvalidateEntityList();
+                _topicCacheValidator.InvalidateEntity(createTopic.Id);
+
+                var response = new CreateTopicResponse
+                {
+                    TopicId  = createTopic.Id
+                };
+
+                return new BaseResponse<CreateTopicResponse>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Create topic success",
+                    data = response
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<BaseResponse<Paginate<GetTopics>>> GetTopics(Guid courseId, string? courseName, int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<Topic>(pageNumber, pageSize);
+            parameters.AddFilter("courseId", courseId);
+            parameters.AddFilter("courseName", courseName);
+
+            var cacheKey = _topicCacheValidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetTopics> GetTopics))
+            {
+                return new BaseResponse<Paginate<GetTopics>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get topics succes(cache)",
+                    data = GetTopics
+                };
+            }
+
+            Expression<Func<Topic, bool>> predicate = x => x.CourseId == courseId && x.IsDelete == false;
+
+            if (!string.IsNullOrEmpty(courseName))
+            {
+                predicate = x => x.CourseId == courseId && x.Course.Name.Contains(courseName) && x.IsDelete == false;
+            }
+
+            var getTopics = await _unitOfWork.GetRepository<Topic>().GetPagingListAsync(predicate: predicate,
+                include: i => i.Include(c => c.Course),
+                page: pageNumber,
+                size: pageSize);
+
+            var mapItems = getTopics.Items.Select(x => new GetTopics
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description,
+                IsDelete = x.IsDelete
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetTopics>
+            {
+                Items = mapItems,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = mapItems.Count()
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cacheKey, pagedResponse,options);
+
+            return new BaseResponse<Paginate<GetTopics>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get topics success",
+                data = pagedResponse
+            };
+
+        }
+
+        public async Task<BaseResponse<string>> UpdateTopics(Guid topicId, EditTopicRequest request)
+        {
+            try
+            {
+                var checkUpdate = await _unitOfWork.GetRepository<Topic>().GetByConditionAsync(x => x.Id == topicId);
+                if (checkUpdate == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Topic not found",
+                        data = null
+                    };
+                }
+
+                checkUpdate.Title = request.Title ?? checkUpdate.Title;
+                checkUpdate.Description = request.Description ?? checkUpdate.Description;
+                checkUpdate.IsDelete = checkUpdate.IsDelete;
+
+                _unitOfWork.GetRepository<Topic>().UpdateAsync(checkUpdate);
+               await _unitOfWork.CommitAsync();
+
+
+                _topicCacheValidator.InvalidateEntityList();
+                _topicCacheValidator.InvalidateEntity(topicId);
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Update Topic Success",
+                    data = null
+                };
+            }
+            catch (Exception ex) { 
+                
+                throw new Exception(ex.ToString());
+            }
+        }
+
+        public async Task<BaseResponse<string>> DeleteTopics(Guid topicId)
+        {
+            try
+            {
+                var checkDelete = await _unitOfWork.GetRepository<Topic>().GetByConditionAsync(x => x.Id == topicId);
+                if (checkDelete == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Topic not found",
+                        data = null
+                    };
+                }
+
+                checkDelete.IsDelete = true;
+                _unitOfWork.GetRepository<Topic>().UpdateAsync(checkDelete);
+                await _unitOfWork.CommitAsync();
+
+                _topicCacheValidator.InvalidateEntityList();
+                _topicCacheValidator.InvalidateEntity(topicId);
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Delete Topic success",
+                    data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
         }
     }
 }

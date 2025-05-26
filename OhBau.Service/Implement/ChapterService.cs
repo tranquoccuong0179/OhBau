@@ -52,7 +52,7 @@ namespace OhBau.Service.Implement
                     CreateAt = DateTime.Now,
                     UpdateAt = null,
                     DeleteAt = null,
-                    CourseId = request.CourseId,
+                    TopicId = request.TopicId,
                 };
 
                 await _unitOfWork.GetRepository<Chapter>().InsertAsync(createChaper);
@@ -74,11 +74,10 @@ namespace OhBau.Service.Implement
             }
         }
 
-        public async Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByCourse(Guid courseId,int pageNumber, int pageSize, string? title, string? course)
+        public async Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByTopic(Guid topicId,int pageNumber, int pageSize, string? title)
         {
                 var listParameter = new ListParameters<Chapter>(pageNumber, pageSize);
                 listParameter.AddFilter("Title", title);
-                listParameter.AddFilter("Course", course);
 
                 var cacheKey = _chaperCacheInvalidator.GetCacheKeyForList(listParameter);
                 if (_cache.TryGetValue(cacheKey, out Paginate<GetChapters> GetChapters))
@@ -90,21 +89,16 @@ namespace OhBau.Service.Implement
                         data = GetChapters
                     };
                 }
-                Expression<Func<Chapter, bool>> predicate = null;
+                Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId && x.Active == false;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    predicate = x => x.Title.Contains(title) && x.Course.Id == courseId;
-                }
-
-                if (!string.IsNullOrEmpty(course))
-                {
-                    predicate = x => x.Course.Name.Contains(course) && x.Course.Id == courseId;
+                    predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId && x.Active == false;
                 }
 
                 var getChapter = await _unitOfWork.GetRepository<Chapter>().GetPagingListAsync(
                                                                                                 predicate:predicate,
                                                                                                 include: q =>
-                                                                                                q.Include(c => c.Course),
+                                                                                                q.Include(c => c.Topic),
                                                                                                 page: pageNumber,
                                                                                                 size: pageSize);
 
@@ -153,7 +147,7 @@ namespace OhBau.Service.Implement
                     };
                 }
                 var getChapter = await _unitOfWork.GetRepository<Chapter>().SingleOrDefaultAsync(predicate: x => x.Id == chapterId,
-                                                                                                 include: q => q.Include(c => c.Course));
+                                                                                                 include: q => q.Include(c => c.Topic));
 
                 if (getChapter == null)
                 {
@@ -172,7 +166,7 @@ namespace OhBau.Service.Implement
                     Content = getChapter.Content,
                     VideoUrl = getChapter.VideoUrl,
                     ImageUrl = getChapter.ImageUrl,
-                    Course = getChapter.Course.Name,
+                    Course = getChapter.Topic.Title,
                     Active = getChapter.Active,
                     CreateAt = getChapter.CreateAt,
                     UpdateAt = getChapter.UpdateAt,
@@ -208,7 +202,7 @@ namespace OhBau.Service.Implement
                 getChapter.Content = request.Content ?? getChapter.Content;
                 getChapter.VideoUrl = request.VideoUrl ?? getChapter.VideoUrl;
                 getChapter.ImageUrl = request.ImageUrl ?? getChapter.ImageUrl;
-                getChapter.CourseId = request.CourseId != null ? request.CourseId : getChapter.CourseId;
+                getChapter.TopicId = request.CourseId != null ? request.CourseId : getChapter.TopicId;
                 getChapter.Active = request.Active;
                 getChapter.CreateAt = getChapter.CreateAt;
                 getChapter.UpdateAt = DateTime.Now;

@@ -34,7 +34,7 @@ namespace OhBau.Model.Payload.Request.Chapter
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime DeleteAt { get; set; }
 
-        public Guid CourseId { get; set; }
+        public Guid TopicId { get; set; }
 
     }
 }
