@@ -6,7 +6,7 @@ namespace OhBau.API.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly string _filePath;
-        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         public VisitStatisticsMiddleWare(RequestDelegate next)
         {
@@ -17,7 +17,14 @@ namespace OhBau.API.Middlewares
         public async Task InvokeAsync(HttpContext context)
         {
             string today = DateTime.Today.ToString("yyyy-MM-dd");
-            string ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            // Ưu tiên lấy IP từ X-Forwarded-For
+            string ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(ip))
+            {
+                ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            }
 
             await _semaphore.WaitAsync();
             try

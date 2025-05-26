@@ -31,9 +31,9 @@ namespace OhBau.API.Controllers
 
 
         [HttpGet(ApiEndPointConstant.Chapter.GetChapters)]
-        public async Task<IActionResult> GetChapters([FromQuery]Guid courseId, [FromQuery]int pageNumber, [FromQuery]int pageSize, [FromQuery]string?title, string? courseName)
+        public async Task<IActionResult> GetChapters([FromQuery]Guid topicId, [FromQuery]int pageNumber, [FromQuery]int pageSize, [FromQuery]string?title)
         {
-                var response = await _chapterService.GetChaptersByCourse(courseId, pageNumber, pageSize, title, courseName);
+                var response = await _chapterService.GetChaptersByTopic(topicId, pageNumber, pageSize, title);
                 return StatusCode(int.Parse(response.status), response);
         }
 

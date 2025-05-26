@@ -14,9 +14,10 @@ namespace OhBau.Service.Interface
     public interface IChapterService
     {
         Task<BaseResponse<string>> CreateChaper(CreateChapterRequest request);
-        Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByCourse(Guid courseId, int pageNumber, int pageSize,string? title, string? course);
+        Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByTopic(Guid topicId, int pageNumber, int pageSize,string? title);
         Task<BaseResponse<GetChapter>> GetChapter(Guid chapterId);
         Task<BaseResponse<string>> UpdateChapter(Guid chapterId, UpdateChapterRequest request);
-        Task<BaseResponse<string>> DeleteChapter(Guid chapterId);
+        Task<BaseResponse<string>> DeleteChapter(Guid chapterId); 
+        
     }
 }

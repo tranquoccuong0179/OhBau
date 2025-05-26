@@ -27,9 +27,9 @@ public partial class Course
 
     public virtual Category Category { get; set; } = null!;
 
-    public virtual ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
-
     public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
     public virtual ICollection<MyCourse> MyCourses { get; set; } = new List<MyCourse>();
+
+
 }
