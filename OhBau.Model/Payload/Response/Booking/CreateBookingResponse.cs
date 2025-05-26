@@ -20,6 +20,14 @@ namespace OhBau.Model.Payload.Response.Booking
 
         public string? Description { get; set; }
 
+        public string? FullName { get; set; }
+
+        public int YearOld { get; set; }
+
+        public string? Address { get; set; }
+
+        public string? Phone { get; set; }
+
         public DateOnly Date { get; set; }
     }
 }
