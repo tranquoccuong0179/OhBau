@@ -11,5 +11,6 @@ namespace OhBau.Service.CloudinaryService
     public interface ICloudinaryService
     {
         Task<BaseResponse<string>> Upload(IFormFile file);
+        Task<BaseResponse<string>> UploadVideo(IFormFile file);
     }
 }
