@@ -55,14 +55,14 @@ namespace OhBau.Service.Implement
 
             if (request.Date < DateOnly.FromDateTime(DateTime.Today))
             {
-                throw new InvalidOperationException("Không thể đặt lịch cho ngày trong quá khứ");
+                throw new BadHttpRequestException("Không thể đặt lịch cho ngày trong quá khứ");
             }
 
             var existingBooking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                 predicate: b => b.DotorSlotId.Equals(request.DotorSlotId) && b.Active == true && b.Date.Equals(request.Date));
             if (existingBooking != null)
             {
-                throw new InvalidOperationException("Đã có lịch đặt cho khung giờ này với bác sĩ này vào ngày này");
+                throw new BadHttpRequestException("Đã có lịch đặt cho khung giờ này với bác sĩ này vào ngày này");
             }
 
             var booking = _mapper.Map<Booking>(request);

@@ -167,7 +167,7 @@ namespace OhBau.Service.Implement
             {
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                     predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
-                        && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                        && b.Date == date
                         && b.Active == true);
 
                 var isBooked = booking != null;
@@ -212,7 +212,7 @@ namespace OhBau.Service.Implement
             {
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                     predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
-                        && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                        && b.Date == date
                         && b.Active == true);
 
                 var isBooked = booking != null;
@@ -268,7 +268,7 @@ namespace OhBau.Service.Implement
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                 predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                     && b.CreateAt.HasValue
-                    && DateOnly.FromDateTime(b.CreateAt.Value) == date
+                    && b.Date == date
                     && b.Active == true);
 
             var isBooked = booking != null;
