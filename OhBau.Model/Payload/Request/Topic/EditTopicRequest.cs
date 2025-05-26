@@ -10,6 +10,6 @@ namespace OhBau.Model.Payload.Request.Topic
     {
         public string Title {  get; set; }
         public string Description {  get; set; }
-
+        public long Duration {  get; set; }
     }
 }
