@@ -273,6 +273,7 @@ namespace OhBau.Service.Implement
                     Description = request.Description,
                     CourseId = request.CourseId,
                     IsDelete = false,
+                    Duration = request.Duration
                 };
 
                 await _unitOfWork.GetRepository<Topic>().InsertAsync(createTopic);
@@ -333,6 +334,7 @@ namespace OhBau.Service.Implement
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
+                Duration = x.Duration,
                 IsDelete = x.IsDelete
             }).ToList();
 
@@ -378,7 +380,7 @@ namespace OhBau.Service.Implement
                 checkUpdate.Title = request.Title ?? checkUpdate.Title;
                 checkUpdate.Description = request.Description ?? checkUpdate.Description;
                 checkUpdate.IsDelete = checkUpdate.IsDelete;
-
+                checkUpdate.Duration = request.Duration != 0 ? request.Duration = checkUpdate.Duration : 0;
                 _unitOfWork.GetRepository<Topic>().UpdateAsync(checkUpdate);
                await _unitOfWork.CommitAsync();
 

@@ -116,7 +116,6 @@ namespace OhBau.Service.Implement
                     Page = pageNumber,
                     Size = pageSize,
                     Total = mapItems.Count,
-                    TotalPages = getChapter.TotalPages,
                 };
 
                 var options = new MemoryCacheEntryOptions
