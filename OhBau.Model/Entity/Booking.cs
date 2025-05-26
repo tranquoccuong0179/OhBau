@@ -29,7 +29,7 @@ public partial class Booking
 
     public string? FullName {  get; set; }
 
-    public int YearOld {  get; set; }
+    public int? YearOld {  get; set; }
 
     public string? Address {  get; set; }
 
