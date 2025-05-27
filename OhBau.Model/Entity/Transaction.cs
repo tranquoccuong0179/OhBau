@@ -14,9 +14,9 @@ namespace OhBau.Model.Entity
         public virtual Order Order { get; set; }
         public PaymentTypeEnum Provider { get; set; }    
         public string PaymentUrl {  get; set; }
-        public string Code { get; set; }    
         public DateTime CreatedDate { get; set; }
         public DateTime ExpireDate { get; set; }
         public PaymentStatusEnum Status { get; set; }
+        public TransactionTypeEnum Type { get; set; }
     }
 }

@@ -98,9 +98,9 @@ namespace OhBau.Service.Implement
                         message = "Order updated with new cart items.",
                         data = new CreateOrderResponse
                         {
-                            OrderId = checkOrderready.Id,
+                            OrderCode = checkOrderready.OrderCode,
                             TotalPrice = checkOrderready.TotalPrice,
-                            OrderItems = orderItems
+                            OrderItems = orderItems,
                         }
                     };
                 }
@@ -149,7 +149,7 @@ namespace OhBau.Service.Implement
                     message = "Order created successfully.",
                     data = new CreateOrderResponse
                     {
-                        OrderId = newOrderId,
+                        OrderCode = createNewOrder.OrderCode,
                         TotalPrice = getCart.TotalPrice,
                         OrderItems = orderItems
                     }

@@ -391,7 +391,7 @@ public partial class OhBauContext : DbContext
         modelBuilder.Entity<MyCourse>().HasKey(c => new {c.AccountId, c.CourseId});
         modelBuilder.Entity<Transaction>().Property(b => b.Provider).HasConversion<string>();
         modelBuilder.Entity<Transaction>().Property(c => c.Status).HasConversion<string>();
-
+        modelBuilder.Entity<Transaction>().Property(c => c.Type).HasConversion<string>();
         OnModelCreatingPartial(modelBuilder);
     }
 
