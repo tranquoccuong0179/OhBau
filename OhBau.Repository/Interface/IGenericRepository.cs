@@ -75,7 +75,7 @@ namespace OhBau.Repository.Interface
         void DeleteRangeAsync(IEnumerable<T> entities);
         Task<int> CountAsync(Expression<Func<T, bool>> predicate = null);
 
-        Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate);
+        Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate, bool tracking = true);
 
     }
 }

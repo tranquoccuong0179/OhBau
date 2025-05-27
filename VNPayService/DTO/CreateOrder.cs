@@ -8,8 +8,8 @@ namespace VNPayService.DTO
 {
     public class CreateOrder
     {
-        public Guid OrderId { get; set; }
-
+        public string OrderCode { get; set; }
+       
         public string Des {  get; set; }
 
     }

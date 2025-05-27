@@ -112,7 +112,8 @@ namespace OhBau.Service.Implement
                     AccountId = getCart.AccountId,
                     CreatedDate = DateTime.Now,
                     PaymentStatus = PaymentStatusEnum.Pending,
-                    TotalPrice = getCart.TotalPrice
+                    TotalPrice = getCart.TotalPrice,
+                    OrderCode = RandomCodeUtil.GenerateRandomCode(6)
                 };
 
                 await _unitOfWork.GetRepository<Order>().InsertAsync(createNewOrder);

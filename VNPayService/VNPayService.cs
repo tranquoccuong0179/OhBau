@@ -45,7 +45,7 @@ namespace VNPayService
             try
             {
           
-                var getOrder = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(x => x.Id == request.OrderId);
+                var getOrder = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(x => x.OrderCode == request.OrderCode);
 
                 if (getOrder == null)
                 {
@@ -54,15 +54,16 @@ namespace VNPayService
 
                 var createVnPayOrder = new OrderInfo
                 {
-                    OrderID = request.OrderId,
+                    OrderCode = request.OrderCode,
                     Amount = (float)getOrder.TotalPrice,
                     CreatedDate = DateTime.Now,
                     Des = request.Des,
                     locale = "VN",
                     Status = 0,
+                    
                 };
                 decimal vnpAmount = (decimal)getOrder.TotalPrice * 100;
-                _logger.LogInformation("VNPay request for OrderId {OrderId}. vnp_Amount: {VnpAmount}", request.OrderId, vnpAmount.ToString("F0"));
+                _logger.LogInformation("VNPay request for OrderId {OrderId}. vnp_Amount: {VnpAmount}", request.OrderCode, vnpAmount.ToString("F0"));
                 var vnPay = new VNPayLibrary();
                 vnPay.AddRequestData("vnp_Version", "2.1.0");
                 vnPay.AddRequestData("vnp_Command", "pay");
@@ -75,9 +76,9 @@ namespace VNPayService
                 vnPay.AddRequestData("vnp_OrderInfo", createVnPayOrder.Des);
                 vnPay.AddRequestData("vnp_OrderType", "other");
                 vnPay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
-                vnPay.AddRequestData("vnp_TxnRef", createVnPayOrder.OrderID.ToString());
+                vnPay.AddRequestData("vnp_TxnRef", createVnPayOrder.OrderCode.ToString());
 
-                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID) 
+                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(getOrder.Id) 
                 && x.Status == PaymentStatusEnum.Pending && x.ExpireDate > DateTime.Now);
                 if (checkTransaction != null)
                 {
@@ -96,7 +97,7 @@ namespace VNPayService
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
                     Provider = PaymentTypeEnum.VNPay,
-                    OrderId = createVnPayOrder.OrderID
+                    OrderId = getOrder.Id
             
                 };
 
@@ -126,11 +127,13 @@ namespace VNPayService
             }
 
             string txnRefStr = vnPay.GetResponseData("vnp_TxnRef");
-            Guid orderId = Guid.NewGuid();
-            if (!Guid.TryParse(txnRefStr, out orderId))
-            {
-                return "{\"RspCode\":\"01\",\"Message\":\"Invalid transaction reference\"}";
-            }
+            string orderCode = txnRefStr;
+
+            //Guid orderId = Guid.NewGuid();
+            //if (!Guid.TryParse(txnRefStr, out orderId))
+            //{
+            //    return "{\"RspCode\":\"01\",\"Message\":\"Invalid transaction reference\"}";
+            //}
 
             string amountStr = vnPay.GetResponseData("vnp_Amount");
             if (string.IsNullOrEmpty(amountStr) || !long.TryParse(amountStr, out long vnp_AmountRaw))
@@ -158,7 +161,7 @@ namespace VNPayService
                 return "{\"RspCode\":\"97\",\"Message\":\"Invalid signature\"}";
             }
 
-            var order = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(x => x.Id == orderId);
+            var order = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(x => x.OrderCode == orderCode);
             var transaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId == order.Id);
 
 
@@ -168,12 +171,12 @@ namespace VNPayService
             }
 
             _logger.LogInformation("Comparing amounts for orderId {OrderId}. Order TotalPrice: {TotalPrice}, vnp_Amount: {VnpAmount}",
-                orderId, order.TotalPrice, vnp_Amount);
+                orderCode, order.TotalPrice, vnp_Amount);
 
             if ((decimal)order.TotalPrice != vnp_Amount)
             {
                 _logger.LogError("Amount mismatch for orderId {OrderId}. Order TotalPrice: {TotalPrice}, vnp_Amount: {VnpAmount}",
-                    orderId, order.TotalPrice, vnp_Amount);
+                    orderCode, order.TotalPrice, vnp_Amount);
                 return "{\"RspCode\":\"04\",\"Message\":\"Invalid amount\"}";
             }
 
@@ -225,9 +228,8 @@ namespace VNPayService
                 _unitOfWork.GetRepository<CartItems>().DeleteRangeAsync(getCartItemByCart);
                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
 
-                var getTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId == orderId);
-                getTransaction.Status = PaymentStatusEnum.Paid;
-                _unitOfWork.GetRepository<Transaction>().UpdateAsync(getTransaction);
+                transaction.Status = PaymentStatusEnum.Paid;
+                _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
