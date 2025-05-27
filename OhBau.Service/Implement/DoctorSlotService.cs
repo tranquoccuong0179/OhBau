@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
+using OhBau.Model.Enum;
 using OhBau.Model.Exception;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.DoctorSlot;
@@ -168,7 +169,8 @@ namespace OhBau.Service.Implement
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                     predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                         && b.Date == date
-                        && b.Active == true);
+                        && b.Active == true
+                        && (b.Type.Equals(TypeBookingEnum.Booked.GetDescriptionFromEnum()) || b.Type.Equals(TypeBookingEnum.Examined.GetDescriptionFromEnum())));
 
                 var isBooked = booking != null;
 
@@ -213,7 +215,8 @@ namespace OhBau.Service.Implement
                 var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
                     predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                         && b.Date == date
-                        && b.Active == true);
+                        && b.Active == true
+                        && (b.Type.Equals(TypeBookingEnum.Booked.GetDescriptionFromEnum()) || b.Type.Equals(TypeBookingEnum.Examined.GetDescriptionFromEnum())));
 
                 var isBooked = booking != null;
 
@@ -269,7 +272,8 @@ namespace OhBau.Service.Implement
                 predicate: b => b.DotorSlotId.Equals(doctorSlot.Id)
                     && b.CreateAt.HasValue
                     && b.Date == date
-                    && b.Active == true);
+                    && b.Active == true
+                    && (b.Type.Equals(TypeBookingEnum.Booked.GetDescriptionFromEnum()) || b.Type.Equals(TypeBookingEnum.Examined.GetDescriptionFromEnum())));
 
             var isBooked = booking != null;
 
