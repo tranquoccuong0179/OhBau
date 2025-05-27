@@ -18,6 +18,9 @@ namespace OhBau.Model.Mapper
                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()));
 
             CreateMap<Feedback, CreateFeedbackResponse>();
+
+            CreateMap<Feedback, GetFeedback>();
+
         }
     }
 }
