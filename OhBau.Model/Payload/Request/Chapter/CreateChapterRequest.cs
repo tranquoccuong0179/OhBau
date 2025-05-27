@@ -23,7 +23,7 @@ namespace OhBau.Model.Payload.Request.Chapter
         public string ImageUrl { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public bool Active { get; set; } = false;
+        public bool Active { get; set; } = true;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public DateTime CreateAt { get; set; } = DateTime.Now;
