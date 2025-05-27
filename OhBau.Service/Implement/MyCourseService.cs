@@ -55,7 +55,7 @@ namespace OhBau.Service.Implement
 
             var getCoursesByAccount = await _unitOfWork.GetRepository<MyCourse>().GetPagingListAsync(
                 predicate:predicate,
-                include: x => x.Include(c => c.Course),
+                include: x => x.Include(c => c.Course).ThenInclude(c => c.Category),
                 page: pageNumber,
                 size: pageSize
                 );
@@ -65,7 +65,8 @@ namespace OhBau.Service.Implement
                 Id = mc.CourseId,
                 Name = mc.Course.Name,
                 Duration = mc.Course.Duration,
-                Rating = mc.Course.Rating
+                Rating = mc.Course.Rating,
+                Category = mc.Course.Category.Name
             }).ToList();
 
             var pagedResponse = new Paginate<MyCoursesResponse>

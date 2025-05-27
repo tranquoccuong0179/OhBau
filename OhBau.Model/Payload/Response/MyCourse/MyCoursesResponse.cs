@@ -11,8 +11,8 @@ namespace OhBau.Model.Payload.Response.MyCourse
         public Guid Id { get; set; }
         public string Name { get; set; }
         public double Rating {  get; set; }
-
         public long Duration {  get; set; }
+        public string Category { get; set; }
 
     }
 }
