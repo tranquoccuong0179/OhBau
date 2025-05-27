@@ -135,6 +135,7 @@ namespace OhBau.Repository.Implement
         #region Update
         public void UpdateAsync(T entity)
         {
+            _dbSet.AsNoTracking();
             _dbSet.Update(entity);
         }
 

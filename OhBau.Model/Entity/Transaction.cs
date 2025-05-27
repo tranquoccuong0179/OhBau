@@ -16,6 +16,7 @@ namespace OhBau.Model.Entity
         public string PaymentUrl {  get; set; }
         public string Code { get; set; }    
         public DateTime CreatedDate { get; set; }
+        public DateTime ExpireDate { get; set; }
         public PaymentStatusEnum Status { get; set; }
     }
 }

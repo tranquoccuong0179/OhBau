@@ -37,6 +37,21 @@ namespace OhBau.Service.Implement
             await _unitOfWork.BeginTransactionAsync();
             try
             {
+                //var checkCartAlready = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
+                //if (checkCartAlready == null)
+                //{
+                //    var createNewCart = new Cart
+                //    {
+                //        Id = Guid.NewGuid(),
+                //        AccountId = accountId,
+                //        CreatedDate = DateTime.Now,
+                //        TotalPrice = 0
+                //    };
+
+                //    await _unitOfWork.GetRepository<Cart>().InsertAsync(createNewCart);
+                //    await _unitOfWork.CommitAsync();
+                //}
+
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
 
                 var checkAlready = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(
