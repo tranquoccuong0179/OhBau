@@ -12,6 +12,8 @@ namespace OhBau.Model.Payload.Response.Parent
         public Guid? Id { get; set; }
         public string? FullName { get; set; }
         public DateOnly? Dob { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
         public GetMotherHealthResponse? GetMotherHealthResponse { get; set; }
     }
 }

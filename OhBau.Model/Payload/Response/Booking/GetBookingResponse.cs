@@ -17,6 +17,8 @@ namespace OhBau.Model.Payload.Response.Booking
 
         public string? BookingModule { get; set; }
 
+        public string? BookingCode { get; set; }
+
         public string? Description { get; set; }
 
         public DateOnly Date { get; set; }

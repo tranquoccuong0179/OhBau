@@ -371,7 +371,6 @@ namespace VNPayService
                     Provider = PaymentTypeEnum.VNPay,
                     OrderId = booking.Id,
                     Type = TransactionTypeEnum.BuyCourse,
-
                 };
 
                 await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
