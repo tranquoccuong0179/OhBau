@@ -91,12 +91,12 @@ namespace VNPayService
                 var addTransaction = new Transaction
                 {
                     Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
-                    Code = RandomCodeUtil.GenerateRandomCode(10),
                     CreatedDate = DateTime.Now,
                     ExpireDate = DateTime.Now.AddMinutes(15), // Set expiration time for the transaction
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
                     Provider = PaymentTypeEnum.VNPay,
+                    Type = TransactionTypeEnum.BuyCourse,
                     OrderId = getOrder.Id
             
                 };
@@ -363,12 +363,12 @@ namespace VNPayService
                 var addTransaction = new Transaction
                 {
                     Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
-                    Code = RandomCodeUtil.GenerateRandomCode(10),
                     CreatedDate = DateTime.Now,
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
                     Provider = PaymentTypeEnum.VNPay,
                     OrderId = booking.Id,
+                    Type = TransactionTypeEnum.BuyCourse,
 
                 };
 

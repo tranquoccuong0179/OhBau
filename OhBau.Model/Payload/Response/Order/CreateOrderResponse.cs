@@ -8,7 +8,7 @@ namespace OhBau.Model.Payload.Response.Order
 {
     public class CreateOrderResponse
     {
-        public Guid OrderId { get; set; }
+        public string OrderCode { get; set; }
         public List<OrderItem> OrderItems { get; set; }
         public double TotalPrice {  get; set; }
 
