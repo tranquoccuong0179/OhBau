@@ -95,12 +95,14 @@ namespace VNPayService
                     ExpireDate = DateTime.Now.AddMinutes(15), // Set expiration time for the transaction
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
-                    Provider = PaymentTypeEnum.VNPay,
-                    Type = TransactionTypeEnum.BuyCourse,
-                    OrderId = getOrder.Id
-            
+                    Provider = PaymentTypeEnum.VNPay
                 };
 
+                if (request.OrderCode.Length == 6)
+                {
+                    addTransaction.Type = TransactionTypeEnum.Booking;
+                    addTransaction.OrderId = getOrder.Id;
+                }
                 await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
