@@ -20,7 +20,7 @@ namespace OhBau.Model.Mapper
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => TypeBookingEnum.Booked.GetDescriptionFromEnum()))
                 .ForMember(dest => dest.Active, opt => opt.MapFrom(src => true))
-                //.ForMember(dest => dest.BookingCode, opt => opt.MapFrom(src => RandomCodeUtil.GenerateRandomCode(8)))
+                .ForMember(dest => dest.BookingCode, opt => opt.MapFrom(src => RandomCodeUtil.GenerateRandomCode(8)))
                 .ForMember(dest => dest.CreateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()))
                 .ForMember(dest => dest.UpdateAt, opt => opt.MapFrom(src => TimeUtil.GetCurrentSEATime()));
 
