@@ -89,10 +89,10 @@ namespace OhBau.Service.Implement
                         data = GetChapters
                     };
                 }
-                Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId && x.Active == false;
+                Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId && x.Active == true;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId && x.Active == false;
+                    predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId && x.Active == true;
                 }
 
                 var getChapter = await _unitOfWork.GetRepository<Chapter>().GetPagingListAsync(
