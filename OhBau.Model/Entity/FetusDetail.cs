@@ -24,6 +24,9 @@ public partial class FetusDetail
 
     public double Ac { get; set; }
 
+    public double Bpm {  get; set; }
+
+    public double Movement { get; set; }
     public Guid FetusId { get; set; }
 
     public bool? Active { get; set; }
