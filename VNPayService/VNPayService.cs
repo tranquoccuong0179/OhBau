@@ -77,7 +77,8 @@ namespace VNPayService
                 vnPay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
                 vnPay.AddRequestData("vnp_TxnRef", createVnPayOrder.OrderID.ToString());
 
-                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID) && x.Status == PaymentStatusEnum.Pending);
+                var checkTransaction = await _unitOfWork.GetRepository<Transaction>().GetByConditionAsync(x => x.OrderId.Equals(createVnPayOrder.OrderID) 
+                && x.Status == PaymentStatusEnum.Pending && x.ExpireDate > DateTime.Now);
                 if (checkTransaction != null)
                 {
                     return checkTransaction.PaymentUrl;
@@ -91,11 +92,12 @@ namespace VNPayService
                     Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
                     Code = RandomCodeUtil.GenerateRandomCode(10),
                     CreatedDate = DateTime.Now,
+                    ExpireDate = DateTime.Now.AddMinutes(15), // Set expiration time for the transaction
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
                     Provider = PaymentTypeEnum.VNPay,
                     OrderId = createVnPayOrder.OrderID
-                
+            
                 };
 
                 await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
