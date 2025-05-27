@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OhBau.Model.Entity;
+using OhBau.Model.Enum;
 using OhBau.Model.Exception;
 using OhBau.Model.Payload.Request.Feedback;
 using OhBau.Model.Payload.Response;
@@ -44,7 +45,7 @@ namespace OhBau.Service.Implement
             }
 
             var booking = await _unitOfWork.GetRepository<Booking>().SingleOrDefaultAsync(
-                predicate: b => b.Id.Equals(request.BookingId) && b.ParentId.Equals(parent.Id),
+                predicate: b => b.Id.Equals(request.BookingId) && b.ParentId.Equals(parent.Id) && b.Type.Equals(TypeBookingEnum.Examined.GetDescriptionFromEnum()),
                 include: b => b.Include(b => b.DotorSlot));
 
             if (booking == null)
