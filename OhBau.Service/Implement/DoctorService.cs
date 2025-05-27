@@ -17,6 +17,7 @@ using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Feedback;
 using OhBau.Model.Payload.Response.Major;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
@@ -601,6 +602,21 @@ namespace OhBau.Service.Implement
                 status = StatusCodes.Status200OK.ToString(),
                 message = "Get majors success",
                 data =pagedResponse
+            };
+        }
+
+        public async Task<BaseResponse<List<GetFeedbackByDoctorId>>> GetFeedbackByDoctorId(Guid id)
+        {
+            var doctor = await _unitOfWork.GetRepository<Doctor>().GetListAsync(
+                selector: d => _mapper.Map<GetFeedbackByDoctorId>(d),
+                predicate: d => d.Id.Equals(id) && d.Active == true,
+                include: d => d.Include(d => d.Feedbacks));
+
+            return new BaseResponse<List<GetFeedbackByDoctorId>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách feedback của doctor này thành công",
+                data = doctor.ToList()
             };
         }
     }

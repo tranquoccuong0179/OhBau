@@ -11,6 +11,7 @@ using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Request.Fetus;
 using OhBau.Model.Payload.Request.Major;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Feedback;
 using OhBau.Model.Payload.Response.Major;
 
 namespace OhBau.Service.Interface
@@ -35,6 +36,8 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<string>> EditFetusInformation(Guid fetusId, EditFetusInformationRequest request);
 
         Task<BaseResponse<Paginate<GetMajors>>> GetMajors(int pageNumber, int pageSize);
+
+        Task<BaseResponse<List<GetFeedbackByDoctorId>>> GetFeedbackByDoctorId(Guid id);
 
     }
 }

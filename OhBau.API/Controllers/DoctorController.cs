@@ -700,5 +700,12 @@ namespace OhBau.API.Controllers
             var response = await _doctorService.GetMajors(pageNumber, pageSize);
             return StatusCode(int.Parse(response.status), response);
         }
+
+        [HttpGet("{id}/feedbacks")]
+        public async Task<IActionResult> GetAllFeedbackByDoctor([FromRoute] Guid id)
+        {
+            var response = await _doctorService.GetFeedbackByDoctorId(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

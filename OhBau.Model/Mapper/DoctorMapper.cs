@@ -7,6 +7,7 @@ using AutoMapper;
 using OhBau.Model.Entity;
 using OhBau.Model.Payload.Request.Doctor;
 using OhBau.Model.Payload.Response.Booking;
+using OhBau.Model.Payload.Response.Feedback;
 
 namespace OhBau.Model.Mapper
 {
@@ -15,6 +16,9 @@ namespace OhBau.Model.Mapper
         public DoctorMapper()
         {
             CreateMap<Doctor, DoctorResponse>();
+
+            CreateMap<Doctor, GetFeedbackByDoctorId>()
+                .ForMember(dest => dest.Feedbacks, opt => opt.MapFrom(src => src.Feedbacks));
         }
     }
 }
