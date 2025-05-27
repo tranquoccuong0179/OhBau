@@ -195,6 +195,7 @@ namespace OhBau.Service.Implement
             {
                 Id = b.Id,
                 Title = b.Title,
+                Content = b.Content,
                 CreatedDate = (DateTime)b.CreatedDate!
 
             }).ToList();
