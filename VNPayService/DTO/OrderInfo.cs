@@ -8,12 +8,14 @@ namespace VNPayService.DTO
 {
     public class OrderInfo
     {
-        public Guid OrderID { get; set; }
+        public string OrderCode { get; set; }
+
         public float Amount { get; set; }
         public int Status { get; set; }
         public string Des { get; set; }
         public DateTime CreatedDate { get; set; }
         public string locale { get; set; }
+
 
     }
 }

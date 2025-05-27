@@ -12,7 +12,7 @@ namespace OhBau.Model.Entity
         public Guid Id { get; set; }
         public DateTime CreatedDate { get; set; }
         public double TotalPrice { get; set; }
-
+        public string OrderCode { get; set; }
         public Guid AccountId { get; set; }
         public virtual Account Account { get; set; }
 

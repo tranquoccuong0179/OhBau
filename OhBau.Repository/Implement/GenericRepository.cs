@@ -135,7 +135,6 @@ namespace OhBau.Repository.Implement
         #region Update
         public void UpdateAsync(T entity)
         {
-            _dbSet.AsNoTracking();
             _dbSet.Update(entity);
         }
 
@@ -164,9 +163,14 @@ namespace OhBau.Repository.Implement
             return await query.CountAsync();
         }
 
-        public async Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate)
+        public async Task<T?> GetByConditionAsync(Expression<Func<T, bool>> predicate, bool tracking = true)
         {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
+            var query = _dbSet.Where(predicate);
+            if (!tracking)
+            {
+                query = query.AsNoTracking();
+            }
+            return await query.FirstOrDefaultAsync();
         }
         #endregion
     }
