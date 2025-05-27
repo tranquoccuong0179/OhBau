@@ -12,6 +12,7 @@ using OhBau.Repository.Interface;
 using OhBau.Service.Interface;
 using OhBau.Model.Exception;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace OhBau.Service.Implement
 {
@@ -114,11 +115,15 @@ namespace OhBau.Service.Implement
                     throw new NotFoundException("Không tìm thấy thông tin tài khoản của người dùng hiện tại");
                 }
 
+                var response = _mapper.Map<GetParentResponse>(parent);
+                response.Email = account.Email;
+                response.Phone = account.Phone;
+
                 return new BaseResponse<GetParentResponse>()
                 {
                     status = StatusCodes.Status200OK.ToString(),
                     message = "Lấy thông tin hồ sơ tài khoản thành công",
-                    data = _mapper.Map<GetParentResponse>(parent)
+                    data = response
                 };
             }catch (Exception ex)
             {
