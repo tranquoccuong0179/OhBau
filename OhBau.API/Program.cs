@@ -140,7 +140,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: CorsConstant.PolicyName,
         policy =>
         {
-            policy.WithOrigins("https://ohbau.cloud", "http://localhost:5173")
+            policy.WithOrigins("https://ohbau.cloud", "http://localhost:5173", "https://clever-frangollo-ce4a5c.netlify.app")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

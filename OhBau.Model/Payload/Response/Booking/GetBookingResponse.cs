@@ -11,15 +11,19 @@ namespace OhBau.Model.Payload.Response.Booking
 {
     public class GetBookingResponse
     {
-        public GetParentResponse? Parent { get; set; }
+        public Guid Id { get; set; }
 
         public string? Type { get; set; }
 
         public string? BookingModule { get; set; }
 
+        public string? BookingCode { get; set; }
+
         public string? Description { get; set; }
 
         public DateOnly Date { get; set; }
+
+        public GetParentResponse? Parent { get; set; }
 
         public DoctorResponse? Doctor { get; set; }
 

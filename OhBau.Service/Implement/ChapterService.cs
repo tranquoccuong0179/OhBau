@@ -85,14 +85,14 @@ namespace OhBau.Service.Implement
                     return new BaseResponse<Paginate<GetChapters>>
                     {
                         status = StatusCodes.Status200OK.ToString(),
-                        message = "Get chapter success",
+                        message = "Get chapter success(cache)",
                         data = GetChapters
                     };
                 }
-                Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId && x.Active == true;
+                 Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId;
                 if (!string.IsNullOrEmpty(title))
                 {
-                    predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId && x.Active == true;
+                predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId;
                 }
 
                 var getChapter = await _unitOfWork.GetRepository<Chapter>().GetPagingListAsync(

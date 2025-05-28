@@ -92,7 +92,7 @@ namespace VNPayService
                 {
                     Id = LongIdGeneratorUtil.GenerateUniqueLongId(),
                     CreatedDate = DateTime.Now,
-                    ExpireDate = DateTime.Now.AddMinutes(15), // Set expiration time for the transaction
+                    ExpireDate = DateTime.Now.AddMinutes(15),
                     PaymentUrl = paymentUrl,
                     Status = PaymentStatusEnum.Pending,
                     Provider = PaymentTypeEnum.VNPay
@@ -371,7 +371,6 @@ namespace VNPayService
                     Provider = PaymentTypeEnum.VNPay,
                     OrderId = booking.Id,
                     Type = TransactionTypeEnum.BuyCourse,
-
                 };
 
                 await _unitOfWork.GetRepository<Transaction>().InsertAsync(addTransaction);
