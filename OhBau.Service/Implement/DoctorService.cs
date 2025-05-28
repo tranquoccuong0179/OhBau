@@ -223,7 +223,7 @@ namespace OhBau.Service.Implement
                     Page = result.Page,
                     Size = result.Size,
                     Total = result.Total,
-                    TotalPages = result.TotalPages
+                    //TotalPages = result.TotalPages
                 };
 
                 var options = new MemoryCacheEntryOptions

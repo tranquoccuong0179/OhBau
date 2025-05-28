@@ -150,18 +150,18 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<CategoryResponse>>> GetCategories(int pageNumber, int pageSize)
         {
-            var listParemeter = new ListParameters<Category>(pageNumber, pageSize);
-            var cache = _categoryCacheInvalidator.GetCacheKeyForList(listParemeter);
+            //var listParemeter = new ListParameters<Category>(pageNumber, pageSize);
+            //var cache = _categoryCacheInvalidator.GetCacheKeyForList(listParemeter);
 
-            if (_cache.TryGetValue(cache, out Paginate<CategoryResponse> GetCategories))
-            {
-                return new BaseResponse<Paginate<CategoryResponse>>
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Get categories success(cache)",
-                    data = GetCategories
-                };
-            }
+            //if (_cache.TryGetValue(cache, out Paginate<CategoryResponse> GetCategories))
+            //{
+            //    return new BaseResponse<Paginate<CategoryResponse>>
+            //    {
+            //        status = StatusCodes.Status200OK.ToString(),
+            //        message = "Get categories success(cache)",
+            //        data = GetCategories
+            //    };
+            //}
 
            
             var getCategories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(page: pageNumber, size:pageSize, predicate: x => x.Active == true);
@@ -189,7 +189,7 @@ namespace OhBau.Service.Implement
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             };
 
-            _cache.Set(cache,pagedResponse,options);
+            //_cache.Set(cache,pagedResponse,options);
 
             return new BaseResponse<Paginate<CategoryResponse>>
             {
