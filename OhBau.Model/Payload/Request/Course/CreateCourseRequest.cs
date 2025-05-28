@@ -16,9 +16,8 @@ namespace OhBau.Model.Payload.Request.Course
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public float? Rating { get; set; } = 0;
 
-        [Required(ErrorMessage = "Please enter a duration")]
-        [Range(1, 876000, ErrorMessage = "Duration must be between 1 and 876,000 hours.")]
-        public long Duration {  get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public long Duration { get; set; } = 0;
 
         [Required(ErrorMessage = "Please enter price")]
         [Range(1, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 1")]

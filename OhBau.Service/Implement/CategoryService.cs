@@ -197,6 +197,7 @@ namespace OhBau.Service.Implement
             _cache.Set(cacheKey, pagedResponse, options);
             _categoryCacheInvalidator.AddToListCacheKeys(cacheKey);
 
+
             return new BaseResponse<Paginate<CategoryResponse>>
             {
                 status = StatusCodes.Status200OK.ToString(),

@@ -223,7 +223,7 @@ namespace OhBau.Service.Implement
                     Page = result.Page,
                     Size = result.Size,
                     Total = result.Total,
-                    TotalPages = result.TotalPages
+                    //TotalPages = result.TotalPages
                 };
 
                 var options = new MemoryCacheEntryOptions
@@ -232,6 +232,7 @@ namespace OhBau.Service.Implement
                 };
 
                 _cache.Set(cacheKey, pagedResponse,options);
+                _doctorCacheInvalidator.AddToListCacheKeys(cacheKey);
 
                 return new BaseResponse<Paginate<GetDoctorsResponse>>
                 {
@@ -329,7 +330,6 @@ namespace OhBau.Service.Implement
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
-
             return new BaseResponse<GetDoctorResponse>
             {
 
