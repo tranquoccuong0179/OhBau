@@ -125,20 +125,20 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetCartByAccount>>> GetCartItemByAccount(Guid accountId, int pageNumber, int pageSize)
         {              
-                var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
-                listParameter.AddFilter("accountId", accountId);
+                //var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
+                //listParameter.AddFilter("accountId", accountId);
                 
-                var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+                //var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
 
-                if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
-                {
-                    return new BaseResponse<Paginate<GetCartByAccount>>
-                    {
-                        status = StatusCodes.Status200OK.ToString(),
-                        message = "Get cart success(cache)",
-                        data = cachedResult
-                    };
-                }
+                //if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
+                //{
+                //    return new BaseResponse<Paginate<GetCartByAccount>>
+                //    {
+                //        status = StatusCodes.Status200OK.ToString(),
+                //        message = "Get cart success(cache)",
+                //        data = cachedResult
+                //    };
+                //}
 
                 var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
@@ -175,8 +175,8 @@ namespace OhBau.Service.Implement
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
                 };
 
-                cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
-                _cache.Set(cacheKey, pagedResposne, cacheOption);
+                //cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
+                //_cache.Set(cacheKey, pagedResposne, cacheOption);
 
                 return new BaseResponse<Paginate<GetCartByAccount>>
                 {

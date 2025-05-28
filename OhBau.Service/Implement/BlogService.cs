@@ -163,26 +163,26 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<Paginate<GetBlogs>>> GetBlogs(int pageNumber, int pageSize, string? title)
         {
 
-            var listParams = new ListParameters<Blog>(pageNumber, pageSize);
-            listParams.AddFilter("Title", title);
+            //var listParams = new ListParameters<Blog>(pageNumber, pageSize);
+            //listParams.AddFilter("Title", title);
 
-            var cacheKey = _blogCacheInvalidator.GetCacheKeyForList(listParams);
+            //var cacheKey = _blogCacheInvalidator.GetCacheKeyForList(listParams);
 
-            if (_cache.TryGetValue(cacheKey, out Paginate<GetBlogs> cachedResult))
-            {
-                return new BaseResponse<Paginate<GetBlogs>>
-                {
-                    status = StatusCodes.Status200OK.ToString(),
-                    message = "Lấy danh sách blog thành công (từ cache)",
-                    data = cachedResult
-                };
-            }
+            //if (_cache.TryGetValue(cacheKey, out Paginate<GetBlogs> cachedResult))
+            //{
+            //    return new BaseResponse<Paginate<GetBlogs>>
+            //    {
+            //        status = StatusCodes.Status200OK.ToString(),
+            //        message = "Lấy danh sách blog thành công (từ cache)",
+            //        data = cachedResult
+            //    };
+            //}
 
-            Expression<Func<Blog, bool>> predicate = x => x.isDelete == false && x.Status.Equals(BlogStatusEnum.Published);
+            Expression<Func<Blog, bool>> predicate = x => x.isDelete == false;
 
             if (!string.IsNullOrEmpty(title))
             {
-                predicate = x => x.Title.Contains(title) && x.Status.Equals(BlogStatusEnum.Published) && x.isDelete == false;
+                predicate = x => x.Title.Contains(title) && x.isDelete == false;
             }
 
             var getBlogs = await _unitOfWork.GetRepository<Blog>().GetPagingListAsync(
@@ -215,8 +215,8 @@ namespace OhBau.Service.Implement
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
             };
 
-            cacheOption.AddExpirationToken(_blogCacheInvalidator.GetListCacheToken());
-            _cache.Set(cacheKey, pagedResponse,cacheOption);
+            //cacheOption.AddExpirationToken(_blogCacheInvalidator.GetListCacheToken());
+            //_cache.Set(cacheKey, pagedResponse,cacheOption);
 
             return new BaseResponse<Paginate<GetBlogs>>
             {
