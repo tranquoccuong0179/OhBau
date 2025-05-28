@@ -175,7 +175,7 @@ namespace OhBau.Service.Implement
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
                 };
 
-                cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
+                //cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
                 _cache.Set(cacheKey, pagedResposne, cacheOption);
 
                 return new BaseResponse<Paginate<GetCartByAccount>>

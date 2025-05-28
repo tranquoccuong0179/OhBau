@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
+using System.Collections.Generic;
 
 public abstract class BaseCacheInvalidator<TEntity> : ICacheInvalidator<TEntity>
 {
     private readonly IMemoryCache _cache;
     private readonly TimeSpan _defaultExpiration;
-    private CancellationTokenSource _listCacheTokenSource = new CancellationTokenSource();
+    private readonly string _listCacheKeysSetKey;
 
     protected BaseCacheInvalidator(IMemoryCache cache, TimeSpan? defaultExpiration = null)
     {
         _cache = cache;
         _defaultExpiration = defaultExpiration ?? TimeSpan.FromMinutes(30);
+        _listCacheKeysSetKey = $"{typeof(TEntity).Name}_ListCacheKeys";
     }
 
     protected abstract string GetEntityCacheKey(Guid entityId);
@@ -22,14 +23,15 @@ public abstract class BaseCacheInvalidator<TEntity> : ICacheInvalidator<TEntity>
 
     public void InvalidateEntityList()
     {
-        if (!_listCacheTokenSource.Token.IsCancellationRequested)
+        if (_cache.TryGetValue(_listCacheKeysSetKey, out HashSet<string> cacheKeys))
         {
-            _listCacheTokenSource.Cancel();
+            foreach (var key in cacheKeys)
+            {
+                _cache.Remove(key);
+            }
+            _cache.Remove(_listCacheKeysSetKey);
         }
-        _listCacheTokenSource = new CancellationTokenSource();
     }
-
-    public CancellationChangeToken GetListCacheToken() => new CancellationChangeToken(_listCacheTokenSource.Token);
 
     public void SetEntityCache(Guid entityId, object data, TimeSpan? absoluteExpire = null)
     {
@@ -84,5 +86,15 @@ public abstract class BaseCacheInvalidator<TEntity> : ICacheInvalidator<TEntity>
         }
 
         return key;
+    }
+
+    protected void AddToListCacheKeys(string cacheKey)
+    {
+        var cacheKeys = _cache.Get<HashSet<string>>(_listCacheKeysSetKey) ?? new HashSet<string>();
+        cacheKeys.Add(cacheKey);
+        _cache.Set(_listCacheKeysSetKey, cacheKeys, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _defaultExpiration
+        });
     }
 }
