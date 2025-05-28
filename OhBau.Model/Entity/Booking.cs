@@ -17,7 +17,7 @@ public partial class Booking
 
     public string Description { get; set; } = null!;
 
-    public string BookingCode { get; set; } = null!;
+    public string? BookingCode { get; set; } = null!;
     public DateOnly Date { get; set; }
 
     public bool? Active { get; set; }
