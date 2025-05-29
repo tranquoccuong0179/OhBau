@@ -235,6 +235,7 @@ namespace VNPayService
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
+
                 _mycourseCacheInvalidator.InvalidateEntityList();
                 return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
 
