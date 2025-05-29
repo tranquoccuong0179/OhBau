@@ -83,6 +83,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache, pagedResponse ,options);
+            _myCourseCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<MyCoursesResponse>>
             {

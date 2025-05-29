@@ -214,6 +214,7 @@ namespace OhBau.Service.Implement
             };
             
             _cache.Set(cacheKey, pagedResponse ,options);
+            _commentCacheINvalidator.AddToListCacheKeys(cacheKey);
 
             return new BaseResponse<Paginate<GetComments>>
             {

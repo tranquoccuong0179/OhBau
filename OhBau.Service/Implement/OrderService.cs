@@ -209,6 +209,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache, pagedResponse, options);
+            _orderCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrders>>
             {
@@ -276,6 +277,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache,pagedResponse,options);
+            _orderDetailCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrderDetails>>
             {
@@ -329,6 +331,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache,pagedResponse, options);
+            _orderCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrders>>
             {

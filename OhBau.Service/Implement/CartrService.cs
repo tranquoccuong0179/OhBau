@@ -124,23 +124,23 @@ namespace OhBau.Service.Implement
         }
 
         public async Task<BaseResponse<Paginate<GetCartByAccount>>> GetCartItemByAccount(Guid accountId, int pageNumber, int pageSize)
-        {              
-                //var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
-                //listParameter.AddFilter("accountId", accountId);
-                
-                //var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+        {
+            var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
+            listParameter.AddFilter("accountId", accountId);
 
-                //if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
-                //{
-                //    return new BaseResponse<Paginate<GetCartByAccount>>
-                //    {
-                //        status = StatusCodes.Status200OK.ToString(),
-                //        message = "Get cart success(cache)",
-                //        data = cachedResult
-                //    };
-                //}
+            var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
 
-                var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
+            {
+                return new BaseResponse<Paginate<GetCartByAccount>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get cart success(cache)",
+                    data = cachedResult
+                };
+            }
+
+            var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
                                                                                                                  i.Include(c => c.Course)
                                                                                                                  .Include(o => o.Cart)
@@ -175,8 +175,8 @@ namespace OhBau.Service.Implement
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
                 };
 
-                //cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
-                //_cache.Set(cacheKey, pagedResposne, cacheOption);
+                 _cache.Set(cacheKey, pagedResposne, cacheOption);
+                _cartCacheInvalidator.AddToListCacheKeys(cacheKey);
 
                 return new BaseResponse<Paginate<GetCartByAccount>>
                 {

@@ -76,20 +76,21 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByTopic(Guid topicId,int pageNumber, int pageSize, string? title)
         {
-                //var listParameter = new ListParameters<Chapter>(pageNumber, pageSize);
-                //listParameter.AddFilter("Title", title);
+            var listParameter = new ListParameters<Chapter>(pageNumber, pageSize);
+            listParameter.AddFilter("Title", title);
 
-                //var cacheKey = _chaperCacheInvalidator.GetCacheKeyForList(listParameter);
-                //if (_cache.TryGetValue(cacheKey, out Paginate<GetChapters> GetChapters))
-                //{
-                //    return new BaseResponse<Paginate<GetChapters>>
-                //    {
-                //        status = StatusCodes.Status200OK.ToString(),
-                //        message = "Get chapter success(cache)",
-                //        data = GetChapters
-                //    };
-                //}
-                 Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId;
+            var cacheKey = _chaperCacheInvalidator.GetCacheKeyForList(listParameter);
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetChapters> GetChapters))
+            {
+                return new BaseResponse<Paginate<GetChapters>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get chapter success(cache)",
+                    data = GetChapters
+                };
+            }
+
+            Expression<Func<Chapter, bool>> predicate = x => x.TopicId == topicId;
                 if (!string.IsNullOrEmpty(title))
                 {
                 predicate = x => x.Topic.Title.Contains(title) && x.Topic.Id == topicId;
@@ -123,9 +124,10 @@ namespace OhBau.Service.Implement
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
                 };
 
-                //_cache.Set(cacheKey,pagedResponse,options);
+                _cache.Set(cacheKey,pagedResponse,options);
+                _chaperCacheInvalidator.AddToListCacheKeys(cacheKey);
 
-                return new BaseResponse<Paginate<GetChapters>>
+            return new BaseResponse<Paginate<GetChapters>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
                     message = "Get Chapter success",

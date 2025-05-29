@@ -59,7 +59,7 @@ namespace OhBau.Service.Implement
                 await _unitOfWork.CommitAsync();
 
                 _categoryCacheInvalidator.InvalidateEntityList();
-                _categoryCacheInvalidator.InvalidateEntity(createCategory.Id);
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -67,11 +67,10 @@ namespace OhBau.Service.Implement
                     data = null
                 };
             }
-            catch (Exception ex) {
-
+            catch (Exception ex)
+            {
                 throw new Exception(ex.ToString());
             }
-            throw new NotImplementedException();
         }
 
         public async Task<BaseResponse<string>> DeleteCategory(Guid categoryId)
@@ -91,6 +90,8 @@ namespace OhBau.Service.Implement
             checkCategory.DeleteAt = DateTime.UtcNow;
             _unitOfWork.GetRepository<Category>().UpdateAsync(checkCategory);
             await _unitOfWork.CommitAsync();
+
+            _categoryCacheInvalidator.InvalidateEntityList();
 
             return new BaseResponse<string>
             {
@@ -135,6 +136,8 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Category>().UpdateAsync(checkUpdate);
                 await _unitOfWork.CommitAsync();
 
+                _categoryCacheInvalidator.InvalidateEntityList();
+
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -150,21 +153,23 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<Paginate<CategoryResponse>>> GetCategories(int pageNumber, int pageSize)
         {
-            //var listParemeter = new ListParameters<Category>(pageNumber, pageSize);
-            //var cache = _categoryCacheInvalidator.GetCacheKeyForList(listParemeter);
+            var listParameters = new ListParameters<Category>(pageNumber, pageSize);
+            var cacheKey = _categoryCacheInvalidator.GetCacheKeyForList(listParameters);
 
-            //if (_cache.TryGetValue(cache, out Paginate<CategoryResponse> GetCategories))
-            //{
-            //    return new BaseResponse<Paginate<CategoryResponse>>
-            //    {
-            //        status = StatusCodes.Status200OK.ToString(),
-            //        message = "Get categories success(cache)",
-            //        data = GetCategories
-            //    };
-            //}
+            if (_cache.TryGetValue(cacheKey, out Paginate<CategoryResponse> cachedCategories))
+            {
+                return new BaseResponse<Paginate<CategoryResponse>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get categories success (cache)",
+                    data = cachedCategories
+                };
+            }
 
-           
-            var getCategories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(page: pageNumber, size:pageSize, predicate: x => x.Active == true);
+            var getCategories = await _unitOfWork.GetRepository<Category>().GetPagingListAsync(
+                page: pageNumber,
+                size: pageSize,
+                predicate: x => x.Active == true);
 
             var mapItem = getCategories.Items.Select(c => new CategoryResponse
             {
@@ -181,7 +186,7 @@ namespace OhBau.Service.Implement
                 Items = mapItem,
                 Page = pageNumber,
                 Size = pageSize,
-                Total = mapItem.Count
+                Total = getCategories.Total
             };
 
             var options = new MemoryCacheEntryOptions
@@ -189,7 +194,9 @@ namespace OhBau.Service.Implement
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             };
 
-            //_cache.Set(cache,pagedResponse,options);
+            _cache.Set(cacheKey, pagedResponse, options);
+            _categoryCacheInvalidator.AddToListCacheKeys(cacheKey);
+
 
             return new BaseResponse<Paginate<CategoryResponse>>
             {

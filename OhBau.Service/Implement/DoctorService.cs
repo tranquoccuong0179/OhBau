@@ -232,6 +232,7 @@ namespace OhBau.Service.Implement
                 };
 
                 _cache.Set(cacheKey, pagedResponse,options);
+                _doctorCacheInvalidator.AddToListCacheKeys(cacheKey);
 
                 return new BaseResponse<Paginate<GetDoctorsResponse>>
                 {
@@ -329,7 +330,6 @@ namespace OhBau.Service.Implement
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
-
             return new BaseResponse<GetDoctorResponse>
             {
 

@@ -137,6 +137,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache,pagedResponse,option);
+            _favoriteCourseCache.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<FavoriteCoursesResponse>>
             {

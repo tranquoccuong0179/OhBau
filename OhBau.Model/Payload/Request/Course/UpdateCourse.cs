@@ -11,8 +11,6 @@ namespace OhBau.Model.Payload.Request.Course
     public class UpdateCourse
     {   
         public string Name {  get; set; }
-        [Range(1, 876000, ErrorMessage = "Duration must be between 1 and 876,000 hours.")]
-        public long Duration {  get; set; }
 
         [Range(1, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 1")]
         public float Price {  get; set; }
