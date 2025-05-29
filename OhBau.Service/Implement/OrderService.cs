@@ -91,6 +91,7 @@ namespace OhBau.Service.Implement
 
                     _orderCacheInvalidator.InvalidateEntityList();
                     _orderCacheInvalidator.InvalidateEntity(checkOrderready.Id);
+                    _orderDetailCacheInvalidator.InvalidateEntityList();
 
                     return new BaseResponse<CreateOrderResponse>
                     {
@@ -139,6 +140,7 @@ namespace OhBau.Service.Implement
 
                 _orderCacheInvalidator.InvalidateEntityList();
                 _orderCacheInvalidator.InvalidateEntity(createNewOrder.Id);
+                _orderDetailCacheInvalidator.InvalidateEntityList();
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();

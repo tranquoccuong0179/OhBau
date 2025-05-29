@@ -117,7 +117,7 @@ namespace OhBau.Service.Implement
                 return new BaseResponse<GetBlog>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get blog success",
+                    message = "Get blog success(cache)",
                     data = cachedBlog
                 };
             }
@@ -151,7 +151,7 @@ namespace OhBau.Service.Implement
             };
 
             _blogCacheInvalidator.SetEntityCache(blogId, mapItem, TimeSpan.FromMinutes(30));
-
+            _blogCacheInvalidator.AddToListCacheKeys(cachedBlog.ToString());
             return new BaseResponse<GetBlog>
             {
                 status = StatusCodes.Status200OK.ToString(),
