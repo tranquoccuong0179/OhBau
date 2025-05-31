@@ -34,7 +34,7 @@ namespace OhBau.Service.Implement
         {
             try
             {
-                var checkAlready = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(request.Name));
+                var checkAlready = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(request.Name) && x.Active == true);
                 if (checkAlready != null)
                 {
                     return new BaseResponse<string>
@@ -75,7 +75,7 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<string>> DeleteCategory(Guid categoryId)
         {
-            var checkCategory = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Id == categoryId);
+            var checkCategory = await _unitOfWork.GetRepository<Category>().SingleOrDefaultAsync(predicate: x => x.Id == categoryId && x.Active == true);
             if (checkCategory == null)
             {
                 return new BaseResponse<string>

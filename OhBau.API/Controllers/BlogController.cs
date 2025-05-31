@@ -5,6 +5,7 @@ using OhBau.Model.Payload.Response.Blog;
 using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
 using OhBau.Model.Utils;
+using Microsoft.AspNetCore.Authorization;
 
 namespace OhBau.API.Controllers
 {
@@ -161,6 +162,7 @@ namespace OhBau.API.Controllers
         }
 
         [HttpPost("like-dislike/{blogId}")]
+        [Authorize]
         public async Task<IActionResult> LikeOrDislikeBlog(Guid blogId)
         {
             try
