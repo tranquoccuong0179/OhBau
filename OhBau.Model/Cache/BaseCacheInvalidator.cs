@@ -66,26 +66,30 @@ public abstract class BaseCacheInvalidator<TEntity> : ICacheInvalidator<TEntity>
     protected virtual string GetCacheKey(object parameters)
     {
         var key = $"{typeof(TEntity).Name}_List_";
+
         if (parameters == null)
             return key + "Default";
 
-        if (parameters is ListParameters<TEntity> listParams)
+        var paramType = parameters.GetType();
+
+        if (paramType.IsGenericType && paramType.GetGenericTypeDefinition() == typeof(ListParameters<>))
         {
-            key += $"Page_{listParams.PageNumber}_Size_{listParams.PageSize}";
-            foreach (var filter in listParams.Filters)
+            dynamic dynamicParams = parameters; 
+            key += $"Page_{dynamicParams.PageNumber}_Size_{dynamicParams.PageSize}";
+
+            foreach (var filter in dynamicParams.Filters)
             {
                 var filterValue = filter.Value?.ToString()?.Replace(" ", "_") ?? "Null";
                 key += $"_{filter.Key}_{filterValue}";
             }
-        }
-        else
-        {
-            var paramString = string.Join("_", parameters.GetType().GetProperties()
-                .Select(p => $"{p.Name}_{p.GetValue(parameters)}"));
-            key += paramString;
+
+            return key;
         }
 
-        return key;
+        var paramString = string.Join("_", paramType.GetProperties()
+            .Select(p => $"{p.Name}_{p.GetValue(parameters)}"));
+
+        return key + paramString;
     }
 
     protected void AddToListCacheKeys(string cacheKey)

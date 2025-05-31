@@ -198,7 +198,7 @@ namespace OhBau.Service.Implement
                 Content = b.Content,
                 CreatedDate = (DateTime)b.CreatedDate!
 
-            }).ToList();
+            }).OrderByDescending(x => x.CreatedDate).ToList();
 
             var pagedResponse = new Paginate<GetBlogs>
             {

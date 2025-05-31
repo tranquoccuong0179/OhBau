@@ -40,6 +40,7 @@ namespace OhBau.Service.Implement
         {
             _doctorCacheInvalidator = doctorCacheInvalidator;
             _majorCacheInvalidator = majorCacheInvalidator;
+            _fetusCacheInvalidator = fetusCacheInvalidator;
             _cache = cache;
         }
 
@@ -331,7 +332,6 @@ namespace OhBau.Service.Implement
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
-            _doctorCacheInvalidator.AddToListCacheKeys(cacheKey.ToString());
             return new BaseResponse<GetDoctorResponse>
             {
 

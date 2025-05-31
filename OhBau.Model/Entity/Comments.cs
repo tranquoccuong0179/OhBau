@@ -28,7 +28,7 @@ namespace OhBau.Model.Entity
         public virtual Comments? Parent { get; set; }
 
         public Guid AccountId { get; set; }
-        public virtual Account Account { get; set; }
+        public virtual Account? Account { get; set; }
 
     }
 }

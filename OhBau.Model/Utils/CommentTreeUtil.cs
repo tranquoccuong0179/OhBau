@@ -12,10 +12,13 @@ namespace OhBau.Model.Utils
     {
         public static List<GetComments> BuildCommentTree(IList<Comments> comments)
         {
+            if (comments == null || comments.Count == 0)
+            {
+                return new List<GetComments>();
+            }
+
             var commentList = comments.ToList();
-
             var commentLookup = commentList.ToLookup(c => c.ParentId);
-
             var commentTrees = new List<GetComments>();
 
             foreach (var comment in commentList.Where(c => c.ParentId == null))

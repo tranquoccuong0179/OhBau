@@ -165,15 +165,17 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<Paginate<GetComments>>> GetComments(Guid blogId,int pageNumber, int pageSize)
         {
             var listParameter = new ListParameters<GetComments>(pageNumber, pageSize);
+            listParameter.AddFilter("blogId", blogId);
 
             var cacheKey = _commentCacheINvalidator.GetCacheKeyForList(listParameter);
-
+            
+            Console.WriteLine(cacheKey);
             if (_cache.TryGetValue(cacheKey, out Paginate<GetComments> getCommentsCache))
             {
                 return new BaseResponse<Paginate<GetComments>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get comment success",
+                    message = "Get comment success(cache)",
                     data = getCommentsCache
                 };
             }
@@ -186,7 +188,7 @@ namespace OhBau.Service.Implement
                     .Include(c => c.Account),    
                 page: pageNumber,
                 size: pageSize
-            );
+            );  
 
             var commentTrees = CommentTreeUtil.BuildCommentTree(getComments.Items);
 
