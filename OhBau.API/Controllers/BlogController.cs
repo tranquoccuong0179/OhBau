@@ -4,6 +4,7 @@ using OhBau.Model.Payload.Request.Blog;
 using OhBau.Model.Payload.Response.Blog;
 using OhBau.Model.Payload.Response;
 using OhBau.Service.Interface;
+using OhBau.Model.Utils;
 
 namespace OhBau.API.Controllers
 {
@@ -157,6 +158,23 @@ namespace OhBau.API.Controllers
         {
             var response = await _blogService.UpdateBlog(id, request);
             return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpPost("like-dislike/{blogId}")]
+        public async Task<IActionResult> LikeOrDislikeBlog(Guid blogId)
+        {
+            try
+            {
+                var accountId = UserUtil.GetAccountId(HttpContext);
+                var response = await _blogService.LikeOrDisLikeBlog(accountId!.Value, blogId);
+                return StatusCode(int.Parse(response.status),response);
+
+            }
+            catch (Exception ex) {
+
+                _logger.LogError("[Like or Dislike API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500,ex.ToString());
+            }
         }
     }
 }

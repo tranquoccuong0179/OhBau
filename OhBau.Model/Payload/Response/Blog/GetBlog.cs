@@ -19,5 +19,7 @@ namespace OhBau.Model.Payload.Response.Blog
         public string? Email {  get; set; }
         public bool IsDelete {  get; set; }
         public DateTime? DeletedDate { get; set; }
+
+        public int TotalLike {  get; set; }
     }
 }

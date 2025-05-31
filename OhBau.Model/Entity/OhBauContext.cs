@@ -70,6 +70,7 @@ public partial class OhBauContext : DbContext
 
     public virtual DbSet<FavoriteCourses> FavoriteCourses { get; set; }
     public virtual DbSet<Topic> Topics { get; set;}
+    public virtual DbSet<LikeBlog> LikeBlog { get; set; }
 
 
     public static string GetConnectionString(string connectionStringName)
