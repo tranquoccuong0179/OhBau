@@ -25,16 +25,18 @@ namespace OhBau.Service.Implement
     {
         private readonly IMemoryCache _cache;
         private readonly GenericCacheInvalidator<Chapter> _chaperCacheInvalidator;
+        private readonly GenericCacheInvalidator<Topic> _topicCacheInvalidator;
         private readonly HtmlSanitizerUtil _sanitizer;
         public ChapterService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<ChapterService> logger, IMapper mapper
             , IHttpContextAccessor httpContextAccessor,
             IMemoryCache cache,
             GenericCacheInvalidator<Chapter> chapterCacheInvalidator,
-            HtmlSanitizerUtil util) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            HtmlSanitizerUtil util, GenericCacheInvalidator<Topic> topicCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _cache = cache;
             _chaperCacheInvalidator = chapterCacheInvalidator;
             _sanitizer = util;
+            _topicCacheInvalidator = topicCacheInvalidator;
         }   
 
         public async Task<BaseResponse<string>> CreateChaper(CreateChapterRequest request)
@@ -60,6 +62,8 @@ namespace OhBau.Service.Implement
 
                 _chaperCacheInvalidator.InvalidateEntityList();
                 _chaperCacheInvalidator.InvalidateEntity(createChaper.Id);
+                _topicCacheInvalidator.InvalidateEntity(createChaper.Id);
+                _topicCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -77,6 +81,7 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<Paginate<GetChapters>>> GetChaptersByTopic(Guid topicId,int pageNumber, int pageSize, string? title)
         {
             var listParameter = new ListParameters<Chapter>(pageNumber, pageSize);
+            listParameter.AddFilter("topicId", topicId);
             listParameter.AddFilter("Title", title);
 
             var cacheKey = _chaperCacheInvalidator.GetCacheKeyForList(listParameter);
@@ -127,6 +132,7 @@ namespace OhBau.Service.Implement
                 _cache.Set(cacheKey,pagedResponse,options);
                 _chaperCacheInvalidator.AddToListCacheKeys(cacheKey);
 
+
             return new BaseResponse<Paginate<GetChapters>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -176,6 +182,7 @@ namespace OhBau.Service.Implement
                 };
 
                 _chaperCacheInvalidator.SetEntityCache(chapterId, mapItem,TimeSpan.FromMinutes(30));
+                _chaperCacheInvalidator.AddToListCacheKeys(cachedKey.ToString());
                 return new BaseResponse<GetChapter>
                 {
                     status = StatusCodes.Status200OK.ToString(),
@@ -214,6 +221,7 @@ namespace OhBau.Service.Implement
 
                 _chaperCacheInvalidator.InvalidateEntity(chapterId);
                 _chaperCacheInvalidator.InvalidateEntityList();
+                _topicCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -250,6 +258,7 @@ namespace OhBau.Service.Implement
                     
                 _chaperCacheInvalidator.InvalidateEntity(chapterId);
                 _chaperCacheInvalidator.InvalidateEntityList();
+                _topicCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {

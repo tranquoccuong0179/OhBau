@@ -30,13 +30,36 @@ namespace VNPayService
     {
         private readonly VNPayConfig _vnPayConfig;
         private readonly GenericCacheInvalidator<MyCourse> _mycourseCacheInvalidator;
-        public VNPayService(IUnitOfWork<OhBauContext> unitOfWork, 
-            ILogger<VNPayService> logger, IMapper mapper, 
-            IHttpContextAccessor httpContextAccessor, VNPayConfig vnPayConfig,
-            GenericCacheInvalidator<MyCourse> myCourseCacheInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly GenericCacheInvalidator<Order> _orderCache;
+        private readonly GenericCacheInvalidator<Course> _courseCacheInvalidator;
+        private readonly GenericCacheInvalidator<Cart> _cartCacheInvalidator;
+        private readonly GenericCacheInvalidator<Transaction> _transactionCacheInvalidator;
+        private readonly GenericCacheInvalidator<OrderDetail> _orderDetailCacheInvalidator;
+        private readonly GenericCacheInvalidator<CartItems> _cartItemsCacheInvalidator;
+        public VNPayService(
+            IUnitOfWork<OhBauContext> unitOfWork,
+            ILogger<VNPayService> logger,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor,
+            VNPayConfig vnPayConfig,
+            GenericCacheInvalidator<MyCourse> myCourseCacheInvalidator,
+            GenericCacheInvalidator<Order> orderCache,
+            GenericCacheInvalidator<Course> courseCacheInvalidator,
+            GenericCacheInvalidator<Cart> cartCacheInvalidator,
+            GenericCacheInvalidator<Transaction> transactionCacheInvalidator,
+            GenericCacheInvalidator<OrderDetail> orderDetailCache,
+            GenericCacheInvalidator<CartItems> cartItemCache
+            
+        ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _vnPayConfig = vnPayConfig;
             _mycourseCacheInvalidator = myCourseCacheInvalidator;
+            _orderCache = orderCache;
+            _courseCacheInvalidator = courseCacheInvalidator;
+            _cartCacheInvalidator = cartCacheInvalidator;
+            _transactionCacheInvalidator = transactionCacheInvalidator;
+            _orderDetailCacheInvalidator = orderDetailCache;
+            _cartItemsCacheInvalidator = cartItemCache;
         }
 
         public async Task<string> CreatePayment(CreateOrder request)
@@ -235,7 +258,15 @@ namespace VNPayService
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
+
                 _mycourseCacheInvalidator.InvalidateEntityList();
+                _cartCacheInvalidator.InvalidateEntityList();
+                _courseCacheInvalidator.InvalidateEntityList();
+                _orderCache.InvalidateEntityList();
+                _transactionCacheInvalidator.InvalidateEntityList();
+                _orderDetailCacheInvalidator.InvalidateEntityList();
+                _cartItemsCacheInvalidator.InvalidateEntityList();
+
                 return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
 
             }

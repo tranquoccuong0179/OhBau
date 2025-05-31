@@ -23,13 +23,17 @@ namespace OhBau.Service.Implement
     {
         private readonly IMemoryCache _cache;
         private readonly GenericCacheInvalidator<Cart> _cartCacheInvalidator;
+        private readonly GenericCacheInvalidator<CartItems> _cartItemsInvalidator;
+
         public CartrService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CartrService> logger, 
             IMapper mapper, 
             IHttpContextAccessor httpContextAccessor,
-            GenericCacheInvalidator<Cart> cartCacheInvalidator, IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            GenericCacheInvalidator<Cart> cartCacheInvalidator, IMemoryCache cache,
+            GenericCacheInvalidator<CartItems> cartItemsInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _cartCacheInvalidator = cartCacheInvalidator;
             _cache = cache;
+            _cartItemsInvalidator = cartItemsInvalidator;
         }
 
         public async Task<BaseResponse<string>> AddCourseToCart(Guid courseId, Guid accountId)
@@ -37,20 +41,6 @@ namespace OhBau.Service.Implement
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                //var checkCartAlready = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
-                //if (checkCartAlready == null)
-                //{
-                //    var createNewCart = new Cart
-                //    {
-                //        Id = Guid.NewGuid(),
-                //        AccountId = accountId,
-                //        CreatedDate = DateTime.Now,
-                //        TotalPrice = 0
-                //    };
-
-                //    await _unitOfWork.GetRepository<Cart>().InsertAsync(createNewCart);
-                //    await _unitOfWork.CommitAsync();
-                //}
 
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
 
@@ -109,6 +99,7 @@ namespace OhBau.Service.Implement
 
                 _cartCacheInvalidator.InvalidateEntityList();
                 _cartCacheInvalidator.InvalidateEntity(addNewCourse.Id);
+                _cartItemsInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -274,6 +265,8 @@ namespace OhBau.Service.Implement
 
                 _cartCacheInvalidator.InvalidateEntityList();
                 _cartCacheInvalidator.InvalidateEntity(itemId);
+                _cartItemsInvalidator.InvalidateEntityList();
+                _cartItemsInvalidator.InvalidateEntity(itemId);
 
                 return new BaseResponse<string>
                 {

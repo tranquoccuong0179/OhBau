@@ -105,7 +105,8 @@ namespace OhBau.Service.Implement
 
                 _doctorCacheInvalidator.InvalidateEntityList();
                 _doctorCacheInvalidator.InvalidateEntity(createDoctor.Id);
-
+                _fetusCacheInvalidator.InvalidateEntityList();
+                _majorCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -330,6 +331,7 @@ namespace OhBau.Service.Implement
             };
 
             _doctorCacheInvalidator.SetEntityCache(doctorId, response, TimeSpan.FromMinutes(30));
+            _doctorCacheInvalidator.AddToListCacheKeys(cacheKey.ToString());
             return new BaseResponse<GetDoctorResponse>
             {
 
@@ -387,6 +389,8 @@ namespace OhBau.Service.Implement
 
                 _doctorCacheInvalidator.InvalidateEntityList();
                 _doctorCacheInvalidator.InvalidateEntity(doctorId);
+                _fetusCacheInvalidator.InvalidateEntityList();
+                _majorCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<DoctorRequest>
                 {
@@ -425,6 +429,8 @@ namespace OhBau.Service.Implement
                 
                 _majorCacheInvalidator.InvalidateEntity(majorId);
                 _majorCacheInvalidator.InvalidateEntityList();
+                _fetusCacheInvalidator.InvalidateEntityList();
+                _majorCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -452,6 +458,8 @@ namespace OhBau.Service.Implement
 
                     _doctorCacheInvalidator.InvalidateEntity(doctorId);
                     _doctorCacheInvalidator.InvalidateEntityList();
+                    _fetusCacheInvalidator.InvalidateEntityList();
+                    _majorCacheInvalidator.InvalidateEntityList();
 
                     return new BaseResponse<string>
                     {
@@ -487,6 +495,8 @@ namespace OhBau.Service.Implement
                     await _unitOfWork.CommitAsync();
                     _majorCacheInvalidator.InvalidateEntity(majorId);
                     _majorCacheInvalidator.InvalidateEntityList();
+                    _doctorCacheInvalidator.InvalidateEntityList();
+                    _fetusCacheInvalidator.InvalidateEntityList();
 
                     return new BaseResponse<string>
                     {
@@ -541,6 +551,8 @@ namespace OhBau.Service.Implement
 
                 _fetusCacheInvalidator.InvalidateEntity(fetusId);
                 _fetusCacheInvalidator.InvalidateEntityList();
+                _majorCacheInvalidator.InvalidateEntityList();
+                _doctorCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
