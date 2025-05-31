@@ -17,5 +17,7 @@ namespace OhBau.Model.Payload.Response.Order
         public Guid CartId { get; set; }
         public List<GetCartItem> cartItem { get; set; }
         public double TotalPrice { get; set; }
+
+        public int TotalItem {  get; set; }
     }
 }

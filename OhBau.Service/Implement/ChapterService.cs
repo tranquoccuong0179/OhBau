@@ -182,7 +182,6 @@ namespace OhBau.Service.Implement
                 };
 
                 _chaperCacheInvalidator.SetEntityCache(chapterId, mapItem,TimeSpan.FromMinutes(30));
-                _chaperCacheInvalidator.AddToListCacheKeys(cachedKey.ToString());
                 return new BaseResponse<GetChapter>
                 {
                     status = StatusCodes.Status200OK.ToString(),

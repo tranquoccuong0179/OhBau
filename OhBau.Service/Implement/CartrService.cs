@@ -149,7 +149,8 @@ namespace OhBau.Service.Implement
                 {
                     CartId = getCartItems.Items.Select(x => x.Cart.Id).FirstOrDefault(),
                     cartItem = mapItem,
-                    TotalPrice = getCartItems.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault()
+                    TotalPrice = getCartItems.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault(),
+                    TotalItem = mapItem.Count
                 };
 
                 var pagedResposne = new Paginate<GetCartByAccount>
