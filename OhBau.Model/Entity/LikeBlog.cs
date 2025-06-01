@@ -18,6 +18,7 @@ namespace OhBau.Model.Entity
 
         public DateTime CreatedDate { get; set; }
 
+        public bool isLiked {  get; set; }
 
     }
 }

@@ -16,6 +16,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Blog;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Blog;
+using OhBau.Model.Payload.Response.LikeBlog;
 using OhBau.Model.Payload.Response.Order;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
@@ -199,7 +200,12 @@ namespace OhBau.Service.Implement
                 Title = b.Title,
                 Content = b.Content,
                 CreatedDate = (DateTime)b.CreatedDate!,
-                TotalLike = b.LikeBlog.Count
+                TotalLike = b.LikeBlog.Count,
+                LikeBlogs = b.LikeBlog.Select(l => new LikeBlogs
+                {
+                    AccountId = l.AccountID,
+                    isLiked = l.isLiked
+                }).ToList()
 
             }).OrderByDescending(x => x.CreatedDate).ToList();
 
@@ -309,6 +315,7 @@ namespace OhBau.Service.Implement
                     BlogId = BlogId,
                     AccountID = accountId,
                     CreatedDate = DateTime.Now,
+                    isLiked = true
 
                 };
 

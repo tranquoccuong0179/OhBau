@@ -21,5 +21,6 @@ namespace OhBau.Model.Payload.Response.Blog
         public DateTime? DeletedDate { get; set; }
 
         public int TotalLike {  get; set; }
+
     }
 }
