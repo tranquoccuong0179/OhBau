@@ -13,6 +13,7 @@ using OhBau.Service.Interface;
 using OhBau.Model.Exception;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using OhBau.Model.Enum;
 
 namespace OhBau.Service.Implement
 {
@@ -178,6 +179,21 @@ namespace OhBau.Service.Implement
                 var parent = _mapper.Map<Parent>(request.RegisterParentRequest);
                 parent.AccountId = account.Id;
 
+                if (account.Role.Equals(RoleEnum.MOTHER.GetDescriptionFromEnum()))
+                {
+                    var motherHealth = new MotherHealthRecord()
+                    {
+                        Id = Guid.NewGuid(),
+                        ParentId = parent.Id,
+                        Weight = 0,
+                        BloodPressure = 0,
+                        Active = true,
+                        CreateAt = TimeUtil.GetCurrentSEATime(),
+                        UpdateAt = TimeUtil.GetCurrentSEATime(),
+                    };
+                    await _unitOfWork.GetRepository<MotherHealthRecord>().InsertAsync(motherHealth);
+                }
+
                 //Create Account Order
                 var createOrder = new Cart
                 {
@@ -189,7 +205,6 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.GetRepository<Cart>().InsertAsync(createOrder);
 
-                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<Parent>().InsertAsync(parent);
 
                 bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
