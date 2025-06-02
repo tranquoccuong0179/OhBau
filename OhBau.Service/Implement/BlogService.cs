@@ -16,6 +16,7 @@ using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.Blog;
 using OhBau.Model.Payload.Response;
 using OhBau.Model.Payload.Response.Blog;
+using OhBau.Model.Payload.Response.LikeBlog;
 using OhBau.Model.Payload.Response.Order;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
@@ -123,7 +124,7 @@ namespace OhBau.Service.Implement
             }
             var getBlog = await _unitOfWork.GetRepository<Blog>().SingleOrDefaultAsync(
                 predicate: x => x.Id == blogId,
-                include: i => i.Include(a => a.Account)
+                include: i => i.Include(a => a.Account).Include(x => x.LikeBlog)
                 );
 
             if (getBlog == null)
@@ -147,11 +148,17 @@ namespace OhBau.Service.Implement
                 IsDelete = getBlog.isDelete,
                 Email = getBlog.Account.Email,
                 Status = getBlog.Status,
-                ReasonReject = getBlog.ReasonReject
+                ReasonReject = getBlog.ReasonReject,
+                TotalLike = getBlog.LikeBlog.Count,
+                likeBlogs = getBlog.LikeBlog.Select(l => new LikeBlogs
+                {
+                    AccountId = l.AccountID,
+                    isLiked = l.isLiked
+
+                }).ToList()
             };
 
             _blogCacheInvalidator.SetEntityCache(blogId, mapItem, TimeSpan.FromMinutes(30));
-            _blogCacheInvalidator.AddToListCacheKeys(cachedBlog.ToString());
             return new BaseResponse<GetBlog>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -186,6 +193,7 @@ namespace OhBau.Service.Implement
             }
 
             var getBlogs = await _unitOfWork.GetRepository<Blog>().GetPagingListAsync(
+                include: i => i.Include(x => x.LikeBlog),
                 predicate: predicate,
                 page: pageNumber,
                 size: pageSize
@@ -196,7 +204,13 @@ namespace OhBau.Service.Implement
                 Id = b.Id,
                 Title = b.Title,
                 Content = b.Content,
-                CreatedDate = (DateTime)b.CreatedDate!
+                CreatedDate = (DateTime)b.CreatedDate!,
+                TotalLike = b.LikeBlog.Count,
+                LikeBlogs = b.LikeBlog.Select(l => new LikeBlogs
+                {
+                    AccountId = l.AccountID,
+                    isLiked = l.isLiked
+                }).ToList()
 
             }).OrderByDescending(x => x.CreatedDate).ToList();
 
@@ -273,5 +287,65 @@ namespace OhBau.Service.Implement
                 data = response
             };
         }
+
+
+        public async Task<BaseResponse<string>> LikeOrDisLikeBlog(Guid accountId, Guid BlogId)
+        {
+            try
+            {
+                var checkLikeBlog = await _unitOfWork.GetRepository<LikeBlog>().GetByConditionAsync(predicate: x => x.BlogId == BlogId && x.AccountID == accountId);
+                var blog = await _unitOfWork.GetRepository<Blog>().GetByConditionAsync(predicate: x => x.Id == BlogId);
+
+                if (checkLikeBlog != null)
+                {
+                    _unitOfWork.GetRepository<LikeBlog>().DeleteAsync(checkLikeBlog);
+                    await _unitOfWork.CommitAsync();
+
+                    blog.TotalLike = blog.TotalLike - 1;
+                    _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
+                    await _unitOfWork.CommitAsync();
+                    _blogCacheInvalidator.InvalidateEntityList();
+                    _blogCacheInvalidator.InvalidateEntity(BlogId);
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Dislike Blog Success",
+                        data = null
+                    };
+                }
+
+                var newLike = new LikeBlog
+                {
+                    Id = Guid.NewGuid(),
+                    BlogId = BlogId,
+                    AccountID = accountId,
+                    CreatedDate = DateTime.Now,
+                    isLiked = true
+
+                };
+
+                await _unitOfWork.GetRepository<LikeBlog>().InsertAsync(newLike);
+
+                blog.TotalLike += 1;
+                _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
+                await _unitOfWork.CommitAsync();
+
+                _blogCacheInvalidator.InvalidateEntityList();
+                _blogCacheInvalidator.InvalidateEntity(BlogId);
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Like blog success",
+                    data = null
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
     }
 }
