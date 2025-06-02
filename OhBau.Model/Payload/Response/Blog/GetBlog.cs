@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OhBau.Model.Enum;
+using OhBau.Model.Payload.Response.LikeBlog;
 
 namespace OhBau.Model.Payload.Response.Blog
 {
@@ -19,5 +20,10 @@ namespace OhBau.Model.Payload.Response.Blog
         public string? Email {  get; set; }
         public bool IsDelete {  get; set; }
         public DateTime? DeletedDate { get; set; }
+
+        public int TotalLike {  get; set; }
+
+        public List<LikeBlogs> likeBlogs { get; set; } = new List<LikeBlogs>();
+
     }
 }

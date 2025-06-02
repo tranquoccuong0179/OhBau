@@ -13,7 +13,12 @@ public class GenericCacheInvalidator<TEntity> : BaseCacheInvalidator<TEntity>
 
     public string GetCacheKeyForList(object parameters)
     {
-        return base.GetCacheKey(parameters);
+        return GetCacheKey(parameters);
+    }
+
+    public void AddToListCacheKeys(string cacheKey)
+    {
+        base.AddToListCacheKeys(cacheKey);
     }
 }
 

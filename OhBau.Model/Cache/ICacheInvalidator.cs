@@ -2,9 +2,8 @@
 
 public interface ICacheInvalidator<TEntity>
 {
-    void InvalidateEntity(Guid entityId);
+void InvalidateEntity(Guid entityId);
     void InvalidateEntityList();
-    CancellationChangeToken GetListCacheToken();
     void SetEntityCache(Guid entityId, object data, TimeSpan? absoluteExpire = null);
     T GetEntityCache<T>(Guid entityId);
 }

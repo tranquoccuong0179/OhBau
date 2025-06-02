@@ -26,8 +26,12 @@ namespace OhBau.Model.Entity
         public bool isDelete {  get; set; }
         public string? ReasonReject {  get; set; }
 
+        public int TotalLike {  get; set; }
+
         public Guid AccountId { get; set; }
 
         public virtual Account Account { get; set; }
+
+        public virtual ICollection<LikeBlog> LikeBlog { get; set; } = new List<LikeBlog>();
     }
 }

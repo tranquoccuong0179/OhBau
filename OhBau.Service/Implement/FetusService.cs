@@ -257,6 +257,7 @@ namespace OhBau.Service.Implement
                 TotalPages = fetusList.TotalPages
             };
 
+
             return new BaseResponse<IPaginate<GetFetusResponse>>
             {
                 status = StatusCodes.Status200OK.ToString(),

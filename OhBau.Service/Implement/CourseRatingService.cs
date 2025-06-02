@@ -16,8 +16,14 @@ namespace OhBau.Service.Implement
 {
     public class CourseRatingService : BaseService<CourseRatingService>, ICourseRating
     {
-        public CourseRatingService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CourseRatingService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly GenericCacheInvalidator<CourseRating> _cacheInvalidator;
+        private readonly GenericCacheInvalidator<Course> _courseCacheInvalidator;
+        public CourseRatingService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CourseRatingService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor
+            , GenericCacheInvalidator<CourseRating> cacheValidator, 
+            GenericCacheInvalidator<Course> courseValidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _cacheInvalidator = cacheValidator;
+            _courseCacheInvalidator = courseValidator;
         }
 
         public async Task<BaseResponse<string>> Rating(Guid accountId, RatingRequest request)
@@ -64,6 +70,9 @@ namespace OhBau.Service.Implement
                     _unitOfWork.GetRepository<Course>().UpdateAsync(getCourse);
                     await _unitOfWork.CommitAsync();
                     await _unitOfWork.CommitTransactionAsync();
+
+                    _cacheInvalidator.InvalidateEntityList();
+                    _courseCacheInvalidator.InvalidateEntityList();
 
                     return new BaseResponse<string>
                     {

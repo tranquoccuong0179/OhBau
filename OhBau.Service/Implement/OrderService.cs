@@ -91,6 +91,7 @@ namespace OhBau.Service.Implement
 
                     _orderCacheInvalidator.InvalidateEntityList();
                     _orderCacheInvalidator.InvalidateEntity(checkOrderready.Id);
+                    _orderDetailCacheInvalidator.InvalidateEntityList();
 
                     return new BaseResponse<CreateOrderResponse>
                     {
@@ -139,6 +140,7 @@ namespace OhBau.Service.Implement
 
                 _orderCacheInvalidator.InvalidateEntityList();
                 _orderCacheInvalidator.InvalidateEntity(createNewOrder.Id);
+                _orderDetailCacheInvalidator.InvalidateEntityList();
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
@@ -209,6 +211,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache, pagedResponse, options);
+            _orderCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrders>>
             {
@@ -276,6 +279,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache,pagedResponse,options);
+            _orderDetailCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrderDetails>>
             {
@@ -329,6 +333,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cache,pagedResponse, options);
+            _orderCacheInvalidator.AddToListCacheKeys(cache);
 
             return new BaseResponse<Paginate<GetOrders>>
             {

@@ -23,13 +23,17 @@ namespace OhBau.Service.Implement
     {
         private readonly IMemoryCache _cache;
         private readonly GenericCacheInvalidator<Cart> _cartCacheInvalidator;
+        private readonly GenericCacheInvalidator<CartItems> _cartItemsInvalidator;
+
         public CartrService(IUnitOfWork<OhBauContext> unitOfWork, ILogger<CartrService> logger, 
             IMapper mapper, 
             IHttpContextAccessor httpContextAccessor,
-            GenericCacheInvalidator<Cart> cartCacheInvalidator, IMemoryCache cache) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            GenericCacheInvalidator<Cart> cartCacheInvalidator, IMemoryCache cache,
+            GenericCacheInvalidator<CartItems> cartItemsInvalidator) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _cartCacheInvalidator = cartCacheInvalidator;
             _cache = cache;
+            _cartItemsInvalidator = cartItemsInvalidator;
         }
 
         public async Task<BaseResponse<string>> AddCourseToCart(Guid courseId, Guid accountId)
@@ -37,20 +41,6 @@ namespace OhBau.Service.Implement
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                //var checkCartAlready = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
-                //if (checkCartAlready == null)
-                //{
-                //    var createNewCart = new Cart
-                //    {
-                //        Id = Guid.NewGuid(),
-                //        AccountId = accountId,
-                //        CreatedDate = DateTime.Now,
-                //        TotalPrice = 0
-                //    };
-
-                //    await _unitOfWork.GetRepository<Cart>().InsertAsync(createNewCart);
-                //    await _unitOfWork.CommitAsync();
-                //}
 
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
 
@@ -109,6 +99,7 @@ namespace OhBau.Service.Implement
 
                 _cartCacheInvalidator.InvalidateEntityList();
                 _cartCacheInvalidator.InvalidateEntity(addNewCourse.Id);
+                _cartItemsInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -124,23 +115,23 @@ namespace OhBau.Service.Implement
         }
 
         public async Task<BaseResponse<Paginate<GetCartByAccount>>> GetCartItemByAccount(Guid accountId, int pageNumber, int pageSize)
-        {              
-                var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
-                listParameter.AddFilter("accountId", accountId);
-                
-                var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+        {
+            var listParameter = new ListParameters<Cart>(pageNumber, pageSize);
+            listParameter.AddFilter("accountId", accountId);
 
-                if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
+            var cacheKey = _cartCacheInvalidator.GetCacheKeyForList(listParameter);
+
+            if (_cache.TryGetValue(cacheKey, out Paginate<GetCartByAccount> cachedResult))
+            {
+                return new BaseResponse<Paginate<GetCartByAccount>>
                 {
-                    return new BaseResponse<Paginate<GetCartByAccount>>
-                    {
-                        status = StatusCodes.Status200OK.ToString(),
-                        message = "Get cart success(cache)",
-                        data = cachedResult
-                    };
-                }
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get cart success(cache)",
+                    data = cachedResult
+                };
+            }
 
-                var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
+            var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
                                                                                                                  i.Include(c => c.Course)
                                                                                                                  .Include(o => o.Cart)
@@ -158,7 +149,8 @@ namespace OhBau.Service.Implement
                 {
                     CartId = getCartItems.Items.Select(x => x.Cart.Id).FirstOrDefault(),
                     cartItem = mapItem,
-                    TotalPrice = getCartItems.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault()
+                    TotalPrice = getCartItems.Items.Select(x => x.Cart.TotalPrice).FirstOrDefault(),
+                    TotalItem = mapItem.Count
                 };
 
                 var pagedResposne = new Paginate<GetCartByAccount>
@@ -175,8 +167,8 @@ namespace OhBau.Service.Implement
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
                 };
 
-                cacheOption.AddExpirationToken(_cartCacheInvalidator.GetListCacheToken());
-                _cache.Set(cacheKey, pagedResposne, cacheOption);
+                 _cache.Set(cacheKey, pagedResposne, cacheOption);
+                _cartCacheInvalidator.AddToListCacheKeys(cacheKey);
 
                 return new BaseResponse<Paginate<GetCartByAccount>>
                 {
@@ -274,6 +266,8 @@ namespace OhBau.Service.Implement
 
                 _cartCacheInvalidator.InvalidateEntityList();
                 _cartCacheInvalidator.InvalidateEntity(itemId);
+                _cartItemsInvalidator.InvalidateEntityList();
+                _cartItemsInvalidator.InvalidateEntity(itemId);
 
                 return new BaseResponse<string>
                 {

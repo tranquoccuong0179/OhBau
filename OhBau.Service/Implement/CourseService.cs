@@ -136,7 +136,7 @@ namespace OhBau.Service.Implement
                 return new BaseResponse<Paginate<GetCoursesResponse>>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Get course success",
+                    message = "Get course success(cache)",
                     data = GetCourses
                 };
             }
@@ -202,7 +202,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cacheKey, pagedReponse, options);
-
+            _courseCacheInvalidator.AddToListCacheKeys(cacheKey);
             //await _redisService.SetAsync(cacheKey, pagedReponse, TimeSpan.FromMinutes(30));
 
 
@@ -232,7 +232,6 @@ namespace OhBau.Service.Implement
                 }
 
                 getCourse.Name = request.Name ?? getCourse.Name;
-                getCourse.Duration = request.Duration != 0 ? request.Duration : getCourse.Duration;
                 getCourse.Price = request.Price != 0 ? request.Price : getCourse.Duration;
                 getCourse.CategoryId = request.CategoryId != null ? request.CategoryId : getCourse.CategoryId;
                 getCourse.Active = request.Active != null ? request.Active : getCourse.Active;
@@ -264,6 +263,7 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<CreateTopicResponse>> CreateTopic(CreateTopicRequest request)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var createTopic = new Topic
@@ -278,10 +278,19 @@ namespace OhBau.Service.Implement
 
                 await _unitOfWork.GetRepository<Topic>().InsertAsync(createTopic);
                 await _unitOfWork.CommitAsync();
-            
+
+                var getTopics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.CourseId == request.CourseId);
+                
+                var updateCourse = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == request.CourseId);
+                updateCourse.Duration = getTopics.Sum(x => x.Duration);
+
+                _unitOfWork.GetRepository<Course>().UpdateAsync(updateCourse);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
                 _topicCacheValidator.InvalidateEntityList();
                 _topicCacheValidator.InvalidateEntity(createTopic.Id);
-
+                _courseCacheInvalidator.InvalidateEntityList();
                 var response = new CreateTopicResponse
                 {
                     TopicId  = createTopic.Id
@@ -296,6 +305,7 @@ namespace OhBau.Service.Implement
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 throw new Exception(ex.ToString());
             }
         }
@@ -352,6 +362,7 @@ namespace OhBau.Service.Implement
             };
 
             _cache.Set(cacheKey, pagedResponse,options);
+            _courseCacheInvalidator.AddToListCacheKeys(cacheKey);
 
             return new BaseResponse<Paginate<GetTopics>>
             {
@@ -364,6 +375,7 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<string>> UpdateTopics(Guid topicId, EditTopicRequest request)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var checkUpdate = await _unitOfWork.GetRepository<Topic>().GetByConditionAsync(x => x.Id == topicId);
@@ -384,9 +396,18 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Topic>().UpdateAsync(checkUpdate);
                await _unitOfWork.CommitAsync();
 
+                var getTopics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.CourseId == checkUpdate.CourseId);
+
+                var updateCourse = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == checkUpdate.CourseId);
+                updateCourse.Duration = getTopics.Sum(x => x.Duration);
+
+                _unitOfWork.GetRepository<Course>().UpdateAsync(updateCourse);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
 
                 _topicCacheValidator.InvalidateEntityList();
                 _topicCacheValidator.InvalidateEntity(topicId);
+                _courseCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -395,14 +416,15 @@ namespace OhBau.Service.Implement
                     data = null
                 };
             }
-            catch (Exception ex) { 
-                
+            catch (Exception ex) {
+                await _unitOfWork.RollbackTransactionAsync();
                 throw new Exception(ex.ToString());
             }
         }
 
         public async Task<BaseResponse<string>> DeleteTopics(Guid topicId)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var checkDelete = await _unitOfWork.GetRepository<Topic>().GetByConditionAsync(x => x.Id == topicId);
@@ -420,8 +442,18 @@ namespace OhBau.Service.Implement
                 _unitOfWork.GetRepository<Topic>().UpdateAsync(checkDelete);
                 await _unitOfWork.CommitAsync();
 
+                var getTopics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.CourseId == checkDelete.CourseId && x.IsDelete == false);
+
+                var updateCourse = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == checkDelete.CourseId);
+                updateCourse.Duration = getTopics.Sum(x => x.Duration);
+
+                _unitOfWork.GetRepository<Course>().UpdateAsync(updateCourse);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
                 _topicCacheValidator.InvalidateEntityList();
                 _topicCacheValidator.InvalidateEntity(topicId);
+                _courseCacheInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
@@ -432,6 +464,7 @@ namespace OhBau.Service.Implement
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 throw new Exception(ex.ToString());
             }
         }
