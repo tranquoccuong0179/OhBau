@@ -149,11 +149,16 @@ namespace OhBau.Service.Implement
                 Email = getBlog.Account.Email,
                 Status = getBlog.Status,
                 ReasonReject = getBlog.ReasonReject,
-                TotalLike = getBlog.LikeBlog.Count
+                TotalLike = getBlog.LikeBlog.Count,
+                likeBlogs = getBlog.LikeBlog.Select(l => new LikeBlogs
+                {
+                    AccountId = l.AccountID,
+                    isLiked = l.isLiked
+
+                }).ToList()
             };
 
             _blogCacheInvalidator.SetEntityCache(blogId, mapItem, TimeSpan.FromMinutes(30));
-            _blogCacheInvalidator.AddToListCacheKeys(cachedBlog.ToString());
             return new BaseResponse<GetBlog>
             {
                 status = StatusCodes.Status200OK.ToString(),
@@ -300,7 +305,7 @@ namespace OhBau.Service.Implement
                     _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
                     await _unitOfWork.CommitAsync();
                     _blogCacheInvalidator.InvalidateEntityList();
-
+                    _blogCacheInvalidator.InvalidateEntity(BlogId);
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status200OK.ToString(),
@@ -324,8 +329,9 @@ namespace OhBau.Service.Implement
                 blog.TotalLike += 1;
                 _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
                 await _unitOfWork.CommitAsync();
-                
+
                 _blogCacheInvalidator.InvalidateEntityList();
+                _blogCacheInvalidator.InvalidateEntity(BlogId);
 
                 return new BaseResponse<string>
                 {
