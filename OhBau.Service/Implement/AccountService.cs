@@ -43,7 +43,7 @@ namespace OhBau.Service.Implement
             account.UpdateAt = TimeUtil.GetCurrentSEATime();
             _unitOfWork.GetRepository<Account>().UpdateAsync(account);
 
-            var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+             var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
                 predicate: p => p.AccountId.Equals(account.Id) && p.Active == true);
             if (parent == null)
             {
@@ -63,7 +63,7 @@ namespace OhBau.Service.Implement
 
             return new BaseResponse<bool>()
             {
-                status = StatusCodes.Status404NotFound.ToString(),
+                status = StatusCodes.Status200OK.ToString(),
                 message = "Xóa tài khoản thành công",
                 data = true
             };
