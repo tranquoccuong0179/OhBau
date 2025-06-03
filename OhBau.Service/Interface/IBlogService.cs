@@ -18,5 +18,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<string>> DeleteBlog(Guid blogId);
         Task<BaseResponse<UpdateBlogResponse>> UpdateBlog(Guid id, UpdateBlogRequest request);
         Task<BaseResponse<string>> LikeOrDisLikeBlog(Guid accountId, Guid BlogId);
+        Task<BaseResponse<Paginate<GetBlogs>>> GetBlogsByUser(Guid userId,int pageNumber, int pageSize);
     }
 }
