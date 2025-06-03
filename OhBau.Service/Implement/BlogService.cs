@@ -205,6 +205,7 @@ namespace OhBau.Service.Implement
                 Title = b.Title,
                 Content = b.Content,
                 CreatedDate = (DateTime)b.CreatedDate!,
+                UpdatedDate = (DateTime)b.UpdatedDate!,
                 TotalComment = b.Comments.Count(),
                 TotalLike = b.LikeBlog.Count,
                 AuthorId = b.Account.Id,
@@ -215,7 +216,7 @@ namespace OhBau.Service.Implement
                     isLiked = l.isLiked
                 }).ToList()
 
-            }).OrderByDescending(x => x.CreatedDate).ToList();
+            }).OrderByDescending(x => x.UpdatedDate).ToList();
 
             var pagedResponse = new Paginate<GetBlogs>
             {
@@ -383,6 +384,7 @@ namespace OhBau.Service.Implement
                 Title = b.Title,
                 Content = b.Content,
                 CreatedDate = b.CreatedDate,
+                UpdatedDate = b.UpdatedDate,
                 TotalComment = b.Comments.Count,
                 TotalLike = b.LikeBlog.Count,
                 AuthorId = b.Account.Id,
@@ -393,7 +395,7 @@ namespace OhBau.Service.Implement
                     isLiked = l.isLiked
 
                 }).ToList()
-            }).ToList();
+            }).OrderByDescending(x => x.UpdatedDate).ToList();
 
             var pagedResponse = new Paginate<GetBlogs>
             {
