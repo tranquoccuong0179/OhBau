@@ -178,5 +178,12 @@ namespace OhBau.API.Controllers
                 return StatusCode(500,ex.ToString());
             }
         }
+
+        [HttpGet("get-blogs-by-user/{userId}")]
+        public async Task<IActionResult> GetBlogsByUser(Guid userId,[FromQuery]int pageNumber, [FromQuery]int pageSize)
+        {
+            var response = await _blogService.GetBlogsByUser(userId, pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
     }
 }

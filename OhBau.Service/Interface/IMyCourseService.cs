@@ -12,5 +12,6 @@ namespace OhBau.Service.Interface
     public interface IMyCourseService
     {
         Task<BaseResponse<Paginate<MyCoursesResponse>>> MyCourses(Guid accountId,int pageNumber, int pageSize, string? courseName);
+        Task<BaseResponse<string>> ReceiveCourse(Guid accountId, Guid courseId);
     }
 }

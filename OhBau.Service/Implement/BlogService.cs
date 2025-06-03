@@ -193,7 +193,7 @@ namespace OhBau.Service.Implement
             }
 
             var getBlogs = await _unitOfWork.GetRepository<Blog>().GetPagingListAsync(
-                include: i => i.Include(x => x.LikeBlog),
+                include: i => i.Include(c => c.Comments).Include(x => x.LikeBlog).Include(a => a.Account),
                 predicate: predicate,
                 page: pageNumber,
                 size: pageSize
@@ -205,7 +205,10 @@ namespace OhBau.Service.Implement
                 Title = b.Title,
                 Content = b.Content,
                 CreatedDate = (DateTime)b.CreatedDate!,
+                TotalComment = b.Comments.Count(),
                 TotalLike = b.LikeBlog.Count,
+                AuthorId = b.Account.Id,
+                AuthorEmail = b.Account.Email,
                 LikeBlogs = b.LikeBlog.Select(l => new LikeBlogs
                 {
                     AccountId = l.AccountID,
@@ -302,8 +305,11 @@ namespace OhBau.Service.Implement
                     await _unitOfWork.CommitAsync();
 
                     blog.TotalLike = blog.TotalLike - 1;
+                    blog.UpdatedDate = DateTime.Now;
+
                     _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
                     await _unitOfWork.CommitAsync();
+
                     _blogCacheInvalidator.InvalidateEntityList();
                     _blogCacheInvalidator.InvalidateEntity(BlogId);
                     return new BaseResponse<string>
@@ -327,6 +333,8 @@ namespace OhBau.Service.Implement
                 await _unitOfWork.GetRepository<LikeBlog>().InsertAsync(newLike);
 
                 blog.TotalLike += 1;
+                blog.UpdatedDate = DateTime.Now;
+
                 _unitOfWork.GetRepository<Blog>().UpdateAsync(blog);
                 await _unitOfWork.CommitAsync();
 
@@ -347,5 +355,70 @@ namespace OhBau.Service.Implement
             }
         }
 
+        public async Task<BaseResponse<Paginate<GetBlogs>>> GetBlogsByUser(Guid userId, int pageNumber, int pageSize)
+        {
+            var parameters = new ListParameters<Blog>(pageNumber, pageSize);
+            parameters.AddFilter("userId", userId);
+
+            var cache = _blogCacheInvalidator.GetCacheKeyForList(parameters);
+            if (_cache.TryGetValue(cache, out Paginate<GetBlogs> BlogsByUser))
+            {
+                return new BaseResponse<Paginate<GetBlogs>>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Get blogs success(cache)",
+                    data = BlogsByUser
+                };
+            }
+
+            var getBlogs = await _unitOfWork.GetRepository<Blog>().GetPagingListAsync(
+                predicate: x => x.AccountId == userId,
+                include: i => i.Include(x => x.Account).Include(x => x.Comments).Include(x => x.LikeBlog),
+                page: pageNumber,
+                size: pageSize);
+
+            var mapItem = getBlogs.Items.Select(b => new GetBlogs
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Content = b.Content,
+                CreatedDate = b.CreatedDate,
+                TotalComment = b.Comments.Count,
+                TotalLike = b.LikeBlog.Count,
+                AuthorId = b.Account.Id,
+                AuthorEmail = b.Account.Email,
+                LikeBlogs = b.LikeBlog.Select(l => new LikeBlogs
+                {
+                    AccountId = l.Id,
+                    isLiked = l.isLiked
+
+                }).ToList()
+            }).ToList();
+
+            var pagedResponse = new Paginate<GetBlogs>
+            {
+                Items = mapItem,
+                Page = pageNumber,
+                Size = pageSize,
+                Total = getBlogs.Total,
+                TotalPages = (int)Math.Ceiling((double)getBlogs.Total / pageSize)
+            };
+
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            _cache.Set(cache, pagedResponse,options);
+            _blogCacheInvalidator.AddToListCacheKeys(cache);
+
+            return new BaseResponse<Paginate<GetBlogs>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Get blogs success",
+                data = pagedResponse
+            };
+
+        }
     }
 }

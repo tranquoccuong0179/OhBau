@@ -33,5 +33,6 @@ namespace OhBau.Model.Entity
         public virtual Account Account { get; set; }
 
         public virtual ICollection<LikeBlog> LikeBlog { get; set; } = new List<LikeBlog>();
+        public virtual ICollection<Comments> Comments { get; set; } = new List<Comments>();
     }
 }
