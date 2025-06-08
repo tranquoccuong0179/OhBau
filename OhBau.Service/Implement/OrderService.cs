@@ -49,7 +49,7 @@ namespace OhBau.Service.Implement
 
                 var getCartItem = await _unitOfWork.GetRepository<CartItems>().GetListAsync(
                     predicate: x => x.CartId == request.CartId,
-                    include: q => q.Include(ci => ci.Course)); 
+                    include: q => q.Include(ci => ci.Products)); 
 
                 var checkOrderready = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(
                     predicate: x => x.AccountId == getCart.AccountId &&
@@ -70,7 +70,7 @@ namespace OhBau.Service.Implement
                         var addNewOrderDetail = new OrderDetail
                         {
                             Id = Guid.NewGuid(),
-                            CourseId = item.CourseId,
+                            ProductId = item.ProductId,
                             OrderId = checkOrderready.Id,
                             UnitPrice = item.UnitPrice,
                         };
@@ -79,7 +79,7 @@ namespace OhBau.Service.Implement
 
                         orderItems.Add(new OrderItem
                         {
-                            Course = item.Course.Name,
+                            Course = item.Products.Name,
                             Price = item.UnitPrice
                         });
                     }
@@ -124,7 +124,7 @@ namespace OhBau.Service.Implement
                     var createNewOrderDetail = new OrderDetail
                     {
                         Id = Guid.NewGuid(),
-                        CourseId = newItem.CourseId,
+                        ProductId = newItem.ProductId,
                         OrderId = newOrderId,
                         UnitPrice = newItem.UnitPrice
                     };
@@ -133,7 +133,7 @@ namespace OhBau.Service.Implement
 
                     orderItems.Add(new OrderItem
                     {
-                        Course = newItem.Course.Name,
+                        Course = newItem.Products.Name,
                         Price = newItem.UnitPrice
                     });
                 }
@@ -240,8 +240,8 @@ namespace OhBau.Service.Implement
 
             var checkAuthorize = await _unitOfWork.GetRepository<OrderDetail>().GetPagingListAsync(
                 predicate: x => x.Order.AccountId == accountId && x.OrderId == orderId,
-                include: i => i.Include(c => c.Course)
-                               .ThenInclude(c => c.Category)
+                include: i => i.Include(c => c.Products)
+                               .ThenInclude(c => c.ProductCategory)
                                .Include(c => c.Order)
                 );
 
@@ -258,11 +258,9 @@ namespace OhBau.Service.Implement
             var mapItems = checkAuthorize.Items.Select(c => new GetOrderDetails
             {
                 Id = c.Id,
-                CourseName = c.Course.Name,
-                CategoryName = c.Course.Category.Name,
-                Duration = c.Course.Duration,
-                CourseRating = c.Course.Rating,
-                Price = c.Course.Price
+                CourseName = c.Products.Name,
+                CategoryName = c.Products.ProductCategory.Name,
+                Price = c.Products.Price
             }).ToList();
 
             var pagedResponse = new Paginate<GetOrderDetails>
@@ -270,7 +268,7 @@ namespace OhBau.Service.Implement
                 Items = mapItems,
                 Page = pageNumber,
                 Size = pageSize,
-                Total = mapItems.Count
+                Total = mapItems.Count()
             };
 
             var options = new MemoryCacheEntryOptions

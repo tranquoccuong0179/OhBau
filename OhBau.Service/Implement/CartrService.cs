@@ -45,7 +45,7 @@ namespace OhBau.Service.Implement
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
 
                 var checkAlready = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(
-                    x => x.CartId == getCartByAccount.Id && x.CourseId == courseId);
+                    x => x.CartId == getCartByAccount.Id && x.ProductId == courseId);
 
                 var checkMyCourse = await _unitOfWork.GetRepository<MyCourse>().GetByConditionAsync(x => x.CourseId == courseId && x.AccountId == accountId);
 
@@ -83,7 +83,7 @@ namespace OhBau.Service.Implement
                 var addNewCourse = new CartItems
                 {
                     Id = Guid.NewGuid(),
-                    CourseId = courseId,
+                    ProductId = courseId,
                     CartId = getCartByAccount.Id,
                     UnitPrice = getCourse.Price
                 };
@@ -133,7 +133,7 @@ namespace OhBau.Service.Implement
 
             var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
-                                                                                                                 i.Include(c => c.Course)
+                                                                                                                 i.Include(c => c.Products)
                                                                                                                  .Include(o => o.Cart)
                                                                                                                  .ThenInclude(a => a.Account),
                                                                                                                  page: pageNumber,
@@ -141,8 +141,8 @@ namespace OhBau.Service.Implement
                                                                                                                  );
                 var mapItem = getCartItems.Items.Select(o => new GetCartItem
                 {
-                       Name = o.Course.Name,
-                       UnitPrice = o.Course.Price,
+                       Name = o.Products.Name,
+                       UnitPrice = o.Products.Price,
                 }).ToList();
 
                 var result = new GetCartByAccount
@@ -198,7 +198,7 @@ namespace OhBau.Service.Implement
             }
             var getCartDetails = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(
                 predicate: x => x.Cart.AccountId == accountId,
-                include: i => i.Include(x => x.Course)
+                include: i => i.Include(x => x.Products)
                                .Include(c => c.Cart).ThenInclude(a => a.Account),
                 page: pageNumber,
                 size: pageSize
@@ -207,10 +207,8 @@ namespace OhBau.Service.Implement
             var mapItems = getCartDetails.Items.Select(c => new CartItemDetail
             {
                 DetailId = c.Id,
-                Name = c.Course.Name,
-                Duration = c.Course.Duration,
-                Price = c.Course.Price,
-                Rating = c.Course.Rating
+                Name = c.Products.Name,
+                Price = c.Products.Price,
             }).ToList();
 
             var result = new GetCartDetailResponse
