@@ -131,5 +131,11 @@ namespace OhBau.API.Constants
             public const string GetProductCategoryById = ProductCategoryEndPoint + "/{id}";
             public const string UpdateProductCategory = ProductCategoryEndPoint + "/{id}";
         }
+
+        public static class Product
+        {
+            public const string ProductEndPoint = ApiEndpoint + "/product";
+            public const string CreateProduct = ProductEndPoint;
+        }
     }
 }
