@@ -1,4 +1,6 @@
-﻿namespace OhBau.API.Constants
+﻿using System.Runtime.CompilerServices;
+
+namespace OhBau.API.Constants
 {
     public static class ApiEndPointConstant
     {
@@ -119,6 +121,15 @@
         {
             public const string FeedbackEndPoint = ApiEndpoint + "/feedback";
             public const string CreateFeedback = FeedbackEndPoint;
+        }
+
+        public static class ProductCategory
+        {
+            public const string ProductCategoryEndPoint = ApiEndpoint + "/product-category";
+            public const string CreateProductCategory = ProductCategoryEndPoint;
+            public const string GetAllProductCategory = ProductCategoryEndPoint;
+            public const string GetProductCategoryById = ProductCategoryEndPoint + "/{id}";
+            public const string UpdateProductCategory = ProductCategoryEndPoint + "/{id}";
         }
     }
 }
