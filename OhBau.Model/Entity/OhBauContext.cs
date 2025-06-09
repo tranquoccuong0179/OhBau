@@ -395,6 +395,24 @@ public partial class OhBauContext : DbContext
         modelBuilder.Entity<Transaction>().Property(b => b.Provider).HasConversion<string>();
         modelBuilder.Entity<Transaction>().Property(c => c.Status).HasConversion<string>();
         modelBuilder.Entity<Transaction>().Property(c => c.Type).HasConversion<string>();
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("Products");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(p => p.ProductCategory)
+                  .WithMany(pc => pc.Products)
+                  .HasForeignKey("CategoryId")
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK_Products_ProductCategory");
+        });
+
+        modelBuilder.Entity<ProductCategory>(entity =>
+        {
+            entity.ToTable("ProductCategory");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
         OnModelCreatingPartial(modelBuilder);
     }
 
