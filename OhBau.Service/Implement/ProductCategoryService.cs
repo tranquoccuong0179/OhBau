@@ -11,6 +11,7 @@ using OhBau.Model.Exception;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.ProductCategory;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Product;
 using OhBau.Model.Payload.Response.ProductCategory;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
@@ -56,6 +57,45 @@ namespace OhBau.Service.Implement
                     Name = productCategory.Name,
                     Description = productCategory.Description,
                 }
+            };
+        }
+
+        public async Task<BaseResponse<IPaginate<GetProductResponse>>> GetAllProductByCategory(Guid id, int page, int size)
+        {
+            var productCategory = await _unitOfWork.GetRepository<ProductCategory>().SingleOrDefaultAsync(
+                predicate: pc => pc.Id.Equals(id));
+
+            if (productCategory == null)
+            {
+                throw new NotFoundException("Danh mục sản phẩm không tồn tại");
+            }
+
+            var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
+                selector: p => new GetProductResponse
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Brand = p.Brand,
+                    Price = p.Price,
+                    Quantity = p.Quantity,
+                    Color = p.Color,
+                    Size = p.Size,
+                    AgeRange = p.AgeRange,
+                    Image = p.Image,
+                    Status = p.Status,
+                    CategoryId = p.CategoryId
+                },
+                predicate: p => p.CategoryId.Equals(id) && p.Active,
+                page: page,
+                size: size);
+
+
+            return new BaseResponse<IPaginate<GetProductResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách sản phẩm theo danh mục thành công",
+                data = products
             };
         }
 
