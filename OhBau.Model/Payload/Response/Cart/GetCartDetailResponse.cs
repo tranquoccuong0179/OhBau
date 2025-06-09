@@ -14,13 +14,17 @@ namespace OhBau.Model.Payload.Response.Cart
 
     public class CartItemDetail
     {
-        public Guid DetailId { get; set; }
+        public Guid ItemId { get; set; }
         public string Name { get; set; } = null!;
-
-        public double Rating { get; set; }
-
-        public long Duration { get; set; }
-
+        public string ImageUrl {  get; set; }
+        public string Description { get; set; }
+        public string Brand {  get; set; }
+        public string Color {  get; set; }
+        public string Size {  get; set; }
+        public string AgeRange {  get; set; }
         public double Price { get; set; }
+        public int Quantity {  get; set; }
+        public double TotalPrice { get; set; }
+
     }
 }

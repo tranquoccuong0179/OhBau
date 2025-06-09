@@ -17,7 +17,7 @@ namespace OhBau.Model.Entity
 
         public double UnitPrice {  get; set; }
         public int Quantity {  get; set; }
-
+        public double TotalPrice { get; set; }
         public Guid CartId { get; set; }
         public virtual Cart Cart { get; set; }
 

@@ -16,7 +16,8 @@ namespace OhBau.API.Controllers
         {
             try
             {
-                var response = await _orderService.CreateOrder(request);
+                var userId = UserUtil.GetAccountId(HttpContext);
+                var response = await _orderService.CreateOrder(userId!.Value,request);
                 return StatusCode(int.Parse(response.status), response);
             }
             catch (Exception ex) {
