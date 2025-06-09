@@ -136,6 +136,10 @@ namespace OhBau.API.Constants
         {
             public const string ProductEndPoint = ApiEndpoint + "/product";
             public const string CreateProduct = ProductEndPoint;
+            public const string GetAllProduct = ProductEndPoint;
+            public const string GetProductById = ProductEndPoint + "/{id}";
+            public const string UpdateProduct = ProductEndPoint + "/{id}";
+            public const string DeleteProduct = ProductEndPoint + "/{id}";
         }
     }
 }
