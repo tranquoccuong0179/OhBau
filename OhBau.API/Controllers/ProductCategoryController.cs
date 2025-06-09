@@ -6,6 +6,7 @@ using OhBau.Service.Interface;
 using OhBau.Model.Payload.Response.ProductCategory;
 using OhBau.Model.Payload.Request.ProductCategory;
 using OhBau.Model.Paginate;
+using OhBau.Model.Payload.Response.Product;
 
 namespace OhBau.API.Controllers
 {
@@ -35,6 +36,18 @@ namespace OhBau.API.Controllers
             int pageNumber = page ?? 1;
             int pageSize = size ?? 10;
             var response = await _productCategoryService.GetAllProductCategory(pageNumber, pageSize);
+            return StatusCode(int.Parse(response.status), response);
+        }
+
+        [HttpGet(ApiEndPointConstant.ProductCategory.GetAllProductByCategory)]
+        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetProductResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<IPaginate<GetProductResponse>>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> GetAllProductByCategory([FromRoute] Guid id,[FromQuery] int? page, [FromQuery] int? size)
+        {
+            int pageNumber = page ?? 1;
+            int pageSize = size ?? 10;
+            var response = await _productCategoryService.GetAllProductByCategory(id, pageNumber, pageSize);
             return StatusCode(int.Parse(response.status), response);
         }
 
