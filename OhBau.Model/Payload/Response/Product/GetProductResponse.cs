@@ -19,6 +19,6 @@ namespace OhBau.Model.Payload.Response.Product
         public string AgeRange { get; set; }
         public string Image { get; set; }
         public string Status { get; set; }
-        public Guid CategoryId { get; set; }
+        public Guid ProductCategoryId { get; set; }
     }
 }

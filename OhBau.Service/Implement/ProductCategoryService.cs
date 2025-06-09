@@ -84,7 +84,7 @@ namespace OhBau.Service.Implement
                     AgeRange = p.AgeRange,
                     Image = p.Image,
                     Status = p.Status,
-                    CategoryId = p.CategoryId
+                    ProductCategoryId = p.CategoryId
                 },
                 predicate: p => p.CategoryId.Equals(id) && p.Active,
                 page: page,
