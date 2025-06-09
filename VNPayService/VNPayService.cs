@@ -236,7 +236,7 @@ namespace VNPayService
                     var addNewMyCourse = new MyCourse
                     {
                         AccountId = getAccountByOrder.Id,
-                        CourseId = orderDetail.CourseId,
+                        CourseId = orderDetail.ProductId,
                         CreateAt = DateTime.Now,
                     };
 

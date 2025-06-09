@@ -124,7 +124,7 @@ namespace OhBau.Service.Implement
             }
             var getBlog = await _unitOfWork.GetRepository<Blog>().SingleOrDefaultAsync(
                 predicate: x => x.Id == blogId,
-                include: i => i.Include(a => a.Account).Include(x => x.LikeBlog)
+                include: i => i.Include(a => a.Account).Include(x => x.LikeBlog).Include(x => x.Comments)
                 );
 
             if (getBlog == null)
@@ -150,6 +150,7 @@ namespace OhBau.Service.Implement
                 Status = getBlog.Status,
                 ReasonReject = getBlog.ReasonReject,
                 TotalLike = getBlog.LikeBlog.Count,
+                TotalComment = getBlog.Comments.Count,
                 likeBlogs = getBlog.LikeBlog.Select(l => new LikeBlogs
                 {
                     AccountId = l.AccountID,
