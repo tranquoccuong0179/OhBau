@@ -20,7 +20,7 @@ namespace OhBau.Model.Payload.Request.Product
         public string AgeRange { get; set; }
         public IFormFile Image { get; set; }
         //public ProductStatusEnum Status { get; set; }
-        public Guid CategoryId { get; set; }
+        public Guid ProductCategoryId { get; set; }
 
     }
 }
