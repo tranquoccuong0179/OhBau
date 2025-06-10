@@ -18,5 +18,6 @@ namespace OhBau.Service.Interface
         Task<BaseResponse<GetProductCategoryResponse>> GetProductCategoryById(Guid id);
         Task<BaseResponse<GetProductCategoryResponse>> UpdateProductCategory(Guid id, UpdateProductCategoryRequest request);
         Task<BaseResponse<IPaginate<GetProductResponse>>> GetAllProductByCategory(Guid id, int page, int size);
+        Task<BaseResponse<bool>> DeleteProductCategory(Guid id);
     }
 }
