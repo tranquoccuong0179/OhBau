@@ -60,6 +60,16 @@ namespace OhBau.API.Controllers
             var response = await _productCategoryService.GetProductCategoryById(id);
             return StatusCode(int.Parse(response.status), response);
         }
+        
+        [HttpDelete(ApiEndPointConstant.ProductCategory.DeleteProductCategory)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(ProblemDetails))]
+        public async Task<IActionResult> DeleteProductCategory([FromRoute] Guid id)
+        {
+            var response = await _productCategoryService.DeleteProductCategory(id);
+            return StatusCode(int.Parse(response.status), response);
+        }
 
         [HttpPut(ApiEndPointConstant.ProductCategory.UpdateProductCategory)]
         [ProducesResponseType(typeof(BaseResponse<GetProductCategoryResponse>), StatusCodes.Status200OK)]
