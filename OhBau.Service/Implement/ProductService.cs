@@ -36,7 +36,7 @@ namespace OhBau.Service.Implement
         {
 
             var productCategory = await _unitOfWork.GetRepository<ProductCategory>().SingleOrDefaultAsync(
-                predicate: pc => pc.Id.Equals(request.CategoryId));
+                predicate: pc => pc.Id.Equals(request.ProductCategoryId));
 
             if (productCategory == null)
             {
@@ -64,7 +64,7 @@ namespace OhBau.Service.Implement
                 Image = uploadResponse.data,
                 //Status = request.Status.GetDescriptionFromEnum(),
                 Status = ProductStatusEnum.InStock.GetDescriptionFromEnum(),
-                CategoryId = request.CategoryId,
+                CategoryId = request.ProductCategoryId,
                 Active = true,
                 CreatedAt = TimeUtil.GetCurrentSEATime(),
                 UpdatedAt = TimeUtil.GetCurrentSEATime(),
@@ -90,7 +90,7 @@ namespace OhBau.Service.Implement
                     AgeRange = product.AgeRange,
                     Image = product.Image,
                     Status = product.Status,
-                    CategoryId = product.CategoryId
+                    ProductCategoryId = product.CategoryId
                 }
             };
         }
@@ -135,7 +135,7 @@ namespace OhBau.Service.Implement
                     AgeRange = p.AgeRange,
                     Image = p.Image,
                     Status = p.Status,
-                    CategoryId = p.CategoryId
+                    ProductCategoryId = p.CategoryId
                 },
                 predicate: p => p.Active,
                 page: page,
@@ -166,7 +166,7 @@ namespace OhBau.Service.Implement
                     AgeRange = p.AgeRange,
                     Image = p.Image,
                     Status = p.Status,
-                    CategoryId = p.CategoryId
+                    ProductCategoryId = p.CategoryId
                 },
                 predicate: p => p.Id.Equals(id) && p.Active);
 
@@ -236,7 +236,7 @@ namespace OhBau.Service.Implement
                     AgeRange = product.AgeRange,
                     Image = product.Image,
                     Status = product.Status,
-                    CategoryId = product.CategoryId,
+                    ProductCategoryId = product.CategoryId,
                 }
             };
         }

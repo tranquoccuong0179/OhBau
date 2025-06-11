@@ -11,6 +11,7 @@ using OhBau.Model.Exception;
 using OhBau.Model.Paginate;
 using OhBau.Model.Payload.Request.ProductCategory;
 using OhBau.Model.Payload.Response;
+using OhBau.Model.Payload.Response.Product;
 using OhBau.Model.Payload.Response.ProductCategory;
 using OhBau.Model.Utils;
 using OhBau.Repository.Interface;
@@ -39,6 +40,7 @@ namespace OhBau.Service.Implement
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 Description = request.Description,
+                Active = true,
                 CreatedAt = TimeUtil.GetCurrentSEATime(),
                 UpdatedAt = TimeUtil.GetCurrentSEATime(),
             };
@@ -59,6 +61,82 @@ namespace OhBau.Service.Implement
             };
         }
 
+        public async Task<BaseResponse<bool>> DeleteProductCategory(Guid id)
+        {
+            var category = await _unitOfWork.GetRepository<ProductCategory>().SingleOrDefaultAsync(
+                predicate: c => c.Id.Equals(id) && c.Active);
+
+            if (category == null)
+            {
+                throw new NotFoundException("Không tìm thấy danh mục sản phẩm cần xóa");
+            }
+
+            category.Active = false;
+            category.UpdatedAt = TimeUtil.GetCurrentSEATime();
+
+            var products = await _unitOfWork.GetRepository<Product>().GetListAsync(
+                predicate: p => p.CategoryId.Equals(id) && p.Active);
+
+            if (products.Any())
+            {
+                foreach (var product in products)
+                {
+                    product.Active = false;
+                    product.UpdatedAt = TimeUtil.GetCurrentSEATime();
+                }
+                _unitOfWork.GetRepository<Product>().UpdateRange(products);
+            }
+
+            _unitOfWork.GetRepository<ProductCategory>().UpdateAsync(category);
+            await _unitOfWork.CommitAsync();
+
+            return new BaseResponse<bool>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Xóa danh mục sản phẩm thành công",
+                data = true
+            };
+        }
+
+        public async Task<BaseResponse<IPaginate<GetProductResponse>>> GetAllProductByCategory(Guid id, int page, int size)
+        {
+            var productCategory = await _unitOfWork.GetRepository<ProductCategory>().SingleOrDefaultAsync(
+                predicate: pc => pc.Id.Equals(id) && pc.Active);
+
+            if (productCategory == null)
+            {
+                throw new NotFoundException("Danh mục sản phẩm không tồn tại");
+            }
+
+            var products = await _unitOfWork.GetRepository<Product>().GetPagingListAsync(
+                selector: p => new GetProductResponse
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Brand = p.Brand,
+                    Price = p.Price,
+                    Quantity = p.Quantity,
+                    Color = p.Color,
+                    Size = p.Size,
+                    AgeRange = p.AgeRange,
+                    Image = p.Image,
+                    Status = p.Status,
+                    ProductCategoryId = p.CategoryId
+                },
+                predicate: p => p.CategoryId.Equals(id) && p.Active,
+                page: page,
+                size: size);
+
+
+            return new BaseResponse<IPaginate<GetProductResponse>>
+            {
+                status = StatusCodes.Status200OK.ToString(),
+                message = "Lấy danh sách sản phẩm theo danh mục thành công",
+                data = products
+            };
+        }
+
         public async Task<BaseResponse<IPaginate<GetProductCategoryResponse>>> GetAllProductCategory(int page, int size)
         {
             var productCategories = await _unitOfWork.GetRepository<ProductCategory>().GetPagingListAsync(
@@ -68,6 +146,7 @@ namespace OhBau.Service.Implement
                     Name = p.Name,
                     Description = p.Description,
                 },
+                predicate: p => p.Active,
                 page: page,
                 size: size);
 
@@ -88,7 +167,7 @@ namespace OhBau.Service.Implement
                     Name = p.Name,
                     Description = p.Description,
                 },
-                predicate: p => p.Id.Equals(id));
+                predicate: p => p.Id.Equals(id) && p.Active);
 
             if (productCategory == null)
             {
@@ -106,7 +185,7 @@ namespace OhBau.Service.Implement
         public async Task<BaseResponse<GetProductCategoryResponse>> UpdateProductCategory(Guid id, UpdateProductCategoryRequest request)
         {
             var productCategory = await _unitOfWork.GetRepository<ProductCategory>().SingleOrDefaultAsync(
-                predicate: p => p.Id.Equals(id));
+                predicate: p => p.Id.Equals(id) && p.Active);
 
             if (productCategory == null)
             {
