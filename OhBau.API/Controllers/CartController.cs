@@ -61,5 +61,21 @@ namespace OhBau.API.Controllers
                 return StatusCode(500, ex.ToString());
             }
         }
+
+        [HttpPut("update-item-quantity/{itemId}")]
+        [Authorize(Roles = "FATHER,MOTHER")]
+        public async Task<IActionResult> UpdateItemQuantity(Guid itemId, [FromForm] int quantity)
+        {
+            try
+            {
+                var response = await _cartService.UpdateQuantityItem(itemId, quantity);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Update Item Quantity API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
     }
 }
