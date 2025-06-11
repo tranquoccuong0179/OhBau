@@ -47,6 +47,26 @@ namespace OhBau.Service.Implement
                     include: i => i.Include(x => x.OrderDetails).ThenInclude(p => p.Products),
                     predicate: x => x.AccountId == accountId && x.PaymentStatus == PaymentStatusEnum.Pending
                 );
+                var itemIds = request.Items.Select(i => i.ItemId).ToList();
+
+                var cartItems = await _unitOfWork.GetRepository<CartItems>()
+                    .GetListAsync(
+                        predicate: x => itemIds.Contains(x.Id),
+                        include: x => x.Include(p => p.Products)
+                    );
+
+                foreach (var cartItem in cartItems)
+                {
+                    if (cartItem.Products.Quantity < cartItem.Quantity)
+                    {
+                        return new BaseResponse<CreateOrderResponse>
+                        {
+                            status = StatusCodes.Status400BadRequest.ToString(),
+                            message = $"{cartItem.Products.Name} không đủ số lượng trong kho.",
+                            data = null
+                        };
+                    }
+                }
 
                 if (checkOrderAlready != null)
                 {

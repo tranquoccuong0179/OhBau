@@ -214,33 +214,45 @@ namespace VNPayService
                 return "{\"RspCode\":\"02\",\"Message\":\"Transaction canceled\"}";
             }
             if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
-            {
+             {
+                double totalPrice = 0;
                 await _unitOfWork.BeginTransactionAsync();
                 try
                 {
                     order.PaymentStatus = PaymentStatusEnum.Paid;
                     transaction.Status = PaymentStatusEnum.Paid;
 
-                    _unitOfWork.GetRepository<Order>().UpdateAsync(order);
-                    _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
-                    await  _unitOfWork.CommitAsync();
+                     _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                     _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
+                    await _unitOfWork.CommitAsync();
 
                     var getOrderDetailByOrderCode = await _unitOfWork.GetRepository<OrderDetail>()
-                        .GetListAsync(predicate: x => x.OrderId == order.Id && x.Order.PaymentStatus == PaymentStatusEnum.Paid
-                         , include: x => x.Include(x => x.Order));
+                        .GetListAsync(predicate: x => x.OrderId == order.Id && x.Order.PaymentStatus == PaymentStatusEnum.Paid,
+                                      include: x => x.Include(x => x.Order));
 
-                    foreach(var deleteItem in getOrderDetailByOrderCode)
+                    foreach (var deleteItem in getOrderDetailByOrderCode)
                     {
-                        var getCartItem = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(x => x.ProductId == deleteItem.ProductId);
-                        _unitOfWork.GetRepository<CartItems>().DeleteAsync(getCartItem);
+                        var getCartItem = await _unitOfWork.GetRepository<CartItems>().SingleOrDefaultAsync(
+                            predicate: x => x.ProductId == deleteItem.ProductId);
 
-                        var getCartByAccountId = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
-                        getCartByAccountId.TotalPrice = getCartByAccountId.TotalPrice - deleteItem.TotalPrice;
-
-                        _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccountId);
-                        await _unitOfWork.CommitAsync();
-                        await _unitOfWork.CommitTransactionAsync();
+                        if (getCartItem != null)
+                        {
+                            var getProduct = await _unitOfWork.GetRepository<Product>().GetByConditionAsync(x => x.Id == getCartItem.ProductId);
+                            getProduct.Quantity = getProduct.Quantity - getCartItem.Quantity;
+                            totalPrice += getCartItem.UnitPrice * getCartItem.Quantity;
+                           _unitOfWork.GetRepository<CartItems>().DeleteAsync(getCartItem);
+                            _unitOfWork.GetRepository<Product>().UpdateAsync(getProduct);
+                        }
                     }
+
+                    var getCart = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
+                    if (getCart != null)
+                    {
+                        getCart.TotalPrice = getCart.TotalPrice - totalPrice;
+                        _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
+                    }
+                    await _unitOfWork.CommitAsync();
+                    await _unitOfWork.CommitTransactionAsync();
                 }
 
                 catch (Exception ex)

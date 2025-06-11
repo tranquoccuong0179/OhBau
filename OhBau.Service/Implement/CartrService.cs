@@ -313,5 +313,65 @@ namespace OhBau.Service.Implement
                 throw new NotImplementedException(); 
             }
         }
+
+        public async Task<BaseResponse<string>> UpdateQuantityItem(Guid itemId, int quantity)
+        {
+            try
+            {
+                if (quantity < 1)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = "Quantity must not be less than 1",
+                        data = null
+                    };
+                }
+                var getCartItem = await _unitOfWork.GetRepository<CartItems>()
+                                                   .GetByConditionAsync(x => x.Id == itemId);
+
+                if (getCartItem == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Cart item not found",
+                        data = null
+                    };
+                }
+
+                // Lấy cart để cập nhật tổng giá
+                var getCart = await _unitOfWork.GetRepository<Cart>()
+                                               .GetByConditionAsync(x => x.Id == getCartItem.CartId);
+
+                // Trừ tổng giá cũ
+                getCart.TotalPrice -= getCartItem.TotalPrice;
+
+                // Cập nhật lại thông tin cart item
+                getCartItem.Quantity = quantity;
+                getCartItem.TotalPrice = getCartItem.UnitPrice * quantity;
+
+                // Cộng tổng giá mới
+                getCart.TotalPrice += getCartItem.TotalPrice;
+
+                // Cập nhật và lưu
+                 _unitOfWork.GetRepository<CartItems>().UpdateAsync(getCartItem);
+                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
+
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Update quantity success",
+                    data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
     }
 }
