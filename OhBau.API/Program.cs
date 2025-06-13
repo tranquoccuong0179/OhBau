@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using EmailService.Service;
 using StackExchange.Redis;
 using OhBau.Service.Redis;
+using Serilog.Sinks.Discord;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,15 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
+    .CreateLogger();
+
+//Discord Log
+var discordHook = builder.Configuration["Discord:WebHook"];
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.Discord(webhookId: 1379810845319757997, webhookToken: "wWBxfU7K4Zbtn28k6UE-qzffdy7NUjlFxphDh8rYXwB6ybo-hF74TqaKU4dQehwSzP3m",
+        restrictedToMinimumLevel: LogEventLevel.Error)
     .CreateLogger();
 
 builder.Host.UseSerilog();

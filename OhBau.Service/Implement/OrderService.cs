@@ -38,134 +38,158 @@ namespace OhBau.Service.Implement
             _orderDetailCacheInvalidator = orderDetailCacheInvalidator;
         }
 
-        public async Task<BaseResponse<CreateOrderResponse>> CreateOrder(CreateOrderRequest request)
+        public async Task<BaseResponse<CreateOrderResponse>> CreateOrder(Guid accountId, CreateOrderRequest request)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var getCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
-                    predicate: x => x.Id == request.CartId,
-                    include: q => q.Include(a => a.Account));
+                var checkOrderAlready = await _unitOfWork.GetRepository<Order>().SingleOrDefaultAsync(
+                    include: i => i.Include(x => x.OrderDetails).ThenInclude(p => p.Products),
+                    predicate: x => x.AccountId == accountId && x.PaymentStatus == PaymentStatusEnum.Pending
+                );
+                var itemIds = request.Items.Select(i => i.ItemId).ToList();
 
-                var getCartItem = await _unitOfWork.GetRepository<CartItems>().GetListAsync(
-                    predicate: x => x.CartId == request.CartId,
-                    include: q => q.Include(ci => ci.Course)); 
+                var cartItems = await _unitOfWork.GetRepository<CartItems>()
+                    .GetListAsync(
+                        predicate: x => itemIds.Contains(x.Id),
+                        include: x => x.Include(p => p.Products)
+                    );
 
-                var checkOrderready = await _unitOfWork.GetRepository<Order>().GetByConditionAsync(
-                    predicate: x => x.AccountId == getCart.AccountId &&
-                                    x.PaymentStatus == PaymentStatusEnum.Pending);
-
-                var orderItems = new List<OrderItem>();
-
-                if (checkOrderready != null)
+                foreach (var cartItem in cartItems)
                 {
-                    var deleteOrderDetail = await _unitOfWork.GetRepository<OrderDetail>()
-                        .GetListAsync(predicate: x => x.OrderId == checkOrderready.Id);
-
-                    _unitOfWork.GetRepository<OrderDetail>().DeleteRangeAsync(deleteOrderDetail);
-                    await _unitOfWork.CommitAsync();
-
-                    foreach (var item in getCartItem)
+                    if (cartItem.Products.Quantity < cartItem.Quantity)
                     {
-                        var addNewOrderDetail = new OrderDetail
+                        return new BaseResponse<CreateOrderResponse>
+                        {
+                            status = StatusCodes.Status400BadRequest.ToString(),
+                            message = $"{cartItem.Products.Name} không đủ số lượng trong kho.",
+                            data = null
+                        };
+                    }
+                }
+
+                if (checkOrderAlready != null)
+                {
+                    var existingProductIds = checkOrderAlready.OrderDetails.Select(x => x.ProductId).ToHashSet();
+
+                    foreach (var newItem in request.Items)
+                    {
+                        var getCartItem = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(x => x.Id == newItem.ItemId);
+
+                        if (getCartItem == null)
+                        {
+                            continue;
+                        }
+
+                        if (existingProductIds.Contains(getCartItem.ProductId))
+                        {
+                            continue;
+                        }
+
+                        var addNewDetailItem = new OrderDetail
                         {
                             Id = Guid.NewGuid(),
-                            CourseId = item.CourseId,
-                            OrderId = checkOrderready.Id,
-                            UnitPrice = item.UnitPrice,
+                            OrderId = checkOrderAlready.Id,
+                            ProductId = getCartItem.ProductId,
+                            UnitPrice = getCartItem.UnitPrice,
+                            Quantity = getCartItem.Quantity,
+                            TotalPrice = getCartItem.UnitPrice * getCartItem.Quantity,
                         };
 
-                        await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(addNewOrderDetail);
-
-                        orderItems.Add(new OrderItem
-                        {
-                            Course = item.Course.Name,
-                            Price = item.UnitPrice
-                        });
+                        await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(addNewDetailItem);
+                        checkOrderAlready.TotalPrice += addNewDetailItem.TotalPrice;
+                        _unitOfWork.GetRepository<Order>().UpdateAsync(checkOrderAlready);
+                        await _unitOfWork.CommitAsync();
                     }
 
-                    checkOrderready.TotalPrice = getCart.TotalPrice;
-                    _unitOfWork.GetRepository<Order>().UpdateAsync(checkOrderready);
-                    await _unitOfWork.CommitAsync();
                     await _unitOfWork.CommitTransactionAsync();
 
                     _orderCacheInvalidator.InvalidateEntityList();
-                    _orderCacheInvalidator.InvalidateEntity(checkOrderready.Id);
                     _orderDetailCacheInvalidator.InvalidateEntityList();
+
+                    var response = new CreateOrderResponse
+                    {
+                        OrderCode = checkOrderAlready.OrderCode,
+                        //OrderItems = checkOrderAlready.OrderDetails.Select(x => new Model.Payload.Response.Order.OrderItem
+                        //{
+                        //    ProductName = x.Products.Name,
+                        //    Price = x.Products.Price,
+                        //    Quantity = x.Quantity
+                        //}).ToList(),
+                        TotalPrice = checkOrderAlready.TotalPrice
+                    };
 
                     return new BaseResponse<CreateOrderResponse>
                     {
                         status = StatusCodes.Status200OK.ToString(),
-                        message = "Order updated with new cart items.",
-                        data = new CreateOrderResponse
-                        {
-                            OrderCode = checkOrderready.OrderCode,
-                            TotalPrice = checkOrderready.TotalPrice,
-                            OrderItems = orderItems,
-                        }
+                        message = "Update order success",
+                        data = response
                     };
                 }
 
-                var newOrderId = Guid.NewGuid();
+                // Create new order if no pending order exists
                 var createNewOrder = new Order
                 {
-                    Id = newOrderId,
-                    AccountId = getCart.AccountId,
+                    Id = Guid.NewGuid(),
+                    AccountId = accountId,
                     CreatedDate = DateTime.Now,
+                    OrderCode = RandomCodeUtil.GenerateRandomCode(6),
                     PaymentStatus = PaymentStatusEnum.Pending,
-                    TotalPrice = getCart.TotalPrice,
-                    OrderCode = RandomCodeUtil.GenerateRandomCode(6)
+                    TotalPrice = 0
                 };
 
                 await _unitOfWork.GetRepository<Order>().InsertAsync(createNewOrder);
+                await _unitOfWork.CommitAsync();
 
-                foreach (var newItem in getCartItem)
+                foreach (var items in request.Items)
                 {
-                    var createNewOrderDetail = new OrderDetail
+                    var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(
+                        predicate: x => x.Id == items.ItemId);
+
+                    if (getCartItems == null)
+                    {
+                        continue;
+                    }
+
+                    var addNewItem = new OrderDetail
                     {
                         Id = Guid.NewGuid(),
-                        CourseId = newItem.CourseId,
-                        OrderId = newOrderId,
-                        UnitPrice = newItem.UnitPrice
+                        OrderId = createNewOrder.Id,
+                        ProductId = getCartItems.ProductId,
+                        Quantity = getCartItems.Quantity,
+                        UnitPrice = getCartItems.UnitPrice,
+                        TotalPrice = getCartItems.UnitPrice * getCartItems.Quantity
                     };
 
-                    await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(createNewOrderDetail);
+                    createNewOrder.TotalPrice += addNewItem.TotalPrice;
 
-                    orderItems.Add(new OrderItem
-                    {
-                        Course = newItem.Course.Name,
-                        Price = newItem.UnitPrice
-                    });
+                    await _unitOfWork.GetRepository<OrderDetail>().InsertAsync(addNewItem);
+                    _unitOfWork.GetRepository<Order>().UpdateAsync(createNewOrder);
+                    await _unitOfWork.CommitAsync();
                 }
 
+                await _unitOfWork.CommitTransactionAsync();
+
                 _orderCacheInvalidator.InvalidateEntityList();
-                _orderCacheInvalidator.InvalidateEntity(createNewOrder.Id);
                 _orderDetailCacheInvalidator.InvalidateEntityList();
 
-                await _unitOfWork.CommitAsync();
-                await _unitOfWork.CommitTransactionAsync();
+                var newResponse = new CreateOrderResponse
+                {
+                    OrderCode = createNewOrder.OrderCode,
+                    TotalPrice = createNewOrder.TotalPrice
+                };
 
                 return new BaseResponse<CreateOrderResponse>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Order created successfully.",
-                    data = new CreateOrderResponse
-                    {
-                        OrderCode = createNewOrder.OrderCode,
-                        TotalPrice = getCart.TotalPrice,
-                        OrderItems = orderItems
-                    }
+                    message = "Create order success",
+                    data = newResponse
                 };
             }
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                return new BaseResponse<CreateOrderResponse>
-                {
-                    status = StatusCodes.Status500InternalServerError.ToString(),
-                    message = ex.ToString(),
-                    data = null
-                };
+                throw new Exception(ex.ToString());
             }
         }
 
@@ -240,8 +264,8 @@ namespace OhBau.Service.Implement
 
             var checkAuthorize = await _unitOfWork.GetRepository<OrderDetail>().GetPagingListAsync(
                 predicate: x => x.Order.AccountId == accountId && x.OrderId == orderId,
-                include: i => i.Include(c => c.Course)
-                               .ThenInclude(c => c.Category)
+                include: i => i.Include(c => c.Products)
+                               .ThenInclude(c => c.ProductCategory)
                                .Include(c => c.Order)
                 );
 
@@ -258,11 +282,16 @@ namespace OhBau.Service.Implement
             var mapItems = checkAuthorize.Items.Select(c => new GetOrderDetails
             {
                 Id = c.Id,
-                CourseName = c.Course.Name,
-                CategoryName = c.Course.Category.Name,
-                Duration = c.Course.Duration,
-                CourseRating = c.Course.Rating,
-                Price = c.Course.Price
+                Name  = c.Products.Name,
+                ImageUrl = c.Products.Image,
+                Description = c.Products.Description,
+                Brand = c.Products.Brand,
+                Color = c.Products.Color,
+                Size = c.Products.Size,
+                AgeRange = c.Products.AgeRange,
+                Quantity = c.Quantity,
+                Price = c.UnitPrice,
+                TotalPrice = c.TotalPrice
             }).ToList();
 
             var pagedResponse = new Paginate<GetOrderDetails>
@@ -270,7 +299,7 @@ namespace OhBau.Service.Implement
                 Items = mapItems,
                 Page = pageNumber,
                 Size = pageSize,
-                Total = mapItems.Count
+                Total = mapItems.Count()
             };
 
             var options = new MemoryCacheEntryOptions

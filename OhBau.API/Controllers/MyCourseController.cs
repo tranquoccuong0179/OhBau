@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OhBau.Model.Payload.Request.Order;
 using OhBau.Model.Utils;
 using OhBau.Service.Interface;
 
@@ -18,5 +19,21 @@ namespace OhBau.API.Controllers
             return StatusCode(int.Parse(response.status), response);
         }
 
+        [HttpPost("receive-course")]
+        [Authorize(Roles = "FATHER,MORTHER")]
+        public async Task<IActionResult> ReceiveCourse([FromBody] AddCourseToOrderRequest reqeust)
+        {
+            try
+            {
+                var accountId = UserUtil.GetAccountId(HttpContext);
+                var response = await _myCourseService.ReceiveCourse(accountId!.Value, reqeust.CourseId);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Receive Course API] " + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
     }
 }

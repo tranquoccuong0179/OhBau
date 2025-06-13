@@ -83,6 +83,17 @@ namespace OhBau.Service.Implement
             }
 
             bool isFather = account.Role.Equals(RoleEnum.FATHER.GetDescriptionFromEnum());
+            bool isMother = account.Role.Equals(RoleEnum.MOTHER.GetDescriptionFromEnum());
+
+            if (!isFather && !isMother)
+            {
+                return new BaseResponse<CreateFetusResponse>
+                {
+                    status = StatusCodes.Status400BadRequest.ToString(),
+                    message = "Vai trò không hợp lệ để tạo thai nhi",
+                    data = null
+                };
+            }
 
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -164,6 +175,23 @@ namespace OhBau.Service.Implement
                         DeleteAt = null
                     };
                     await _unitOfWork.GetRepository<ParentRelation>().InsertAsync(motherFetusRelation);
+                }
+                else if (isMother)
+                {
+                    var motherRelation = new ParentRelation
+                    {
+                        Id = Guid.NewGuid(),
+                        AccountId = account.Id,
+                        ParentId = currentParent.Id,
+                        FetusId = fetus.Id,
+                        RelationType = "Mother",
+                        Active = true,
+                        CreateAt = TimeUtil.GetCurrentSEATime(),
+                        UpdateAt = TimeUtil.GetCurrentSEATime(),
+                        DeleteAt = null
+                    };
+
+                    await _unitOfWork.GetRepository<ParentRelation>().InsertAsync(motherRelation);
                 }
 
                 await _unitOfWork.CommitTransactionAsync();

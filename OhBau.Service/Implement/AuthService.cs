@@ -32,7 +32,7 @@ namespace OhBau.Service.Implement
                   (p.Role == RoleEnum.ADMIN.GetDescriptionFromEnum() ||
                   p.Role == RoleEnum.FATHER.GetDescriptionFromEnum() ||
                   p.Role == RoleEnum.MOTHER.GetDescriptionFromEnum() ||
-                  p.Role == RoleEnum.DOCTOR.GetDescriptionFromEnum());
+                  p.Role == RoleEnum.DOCTOR.GetDescriptionFromEnum() && p.Active == true);
             Account account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(predicate: searchFilter);
             if (account == null)
             {

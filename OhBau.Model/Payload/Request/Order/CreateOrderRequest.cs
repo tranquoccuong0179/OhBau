@@ -8,7 +8,11 @@ namespace OhBau.Model.Payload.Request.Order
 {
     public class CreateOrderRequest
     {
-        public Guid CartId { get; set; }
-        
+        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
+    }
+
+    public class OrderItem
+    {
+        public Guid ItemId { get; set; }
     }
 }

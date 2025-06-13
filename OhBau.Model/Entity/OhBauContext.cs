@@ -71,6 +71,8 @@ public partial class OhBauContext : DbContext
     public virtual DbSet<FavoriteCourses> FavoriteCourses { get; set; }
     public virtual DbSet<Topic> Topics { get; set;}
     public virtual DbSet<LikeBlog> LikeBlog { get; set; }
+    public virtual DbSet<Product> Products {  get; set; }
+    public virtual DbSet<ProductCategory> ProductCategory { get; set; }
 
 
     public static string GetConnectionString(string connectionStringName)
@@ -393,6 +395,24 @@ public partial class OhBauContext : DbContext
         modelBuilder.Entity<Transaction>().Property(b => b.Provider).HasConversion<string>();
         modelBuilder.Entity<Transaction>().Property(c => c.Status).HasConversion<string>();
         modelBuilder.Entity<Transaction>().Property(c => c.Type).HasConversion<string>();
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("Products");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(p => p.ProductCategory)
+                  .WithMany(pc => pc.Products)
+                  .HasForeignKey("CategoryId")
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK_Products_ProductCategory");
+        });
+
+        modelBuilder.Entity<ProductCategory>(entity =>
+        {
+            entity.ToTable("ProductCategory");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
         OnModelCreatingPartial(modelBuilder);
     }
 

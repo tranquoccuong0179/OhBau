@@ -35,6 +35,8 @@ namespace OhBau.Service.Implement
         {
             var listParameter = new ListParameters<MyCourse>(pageNumber, pageSize);
             listParameter.AddFilter("courseName", courseName);
+            listParameter.AddFilter("accountId", accountId);
+
             var cache = _myCourseCacheInvalidator.GetCacheKeyForList(listParameter);
             if (_cache.TryGetValue(cache, out Paginate<MyCoursesResponse> MyCourses))
             {
@@ -91,6 +93,48 @@ namespace OhBau.Service.Implement
                 message = "Get my course success",
                 data = pagedResponse
             };
+        }
+
+        public async Task<BaseResponse<string>> ReceiveCourse(Guid accountId, Guid courseId)
+        {
+            try
+            {
+               var checkReceive = await _unitOfWork.GetRepository<MyCourse>().GetByConditionAsync(x => x.AccountId == accountId && x.CourseId == courseId);
+                if (checkReceive != null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status208AlreadyReported.ToString(),
+                        message = "You have already received this course",
+                        data = null
+                    };
+                }
+
+                var addMyCourse = new MyCourse
+                {
+                    AccountId = accountId,
+                    CourseId = courseId,
+                    CreateAt = DateTime.Now
+                };
+
+                await _unitOfWork.GetRepository<MyCourse>().InsertAsync(addMyCourse);
+                await _unitOfWork.CommitAsync();
+
+                _myCourseCacheInvalidator.InvalidateEntityList();
+                _myCourseCacheInvalidator.InvalidateEntity(courseId);
+
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Receive course succss",
+                    data = null
+                };
+            }
+            catch (Exception ex) { 
+                
+                throw new Exception(ex.ToString(), ex);
+            }
         }
     }
 }

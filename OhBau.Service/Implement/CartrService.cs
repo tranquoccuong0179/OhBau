@@ -36,7 +36,7 @@ namespace OhBau.Service.Implement
             _cartItemsInvalidator = cartItemsInvalidator;
         }
 
-        public async Task<BaseResponse<string>> AddCourseToCart(Guid courseId, Guid accountId)
+        public async Task<BaseResponse<string>> AddProductToCart(Guid productId,int quantity, Guid accountId)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -45,66 +45,88 @@ namespace OhBau.Service.Implement
                 var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == accountId);
 
                 var checkAlready = await _unitOfWork.GetRepository<CartItems>().GetByConditionAsync(
-                    x => x.CartId == getCartByAccount.Id && x.CourseId == courseId);
+                    x => x.CartId == getCartByAccount.Id && x.ProductId == productId);
 
-                var checkMyCourse = await _unitOfWork.GetRepository<MyCourse>().GetByConditionAsync(x => x.CourseId == courseId && x.AccountId == accountId);
+                var getProduct = await _unitOfWork.GetRepository<Product>().GetByConditionAsync(x => x.Id == productId);
 
-                if (checkMyCourse != null)
-                {
-                    return new BaseResponse<string>
-                    {
-                        status = StatusCodes.Status208AlreadyReported.ToString(),
-                        message = "You have already purchased this course",
-                        data = null
-                    };
-                }
 
                 if (checkAlready != null)
                 {
+                    if (getProduct.Quantity < quantity)
+                    {
+                        return new BaseResponse<string>
+                        {
+                            status = StatusCodes.Status400BadRequest.ToString(),
+                            message = "The quantity of products in stock is not enough",
+                            data = null
+                        };
+                    }
+
+                    getCartByAccount.TotalPrice = getCartByAccount.TotalPrice + (checkAlready.UnitPrice * checkAlready.Quantity);
+                    checkAlready.Quantity += quantity;
+                    _unitOfWork.GetRepository<CartItems>().UpdateAsync(checkAlready);
+
+                    checkAlready.TotalPrice = checkAlready.UnitPrice * checkAlready.Quantity;
+                    _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
+
+                    await _unitOfWork.CommitAsync();
+                    await _unitOfWork.CommitTransactionAsync();
                     return new BaseResponse<string>
                     {
-                        status = StatusCodes.Status208AlreadyReported.ToString(),
-                        message = "The course already exists in your order",
+                        status = StatusCodes.Status200OK.ToString(),
+                        message = "Add product success",
                         data = null
                     };
                 }
 
-                var getCourse = await _unitOfWork.GetRepository<Course>().GetByConditionAsync(x => x.Id == courseId);
-                if (getCourse == null)
+
+                if (getProduct.Quantity < quantity)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = "The quantity of products in stock is not enough",
+                        data = null
+                    };
+                }
+
+                if (getCartByAccount == null)
                 {
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status404NotFound.ToString(),
-                        message = "Course not found",
+                        message = "Cart not found",
                         data = null
                     };
                 }
 
-                var addNewCourse = new CartItems
+                var addNewProduct = new CartItems
                 {
                     Id = Guid.NewGuid(),
-                    CourseId = courseId,
+                    ProductId = productId,
                     CartId = getCartByAccount.Id,
-                    UnitPrice = getCourse.Price
+                    UnitPrice = getProduct.Price,
+                    Quantity = quantity,
+                    TotalPrice = getProduct.Price * quantity
                 };
 
-                await _unitOfWork.GetRepository<CartItems>().InsertAsync(addNewCourse);
+                await _unitOfWork.GetRepository<CartItems>().InsertAsync(addNewProduct);
                 await _unitOfWork.CommitAsync();
 
-                getCartByAccount.TotalPrice = getCartByAccount.TotalPrice + addNewCourse.UnitPrice;
+                getCartByAccount.TotalPrice = getCartByAccount.TotalPrice + (addNewProduct.UnitPrice * quantity);
 
                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
                 _cartCacheInvalidator.InvalidateEntityList();
-                _cartCacheInvalidator.InvalidateEntity(addNewCourse.Id);
+                _cartCacheInvalidator.InvalidateEntity(addNewProduct.Id);
                 _cartItemsInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
                     status = StatusCodes.Status200OK.ToString(),
-                    message = "Add course to order success",
+                    message = "Add product to order success",
                     data = null
                 };
             }
@@ -133,7 +155,7 @@ namespace OhBau.Service.Implement
 
             var getCartItems = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(predicate: a => a.Cart.AccountId == accountId,
                                                                                                                  include: i =>
-                                                                                                                 i.Include(c => c.Course)
+                                                                                                                 i.Include(c => c.Products)
                                                                                                                  .Include(o => o.Cart)
                                                                                                                  .ThenInclude(a => a.Account),
                                                                                                                  page: pageNumber,
@@ -141,8 +163,13 @@ namespace OhBau.Service.Implement
                                                                                                                  );
                 var mapItem = getCartItems.Items.Select(o => new GetCartItem
                 {
-                       Name = o.Course.Name,
-                       UnitPrice = o.Course.Price,
+                       ItemId = o.Id,
+                       Name = o.Products.Name,
+                       ImageUrl = o.Products.Image,
+                       Description = o.Products.Description,
+                       Color = o.Products.Color,
+                       Size = o.Products.Size,
+                       UnitPrice = o.Products.Price,
                 }).ToList();
 
                 var result = new GetCartByAccount
@@ -179,7 +206,6 @@ namespace OhBau.Service.Implement
                                                                                                   
             }
         
-
         public async Task<BaseResponse<Paginate<Model.Payload.Response.Cart.GetCartDetailResponse>>> GetCartDetails(Guid accountId, int pageNumber, int pageSize)
         {
 
@@ -198,7 +224,7 @@ namespace OhBau.Service.Implement
             }
             var getCartDetails = await _unitOfWork.GetRepository<CartItems>().GetPagingListAsync(
                 predicate: x => x.Cart.AccountId == accountId,
-                include: i => i.Include(x => x.Course)
+                include: i => i.Include(x => x.Products)
                                .Include(c => c.Cart).ThenInclude(a => a.Account),
                 page: pageNumber,
                 size: pageSize
@@ -206,11 +232,17 @@ namespace OhBau.Service.Implement
 
             var mapItems = getCartDetails.Items.Select(c => new CartItemDetail
             {
-                DetailId = c.Id,
-                Name = c.Course.Name,
-                Duration = c.Course.Duration,
-                Price = c.Course.Price,
-                Rating = c.Course.Rating
+                ItemId = c.Id,
+                Name = c.Products.Name,
+                ImageUrl = c.Products.Image,
+                Description = c.Products.Description,
+                Brand = c.Products.Brand,
+                Color = c.Products.Color,
+                Size = c.Products.Size,
+                AgeRange = c.Products.AgeRange,
+                Price = c.UnitPrice,
+                Quantity = c.Quantity,
+                TotalPrice = c.TotalPrice
             }).ToList();
 
             var result = new GetCartDetailResponse
@@ -259,7 +291,7 @@ namespace OhBau.Service.Implement
                 }
 
                 var getCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(predicate: x => x.Id == checkDelete.CartId);
-                getCart.TotalPrice = getCart.TotalPrice - checkDelete.UnitPrice;
+                getCart.TotalPrice = getCart.TotalPrice - checkDelete.TotalPrice;
                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
                 _unitOfWork.GetRepository<CartItems>().DeleteAsync(checkDelete);
                 await _unitOfWork.CommitAsync();
@@ -281,5 +313,65 @@ namespace OhBau.Service.Implement
                 throw new NotImplementedException(); 
             }
         }
+
+        public async Task<BaseResponse<string>> UpdateQuantityItem(Guid itemId, int quantity)
+        {
+            try
+            {
+                if (quantity < 1)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status400BadRequest.ToString(),
+                        message = "Quantity must not be less than 1",
+                        data = null
+                    };
+                }
+                var getCartItem = await _unitOfWork.GetRepository<CartItems>()
+                                                   .GetByConditionAsync(x => x.Id == itemId);
+
+                if (getCartItem == null)
+                {
+                    return new BaseResponse<string>
+                    {
+                        status = StatusCodes.Status404NotFound.ToString(),
+                        message = "Cart item not found",
+                        data = null
+                    };
+                }
+
+                // Lấy cart để cập nhật tổng giá
+                var getCart = await _unitOfWork.GetRepository<Cart>()
+                                               .GetByConditionAsync(x => x.Id == getCartItem.CartId);
+
+                // Trừ tổng giá cũ
+                getCart.TotalPrice -= getCartItem.TotalPrice;
+
+                // Cập nhật lại thông tin cart item
+                getCartItem.Quantity = quantity;
+                getCartItem.TotalPrice = getCartItem.UnitPrice * quantity;
+
+                // Cộng tổng giá mới
+                getCart.TotalPrice += getCartItem.TotalPrice;
+
+                // Cập nhật và lưu
+                 _unitOfWork.GetRepository<CartItems>().UpdateAsync(getCartItem);
+                 _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
+
+                await _unitOfWork.CommitAsync();
+
+                return new BaseResponse<string>
+                {
+                    status = StatusCodes.Status200OK.ToString(),
+                    message = "Update quantity success",
+                    data = null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
     }
 }

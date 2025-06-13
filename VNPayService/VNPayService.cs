@@ -23,7 +23,7 @@ using OhBau.Service;
 using VNPayService.Config;
 using VNPayService.DTO;
 using VNPayService.VNPlayPackage;
-
+#pragma warning disable
 namespace VNPayService
 {
     public class VNPayService :BaseService<VNPayService> ,IVnPayService
@@ -153,13 +153,6 @@ namespace VNPayService
 
             string txnRefStr = vnPay.GetResponseData("vnp_TxnRef");
             string orderCode = txnRefStr;
-
-            //Guid orderId = Guid.NewGuid();
-            //if (!Guid.TryParse(txnRefStr, out orderId))
-            //{
-            //    return "{\"RspCode\":\"01\",\"Message\":\"Invalid transaction reference\"}";
-            //}
-
             string amountStr = vnPay.GetResponseData("vnp_Amount");
             if (string.IsNullOrEmpty(amountStr) || !long.TryParse(amountStr, out long vnp_AmountRaw))
             {
@@ -221,61 +214,60 @@ namespace VNPayService
                 return "{\"RspCode\":\"02\",\"Message\":\"Transaction canceled\"}";
             }
             if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
-            {
-                order.PaymentStatus = PaymentStatusEnum.Paid;
-            }
-
-            try
-            {
+             {
+                double totalPrice = 0;
                 await _unitOfWork.BeginTransactionAsync();
-                var getAccountByOrder = await _unitOfWork.GetRepository<Account>().GetByConditionAsync(x => x.Id == order.AccountId);
-                var getOrderDetailByOrder = await _unitOfWork.GetRepository<OrderDetail>().GetListAsync(predicate: x => x.OrderId == order.Id);
-
-                foreach (var orderDetail in getOrderDetailByOrder)
+                try
                 {
-                    var addNewMyCourse = new MyCourse
-                    {
-                        AccountId = getAccountByOrder.Id,
-                        CourseId = orderDetail.CourseId,
-                        CreateAt = DateTime.Now,
-                    };
+                    order.PaymentStatus = PaymentStatusEnum.Paid;
+                    transaction.Status = PaymentStatusEnum.Paid;
 
-                    await _unitOfWork.GetRepository<MyCourse>().InsertAsync(addNewMyCourse);
-                    _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                     _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                     _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
+                    await _unitOfWork.CommitAsync();
+
+                    var getOrderDetailByOrderCode = await _unitOfWork.GetRepository<OrderDetail>()
+                        .GetListAsync(predicate: x => x.OrderId == order.Id && x.Order.PaymentStatus == PaymentStatusEnum.Paid,
+                                      include: x => x.Include(x => x.Order));
+
+                    foreach (var deleteItem in getOrderDetailByOrderCode)
+                    {
+                        var getCartItem = await _unitOfWork.GetRepository<CartItems>().SingleOrDefaultAsync(
+                            predicate: x => x.ProductId == deleteItem.ProductId);
+
+                        if (getCartItem != null)
+                        {
+                            var getProduct = await _unitOfWork.GetRepository<Product>().GetByConditionAsync(x => x.Id == getCartItem.ProductId);
+                            getProduct.Quantity = getProduct.Quantity - getCartItem.Quantity;
+                            totalPrice += getCartItem.UnitPrice * getCartItem.Quantity;
+                           _unitOfWork.GetRepository<CartItems>().DeleteAsync(getCartItem);
+                            _unitOfWork.GetRepository<Product>().UpdateAsync(getProduct);
+                        }
+                    }
+
+                    var getCart = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
+                    if (getCart != null)
+                    {
+                        getCart.TotalPrice = getCart.TotalPrice - totalPrice;
+                        _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
+                    }
+                    await _unitOfWork.CommitAsync();
+                    await _unitOfWork.CommitTransactionAsync();
                 }
 
-                _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
-                var getCartByAccount = await _unitOfWork.GetRepository<Cart>().GetByConditionAsync(x => x.AccountId == order.AccountId);
-                getCartByAccount.TotalPrice = 0;
-                
-                var getCartItemByCart = await _unitOfWork.GetRepository<CartItems>().GetListAsync(predicate: x => x.CartId == getCartByAccount.Id);
+                catch (Exception ex)
+                {
 
-                _unitOfWork.GetRepository<CartItems>().DeleteRangeAsync(getCartItemByCart);
-                _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
-
-                transaction.Status = PaymentStatusEnum.Paid;
-                _unitOfWork.GetRepository<Transaction>().UpdateAsync(transaction);
-
-                await _unitOfWork.CommitAsync();
-                await _unitOfWork.CommitTransactionAsync();
-
-                _mycourseCacheInvalidator.InvalidateEntityList();
-                _cartCacheInvalidator.InvalidateEntityList();
-                _courseCacheInvalidator.InvalidateEntityList();
-                _orderCache.InvalidateEntityList();
-                _transactionCacheInvalidator.InvalidateEntityList();
-                _orderDetailCacheInvalidator.InvalidateEntityList();
-                _cartItemsCacheInvalidator.InvalidateEntityList();
-
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw new Exception(ex.ToString());
+                }
                 return "{\"RspCode\":\"00\",\"Message\":\"Confirm Success\"}";
 
             }
-            catch (Exception ex) {
-                
-              await  _unitOfWork.RollbackTransactionAsync();
-                throw new Exception(ex.ToString());
+            else
+            {
+                throw new Exception();
             }
-
         }
 
         public async Task<PaymentResponse> ProcessVnPayReturn(Dictionary<string, string> queryParams)

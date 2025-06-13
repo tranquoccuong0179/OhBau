@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OhBau.Model.Payload.Request.Cart;
 using OhBau.Model.Payload.Request.Order;
 using OhBau.Model.Utils;
 using OhBau.Service.Interface;
@@ -10,14 +11,14 @@ namespace OhBau.API.Controllers
     [Route("api/v1/cart")]
     public class CartController(ICartService _cartService, ILogger<CartController> _logger) : Controller
     {
-        [HttpPost("add-course-to-cart")]
+        [HttpPost("add-product-to-cart")]
         [Authorize(Roles = "FATHER,MOTHER")]
-        public async Task<IActionResult> AddCourseToCart([FromBody] AddCourseToOrderRequest request)
+        public async Task<IActionResult> AddCourseToCart([FromBody] AddProductToCart request)
         {
             try
             {
                 var accountId = UserUtil.GetAccountId(HttpContext);
-                var response = await _cartService.AddCourseToCart(request.CourseId, accountId!.Value);
+                var response = await _cartService.AddProductToCart(request.ProductId,request.Quantity, accountId!.Value);
                 return StatusCode(int.Parse(response.status), response);   
             }
             catch (Exception ex) {
@@ -57,6 +58,22 @@ namespace OhBau.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("[Delete cart item API]:" + ex.Message, ex.StackTrace);
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("update-item-quantity/{itemId}")]
+        [Authorize(Roles = "FATHER,MOTHER")]
+        public async Task<IActionResult> UpdateItemQuantity(Guid itemId, [FromForm] int quantity)
+        {
+            try
+            {
+                var response = await _cartService.UpdateQuantityItem(itemId, quantity);
+                return StatusCode(int.Parse(response.status), response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[Update Item Quantity API] " + ex.Message, ex.StackTrace);
                 return StatusCode(500, ex.ToString());
             }
         }
