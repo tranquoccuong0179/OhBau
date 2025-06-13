@@ -220,8 +220,8 @@ namespace OhBau.Service.Implement
                 Items = mapItems,
                 Page = pageNumber,
                 Size = pageSize,
-                Total = mapItems.Count,
-                TotalPages = getBlogs.Total
+                Total = getBlogs.Total,
+                TotalPages = (int)Math.Ceiling((double)getBlogs.Total / pageSize)
             };
 
             var cacheOption = new MemoryCacheEntryOptions
