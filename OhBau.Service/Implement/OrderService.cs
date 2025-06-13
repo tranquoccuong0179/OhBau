@@ -59,6 +59,9 @@ namespace OhBau.Service.Implement
                 {
                     if (cartItem.Products.Quantity < cartItem.Quantity)
                     {
+
+                        _orderCacheInvalidator.InvalidateEntityList();
+                        _orderDetailCacheInvalidator.InvalidateEntityList();
                         return new BaseResponse<CreateOrderResponse>
                         {
                             status = StatusCodes.Status400BadRequest.ToString(),
@@ -106,6 +109,7 @@ namespace OhBau.Service.Implement
 
                     _orderCacheInvalidator.InvalidateEntityList();
                     _orderDetailCacheInvalidator.InvalidateEntityList();
+                   
 
                     var response = new CreateOrderResponse
                     {

@@ -52,7 +52,7 @@ namespace OhBau.Service.Implement
 
                 if (checkAlready != null)
                 {
-                    if (getProduct.Quantity < quantity)
+                    if (getProduct.Quantity < quantity + checkAlready.Quantity)
                     {
                         return new BaseResponse<string>
                         {
@@ -62,15 +62,21 @@ namespace OhBau.Service.Implement
                         };
                     }
 
-                    getCartByAccount.TotalPrice = getCartByAccount.TotalPrice + (checkAlready.UnitPrice * checkAlready.Quantity);
-                    checkAlready.Quantity += quantity;
-                    _unitOfWork.GetRepository<CartItems>().UpdateAsync(checkAlready);
+                    getCartByAccount.TotalPrice -= checkAlready.TotalPrice;
 
+                    checkAlready.Quantity += quantity;
                     checkAlready.TotalPrice = checkAlready.UnitPrice * checkAlready.Quantity;
+
+                    getCartByAccount.TotalPrice += checkAlready.TotalPrice;
+
+                    _unitOfWork.GetRepository<CartItems>().UpdateAsync(checkAlready);
                     _unitOfWork.GetRepository<Cart>().UpdateAsync(getCartByAccount);
 
                     await _unitOfWork.CommitAsync();
                     await _unitOfWork.CommitTransactionAsync();
+                    _cartCacheInvalidator.InvalidateEntityList();
+                    _cartItemsInvalidator.InvalidateEntityList();
+
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status200OK.ToString(),
@@ -80,8 +86,10 @@ namespace OhBau.Service.Implement
                 }
 
 
-                if (getProduct.Quantity < quantity)
+                    if (getProduct.Quantity < quantity)
                 {
+                    _cartCacheInvalidator.InvalidateEntityList();
+                    _cartItemsInvalidator.InvalidateEntityList();
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status400BadRequest.ToString(),
@@ -92,6 +100,8 @@ namespace OhBau.Service.Implement
 
                 if (getCartByAccount == null)
                 {
+                    _cartCacheInvalidator.InvalidateEntityList();
+                    _cartItemsInvalidator.InvalidateEntityList();
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status404NotFound.ToString(),
@@ -359,6 +369,8 @@ namespace OhBau.Service.Implement
                  _unitOfWork.GetRepository<Cart>().UpdateAsync(getCart);
 
                 await _unitOfWork.CommitAsync();
+                _cartCacheInvalidator.InvalidateEntityList();
+                _cartItemsInvalidator.InvalidateEntityList();
 
                 return new BaseResponse<string>
                 {
