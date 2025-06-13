@@ -48,7 +48,7 @@ var discordHook = builder.Configuration["Discord:WebHook"];
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
-    .WriteTo.Discord(webhookId: 1379810845319757997, webhookToken: "wWBxfU7K4Zbtn28k6UE-qzffdy7NUjlFxphDh8rYXwB6ybo-hF74TqaKU4dQehwSzP3m",
+    .WriteTo.Discord(webhookId: 1382216619459084290, webhookToken: "_MedtNh4sue9IenL8LbKEH_iKh5Avnfmvsu_mbVxiA7074fjU1_kzlPLlzCTqtNH4fmr",
         restrictedToMinimumLevel: LogEventLevel.Error)
     .CreateLogger();
 

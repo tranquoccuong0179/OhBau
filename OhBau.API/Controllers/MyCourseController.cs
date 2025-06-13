@@ -20,7 +20,7 @@ namespace OhBau.API.Controllers
         }
 
         [HttpPost("receive-course")]
-        [Authorize(Roles = "FATHER,MORTHER")]
+        [Authorize(Roles = "FATHER,MOTHER")]
         public async Task<IActionResult> ReceiveCourse([FromBody] AddCourseToOrderRequest reqeust)
         {
             try

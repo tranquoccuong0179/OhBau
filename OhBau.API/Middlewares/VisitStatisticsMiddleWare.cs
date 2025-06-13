@@ -23,7 +23,13 @@ namespace OhBau.API.Middlewares
 
             if (string.IsNullOrWhiteSpace(ip))
             {
-                ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var remoteIp = context.Connection.RemoteIpAddress;
+                if (remoteIp != null && remoteIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                {
+                    remoteIp = System.Net.Dns.GetHostEntry(remoteIp).AddressList
+                        .FirstOrDefault(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                }
+                ip = remoteIp?.ToString() ?? "unknown";
             }
 
             await _semaphore.WaitAsync();

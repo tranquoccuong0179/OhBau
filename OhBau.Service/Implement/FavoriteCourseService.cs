@@ -41,6 +41,8 @@ namespace OhBau.Service.Implement
                     _unitOfWork.GetRepository<FavoriteCourses>().DeleteAsync(checkAlready);
                     await _unitOfWork.CommitAsync();
                     
+                    _favoriteCourseCache.InvalidateEntity(courseId);
+                    _favoriteCourseCache.InvalidateEntityList();
                     return new BaseResponse<string>
                     {
                         status = StatusCodes.Status200OK.ToString(),
