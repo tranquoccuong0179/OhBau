@@ -281,6 +281,22 @@ namespace OhBau.Service.Implement
                 account.UpdateAt = TimeUtil.GetCurrentSEATime();
 
                 _unitOfWork.GetRepository<Account>().UpdateAsync(account);
+
+
+                var parent = await _unitOfWork.GetRepository<Parent>().SingleOrDefaultAsync(
+                    predicate: p => p.AccountId.Equals(id));
+
+                if (parent == null)
+                {
+                    throw new NotFoundException("Không tìm thấy thông tin bố mẹ");
+                }
+
+                parent.FullName = request.FullName ?? parent.FullName;
+                parent.Dob = request.Dob ?? parent.Dob;
+
+                _unitOfWork.GetRepository<Parent>().UpdateAsync(parent);
+
+
                 bool isSuccessfully = await _unitOfWork.CommitAsync() > 0;
 
                 if (isSuccessfully)
