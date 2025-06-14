@@ -266,8 +266,6 @@ namespace OhBau.Service.Implement
 
         public async Task<BaseResponse<GetAccountResponse>> UpdateAccount(UpdateAccountRequest request)
         {
-            try
-            {
                 Guid? id = UserUtil.GetAccountId(_httpContextAccessor.HttpContext);
                 var account = await _unitOfWork.GetRepository<Account>().SingleOrDefaultAsync(
                     predicate: a => a.Id.Equals(id) && a.Active == true);
@@ -293,6 +291,7 @@ namespace OhBau.Service.Implement
 
                 parent.FullName = request.FullName ?? parent.FullName;
                 parent.Dob = request.Dob ?? parent.Dob;
+                parent.UpdateAt = TimeUtil.GetCurrentSEATime();
 
                 _unitOfWork.GetRepository<Parent>().UpdateAsync(parent);
 
@@ -309,11 +308,7 @@ namespace OhBau.Service.Implement
                     };
                 }
                 throw new Exception("Cập nhật tài khoản thất bại");
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            
         }
     }
 }
